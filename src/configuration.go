@@ -1,16 +1,16 @@
 package goule
 
 type SourceURL struct {
-	Protocol     string `json:"protocol"`
-	Hostname     string `json:"hostname"`
-	Path         string `json:"path"`
+	Protocol string `json:"protocol"`
+	Hostname string `json:"hostname"`
+	Path     string `json:"path"`
 }
 
 type DestinationURL struct {
-	Protocol     string `json:"protocol"`
-	Hostname     string `json:"hostname"`
-	Port         int    `json:"port"`
-	Path         string `json:"path"`
+	Protocol string `json:"protocol"`
+	Hostname string `json:"hostname"`
+	Port     int    `json:"port"`
+	Path     string `json:"path"`
 }
 
 type ForwardRule struct {
@@ -47,6 +47,7 @@ type Certificate struct {
 }
 
 type Configuration struct {
+	ConfigPath   string        `json:"-"`
 	Tasks        []Task        `json:"tasks"`
 	Certificates []Certificate `json:"certificates"`
 	ServeHTTP    bool          `json:"serve_http"`
@@ -58,7 +59,7 @@ type Configuration struct {
 }
 
 func MakeConfiguration() *Configuration {
-	return &Configuration{[]Task{}, []Certificate{}, true, true, 80, 443,
-	    []SourceURL{},
+	return &Configuration{"", []Task{}, []Certificate{}, true, true, 80, 443,
+		[]SourceURL{},
 		"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}
 }

@@ -2,11 +2,11 @@ package main
 
 import (
 	"../src"
-	"os"
-	"fmt"
-	"net/http"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"os"
 )
 
 func main() {
@@ -24,6 +24,7 @@ func main() {
 		fmt.Println("Failed to read JSON:", err)
 		os.Exit(1)
 	}
+	config.ConfigPath = os.Args[1]
 	http.HandleFunc("/", goule.CreateHandler(config, false))
 	err = http.ListenAndServe(":12345", nil)
 	if err != nil {
