@@ -1,7 +1,7 @@
 body {
 	margin: 0 0 0 0;
 	padding: 0 0 0 0;
-	background: #DDD;
+	background-color: #F1F2F2;
 	font-family: arial, sans-serif;
 }
 
@@ -11,7 +11,8 @@ body {
 	height: 60px;
 	background: white;
 	padding-left: 10px;
-	padding-right: 10px;
+	padding-right: 15px;
+	border-bottom: 3px solid #d6d6d6;
 }
 
 .header-left {
@@ -36,41 +37,4 @@ body {
 	height: 60px;
 	font-size: 34px;
 	line-height: 60px;
-}
-
-/* Right side elements */
-
-#generate {
-	position: relative;
-	font-size: 20px;
-	width: 170px;
-	height: 40px;
-	border-radius: 20px;
-	background-color: #85a9b3;
-	overflow: hidden;
-	margin-top: 10px;
-}
-
-#generate label {
-	position: absolute;
-	text-align: center;
-	height: 40px;
-	width: 100%;
-	color: white;
-	line-height: 40px;
-	-webkit-transition: -webkit-transform 0.5s ease;
-  transition: transform 0.5s ease;
-}
-
-#generate .random {
-	transform: translate(150px, 0px);
-	-webkit-transform: translate(150px, 0px);
-}
-
-#generate:hover .normal {
-	-webkit-transform: translate(-150px, 0);
-}
-
-#generate:hover .random {
-	-webkit-transform: translate(0, 0);
 }

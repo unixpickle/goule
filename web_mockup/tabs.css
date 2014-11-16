@@ -1,0 +1,25 @@
+#tabs {
+	height: 60px;
+}
+
+.tab-button {
+	font-size: 20px;
+	border: none;
+	height: 36px;
+	line-height: 36px;
+	background: none;
+	margin-right: 20px;
+	margin-top: 15px;
+	padding: 0 0 0 0;
+	outline: 0;
+	cursor: pointer;
+	color: #777;
+}
+
+#active-tab-indicator {
+	position: absolute;
+	top: 60px;
+	height: 3px;
+	background-color: #64bcd4;
+	width: 0;
+}

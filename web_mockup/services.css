@@ -6,6 +6,7 @@
 }
 
 .service {
+	border-radius: 3px;
 	background-color: white;
 	padding: 15px 15px 15px 15px;
 }

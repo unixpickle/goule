@@ -3,16 +3,27 @@
   <head>
     <title>Goule - Services</title>
     <link rel="stylesheet" type="text/css" href="header.css">
+    <link rel="stylesheet" type="text/css" href="generate.css">
+    <link rel="stylesheet" type="text/css" href="tabs.css">
     <link rel="stylesheet" type="text/css" href="services.css">
+    <script src="src/jquery.js"></script>
+    <script src="src/tabs.js"></script>
+    <script src="src/settings.js"></script>
+    <script src="src/list.js"></script>
   </head>
   <body>
     <div id="header">
-      <img class="header-left" id="logo" src="logo.jpeg" />
+      <img class="header-left" id="logo" src="icon.png" />
       <h1 class="header-left" id="product-name">Goule</h1>
       <div class="header-right" id="generate">
-        <label class="normal">Generate Port</label>
+        <label class="normal">New Port</label>
         <label class="random">1337</label>
-      </button>
+      </div>
+      <div class="header-right" id="tabs">
+        <button class="tab-button" id="list-tab">List</button>
+        <button class="tab-button" id="settings-tab">Settings</button>
+        <div id="active-tab-indicator"></div>
+      </div>
     </div>
     <div id="services">
       <div class="service">
