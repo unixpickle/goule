@@ -1,5 +1,7 @@
 package goule
 
+import "sync"
+
 type SourceURL struct {
 	Protocol string `json:"protocol"`
 	Hostname string `json:"hostname"`
@@ -47,6 +49,7 @@ type Certificate struct {
 }
 
 type Configuration struct {
+	mutex        *sync.Mutex
 	ConfigPath   string        `json:"-"`
 	Tasks        []Task        `json:"tasks"`
 	Certificates []Certificate `json:"certificates"`
@@ -59,7 +62,16 @@ type Configuration struct {
 }
 
 func MakeConfiguration() *Configuration {
-	return &Configuration{"", []Task{}, []Certificate{}, true, true, 80, 443,
-		[]SourceURL{},
+	// The default password, by the way, is "password".
+	return &Configuration{&sync.Mutex{}, "", []Task{}, []Certificate{}, true,
+		true, 80, 443, []SourceURL{SourceURL{"http", "localhost", ""}},
 		"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}
+}
+
+func (self *Configuration) Lock() {
+	self.mutex.Lock()
+}
+
+func (self *Configuration) Unlock() {
+	self.mutex.Unlock()
 }

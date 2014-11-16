@@ -48,6 +48,7 @@ func (self *HTTPServer) Stop() error {
 	if self.listener == nil {
 		return errors.New("Server wasn't running.")
 	}
+	
 	(*self.listener).Close()
 	self.listener = nil
 	return nil
@@ -56,6 +57,5 @@ func (self *HTTPServer) Stop() error {
 func (self *HTTPServer) IsRunning() bool {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
-	
 	return self.listener != nil
 }
