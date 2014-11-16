@@ -6,12 +6,6 @@ import (
 	"io/ioutil"
 )
 
-type SourceURL struct {
-	Protocol string `json:"protocol"`
-	Hostname string `json:"hostname"`
-	Path     string `json:"path"`
-}
-
 type DestinationURL struct {
 	Protocol string `json:"protocol"`
 	Hostname string `json:"hostname"`
@@ -25,24 +19,24 @@ type ForwardRule struct {
 }
 
 type Executable struct {
-	Arguments   []string          `json:"arguments"`
-	Environment map[string]string `json:"environment"`
+	Dirname          string            `json:"dirname"`
+	LogStdout        bool              `json:"log_stdout"`
+	LogStderr        bool              `json:"log_stderr"`
+	SetGroupId       bool              `json:"set_group_id"`
+	SetUserId        bool              `json:"set_user_id"`
+	GroupId          int               `json:"group_id"`
+	UserId           int               `json:"user_id"`
+	Arguments        []string          `json:"arguments"`
+	Environment      map[string]string `json:"environment"`
+	Autolaunch       bool              `json:"autolaunch"`
+	Relaunch         bool              `json:"relaunch"`
+	RelaunchInterval int               `json:"relaunch_interval"`
 }
 
-type Task struct {
-	Name             string        `json:"name"`
-	Dirname          string        `json:"dirname"`
-	Autolaunch       bool          `json:"autolaunch"`
-	Relaunch         bool          `json:"relaunch"`
-	RelaunchInterval int           `json:"relaunch_interval"`
-	SetGroupId       bool          `json:"set_group_id"`
-	SetUserId        bool          `json:"set_user_id"`
-	GroupId          int           `json:"group_id"`
-	UserId           int           `json:"user_id"`
-	LogStdout        bool          `json:"log_stdout"`
-	LogStderr        bool          `json:"log_stderr"`
-	ForwardRules     []ForwardRule `json:"forward_rules"`
-	Executables      []Executable  `json:"executables"`
+type Service struct {
+	Name         string        `json:"name"`
+	ForwardRules []ForwardRule `json:"forward_rules"`
+	Executables  []Executable  `json:"executables"`
 }
 
 type Certificate struct {
@@ -55,7 +49,7 @@ type Certificate struct {
 type Configuration struct {
 	mutex        *sync.Mutex
 	ConfigPath   string        `json:"-"`
-	Tasks        []Task        `json:"tasks"`
+	Services     []Service     `json:"services"`
 	Certificates []Certificate `json:"certificates"`
 	ServeHTTP    bool          `json:"serve_http"`
 	ServeHTTPS   bool          `json:"serve_https"`
@@ -67,7 +61,7 @@ type Configuration struct {
 
 func MakeConfiguration() *Configuration {
 	// The default password, by the way, is "password".
-	return &Configuration{&sync.Mutex{}, "", []Task{}, []Certificate{}, true,
+	return &Configuration{&sync.Mutex{}, "", []Service{}, []Certificate{}, true,
 		true, 80, 443, []SourceURL{SourceURL{"http", "localhost", ""}},
 		"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}
 }
