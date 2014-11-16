@@ -41,5 +41,22 @@
 /* Controls */
 
 .service-controls {
-	float: right;
+	position: absolute;
+	right: 0;
+	top: 0;
+}
+
+.start-stop {
+	display: inline;
+	background-color: #f00;
+	border: none;
+	outline: 0;
+	font-size: 20px;
+	color: white;
+	height: 30px;
+	padding-left: 30px;
+	padding-right: 30px;
+	cursor: pointer;
+	margin-top: 10px;
+	margin-right: 10px;
 }
