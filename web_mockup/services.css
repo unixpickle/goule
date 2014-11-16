@@ -1,0 +1,44 @@
+#services {
+	width: 700px;
+	position: absolute;
+	left: calc(50% - 350px);
+	top: 100px;
+}
+
+.service {
+	background-color: white;
+	padding: 15px 15px 15px 15px;
+}
+
+/* Line one */
+
+.service-name {
+	font-size: 20px;
+	margin: 0 0 0 0;
+	padding: 0 0 0 0;
+	display: inline;
+}
+
+.service-crash-time {
+	font-style: italic;
+}
+
+/* Line two */
+
+.service-line-two {
+	margin-top: 10px;
+}
+
+.service-forward-rules {
+	display: inline;
+}
+
+.service-executables {
+	display: inline;
+}
+
+/* Controls */
+
+.service-controls {
+	float: right;
+}
