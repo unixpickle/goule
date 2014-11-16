@@ -1,6 +1,10 @@
 package goule
 
-import "sync"
+import (
+	"sync"
+	"encoding/json"
+	"io/ioutil"
+)
 
 type SourceURL struct {
 	Protocol string `json:"protocol"`
@@ -66,6 +70,19 @@ func MakeConfiguration() *Configuration {
 	return &Configuration{&sync.Mutex{}, "", []Task{}, []Certificate{}, true,
 		true, 80, 443, []SourceURL{SourceURL{"http", "localhost", ""}},
 		"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}
+}
+
+func ReadConfiguration(path string) (*Configuration, error) {
+	configData, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	config := MakeConfiguration()
+	if err := json.Unmarshal(configData, config); err != nil {
+		return nil, err
+	}
+	config.ConfigPath = path
+	return config, nil
 }
 
 func (self *Configuration) Lock() {

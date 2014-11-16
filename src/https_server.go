@@ -82,10 +82,19 @@ func (self *HTTPSServer) runOnCurrentPort() error {
 	}
 	tlsListener := tls.NewListener(tcpListener, config)
 	self.listener = &tlsListener
-	if err := http.Serve(tlsListener, self.handler); err != nil {
-		self.listener = nil
-		return err
-	}
+	
+	// Run the server in the background
+	go func() {
+		if err := http.Serve(tlsListener, self.handler); err != nil {
+			self.mutex.Lock()
+			if self.listener == &tlsListener {
+				(*self.listener).Close()
+				self.listener = nil
+			}
+			self.mutex.Unlock()
+		}
+	}()
+	
 	return nil
 }
 

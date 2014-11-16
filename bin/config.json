@@ -3,8 +3,8 @@
 	"certificates":[],
 	"serve_http":true,
 	"serve_https":true,
-	"http_port":80,
-	"https_port":443,
+	"http_port":1337,
+	"https_port":1338,
 	"admin_rules":[],
 	"admin_hash":"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
 }

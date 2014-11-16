@@ -2,32 +2,24 @@ package main
 
 import (
 	"../src"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
+	"fmt"
 )
 
 func main() {
 	if len(os.Args) != 2 {
-		fmt.Println("Usage: goule <config.json>")
+		fmt.Fprintln(os.Stderr, "Usage: goule <config.json>")
 		os.Exit(1)
 	}
-	configData, err := ioutil.ReadFile(os.Args[1])
+	config, err := goule.ReadConfiguration(os.Args[1])
 	if err != nil {
-		fmt.Println("Failed to read", os.Args[1])
+		fmt.Fprintln(os.Stderr, "Failed to read configuration:", err)
 		os.Exit(1)
 	}
-	config := goule.MakeConfiguration()
-	if err := json.Unmarshal(configData, config); err != nil {
-		fmt.Println("Failed to read JSON:", err)
-		os.Exit(1)
+	router := goule.NewRouter(config)
+	if err := router.Run(); err != nil {
+		fmt.Fprintln(os.Stderr, "Failed to run router:", err)
 	}
-	config.ConfigPath = os.Args[1]
-	http.HandleFunc("/", goule.CreateHandler(config, false))
-	err = http.ListenAndServe(":12345", nil)
-	if err != nil {
-		panic("failed to listen :(")
-	}
+	fmt.Println("Goule running.")
+	select{}
 }

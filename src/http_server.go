@@ -32,11 +32,18 @@ func (self *HTTPServer) Run(port int) error {
 	}
 	
 	self.listener = &listener
-	if err := http.Serve(listener, self.handler); err != nil {
-		(*self.listener).Close()
-		self.listener = nil
-		return err
-	}
+	
+	// Run the server in the background
+	go func() {
+		if err := http.Serve(listener, self.handler); err != nil {
+			self.mutex.Lock()
+			if self.listener == &listener {
+				(*self.listener).Close()
+				self.listener = nil
+			}
+			self.mutex.Unlock()
+		}
+	}()
 	
 	return nil
 }
