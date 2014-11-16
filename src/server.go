@@ -1,6 +1,7 @@
 package goule
 
 type Server interface {
-	func Run(handler Handler, port int)
-	func Stop()
+	Run(port int) error
+	Stop() error
+	IsRunning() bool
 }
