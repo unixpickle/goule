@@ -17,6 +17,10 @@ type HTTPSServer struct {
 	port     int
 }
 
+func NewHTTPSServer(handler http.Handler, config *Configuration) *HTTPSServer {
+	return &HTTPSServer{handler, nil, &sync.Mutex{}, config, 0}
+}
+
 func (self *HTTPSServer) Run(port int) error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
