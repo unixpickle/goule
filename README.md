@@ -14,8 +14,7 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Update [router.go](src/router.go) to forward to the admin site if applicable
-   * Setup static file server
+ * Make admin HTTP static file server secure!
  * Create HTTP reverse proxy
  * Apply HTTP proxy to forward rules
  * Create executable management system
@@ -27,3 +26,11 @@ Here is a general TODO list which outlines everything that must be done before G
  * Implement web interface
    * JSON/AJAX APIs
    * Hellish nightmare of implementing a GUI
+
+## Done
+
+I'm moving things from my TODO list to this spot once I do them:
+
+ * Update [router.go](src/router.go) to forward to the admin site if applicable
+   * Begin JSON/AJAX control API
+   * Setup static file server
