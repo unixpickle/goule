@@ -24,6 +24,7 @@ func (self *Router) HandleRequest(res http.ResponseWriter, req *http.Request,
 	// The server won't know if TLS was used, so we need to specify manually.
 	url := *req.URL
 	url.Scheme = scheme
+	url.Host = req.Host
 
 	// TODO: here, we will search for a regular forward rule.
 
