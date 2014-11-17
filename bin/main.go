@@ -2,8 +2,8 @@ package main
 
 import (
 	"../src"
-	"os"
 	"fmt"
+	"os"
 )
 
 func main() {
@@ -21,5 +21,5 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Failed to run router:", err)
 	}
 	fmt.Println("Goule running.")
-	select{}
+	select {}
 }

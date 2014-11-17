@@ -1,9 +1,9 @@
 package goule
 
 import (
-	"sync"
 	"encoding/json"
 	"io/ioutil"
+	"sync"
 )
 
 type DestinationURL struct {
@@ -47,7 +47,7 @@ type Certificate struct {
 }
 
 type Configuration struct {
-	mutex        *sync.Mutex
+	lock         *sync.RWMutex
 	ConfigPath   string        `json:"-"`
 	Services     []Service     `json:"services"`
 	Certificates []Certificate `json:"certificates"`
@@ -61,8 +61,8 @@ type Configuration struct {
 
 func MakeConfiguration() *Configuration {
 	// The default password, by the way, is "password".
-	return &Configuration{&sync.Mutex{}, "", []Service{}, []Certificate{}, true,
-		true, 80, 443, []SourceURL{SourceURL{"http", "localhost", ""}},
+	return &Configuration{&sync.RWMutex{}, "", []Service{}, []Certificate{},
+		true, true, 80, 443, []SourceURL{SourceURL{"http", "localhost", ""}},
 		"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"}
 }
 
@@ -80,9 +80,17 @@ func ReadConfiguration(path string) (*Configuration, error) {
 }
 
 func (self *Configuration) Lock() {
-	self.mutex.Lock()
+	self.lock.Lock()
 }
 
 func (self *Configuration) Unlock() {
-	self.mutex.Unlock()
+	self.lock.Unlock()
+}
+
+func (self *Configuration) RLock() {
+	self.lock.RLock()
+}
+
+func (self *Configuration) RUnlock() {
+	self.lock.RUnlock()
 }

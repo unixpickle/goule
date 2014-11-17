@@ -1,11 +1,11 @@
 package goule
 
 import (
+	"errors"
 	"net"
 	"net/http"
-	"errors"
-	"sync"
 	"strconv"
+	"sync"
 )
 
 type HTTPServer struct {
@@ -21,18 +21,18 @@ func NewHTTPServer(handler http.Handler) *HTTPServer {
 func (self *HTTPServer) Run(port int) error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
-	
+
 	if self.listener != nil {
 		return errors.New("Server was already running.")
 	}
-	
-	listener, err := net.Listen("tcp", ":" + strconv.Itoa(port))
+
+	listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
 		return err
 	}
-	
+
 	self.listener = &listener
-	
+
 	// Run the server in the background
 	go func() {
 		if err := http.Serve(listener, self.handler); err != nil {
@@ -44,18 +44,18 @@ func (self *HTTPServer) Run(port int) error {
 			self.mutex.Unlock()
 		}
 	}()
-	
+
 	return nil
 }
 
 func (self *HTTPServer) Stop() error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
-	
+
 	if self.listener == nil {
 		return errors.New("Server wasn't running.")
 	}
-	
+
 	(*self.listener).Close()
 	self.listener = nil
 	return nil

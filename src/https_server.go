@@ -1,12 +1,12 @@
 package goule
 
 import (
-	"net"
-	"net/http"
 	"crypto/tls"
 	"errors"
-	"sync"
+	"net"
+	"net/http"
 	"strconv"
+	"sync"
 )
 
 type HTTPSServer struct {
@@ -24,24 +24,24 @@ func NewHTTPSServer(handler http.Handler, config *Configuration) *HTTPSServer {
 func (self *HTTPSServer) Run(port int) error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
-	
+
 	if self.listener != nil {
 		return errors.New("Server was already running.")
 	}
-	
+
 	self.port = port
-	
+
 	return self.runOnCurrentPort()
 }
 
 func (self *HTTPSServer) Stop() error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
-	
+
 	if self.listener == nil {
 		return errors.New("Server wasn't running.")
 	}
-	
+
 	(*self.listener).Close()
 	self.listener = nil
 	return nil
@@ -57,16 +57,16 @@ func (self *HTTPSServer) CertificatesChanged() error {
 	// In the future, this will not need to do anything because we can implement
 	// the server's GetCertificate() method. For now, though, that method is
 	// not in the stable release.
-	
+
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
-	
+
 	if self.listener == nil {
 		return nil
 	}
 	(*self.listener).Close()
 	self.listener = nil
-	
+
 	return self.runOnCurrentPort()
 }
 
@@ -75,14 +75,14 @@ func (self *HTTPSServer) runOnCurrentPort() error {
 	if err != nil {
 		return err
 	}
-	
-	tcpListener, err := net.Listen("tcp", ":" + strconv.Itoa(self.port))
+
+	tcpListener, err := net.Listen("tcp", ":"+strconv.Itoa(self.port))
 	if err != nil {
 		return err
 	}
 	tlsListener := tls.NewListener(tcpListener, config)
 	self.listener = &tlsListener
-	
+
 	// Run the server in the background
 	go func() {
 		if err := http.Serve(tlsListener, self.handler); err != nil {
@@ -94,14 +94,14 @@ func (self *HTTPSServer) runOnCurrentPort() error {
 			self.mutex.Unlock()
 		}
 	}()
-	
+
 	return nil
 }
 
 func (self *HTTPSServer) createTLSConfig() (*tls.Config, error) {
-	self.config.Lock()
-	defer self.config.Unlock()
-	
+	self.config.RLock()
+	defer self.config.RUnlock()
+
 	// Build up the tls.Config to have all the certificates we need
 	certs := self.config.Certificates
 	config := &tls.Config{}

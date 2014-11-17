@@ -23,5 +23,5 @@ func (self SourceURL) MatchesURL(url *url.URL) bool {
 // receiving SourceURL does not.
 // This subpath can be appended to the proxy destination in some cases.
 func (self SourceURL) SubpathForURL(url *url.URL) string {
-	return url.Path[len(self.Path) : len(url.Path)]
+	return url.Path[len(self.Path):len(url.Path)]
 }
