@@ -27,12 +27,6 @@ type ServiceInfo struct {
 	Executables  []ExecutableInfo `json:"executables"`
 }
 
-type CertInfo struct {
-	CertPath       string   `json:"cert_path"`
-	KeyPath        string   `json:"key_path"`
-	AuthorityPaths []string `json:"authority_paths"`
-}
-
 type ServerSetting struct {
 	Enabled bool
 	Port    int
@@ -41,8 +35,7 @@ type ServerSetting struct {
 type Configuration struct {
 	LoadedPath   string              `json:"-"`
 	Services     []ServiceInfo       `json:"services"`
-	Certs        map[string]CertInfo `json:"certs"`
-	DefaultCert  CertInfo            `json:"default_cert"`
+	TLS          TLSInfo             `json:"tls"`
 	HTTPSetting  ServerSetting       `json:"http"`
 	HTTPSSetting ServerSetting       `json:"https"`
 	AdminRules   []SourceURL         `json:"admin_rules"`

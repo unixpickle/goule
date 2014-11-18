@@ -17,7 +17,7 @@ type HTTPServer struct {
 }
 
 func NewHTTPServer(handler http.Handler) *HTTPServer {
-	return &HTTPServer{sync.Mutex{}, handler, nil, 0, false, 0}
+	return &HTTPServer{sync.Mutex{}, handler, nil, 0, ServerSetting{}}
 }
 
 // Update applies a given server setting to an HTTPServer.
