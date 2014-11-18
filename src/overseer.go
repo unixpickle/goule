@@ -64,3 +64,7 @@ func (self *Overseer) GetAdminSettings() AdminSettings {
 	defer self.adminMutex.RUnlock()
 	return self.admin
 }
+
+func (self *Overseer) IsRunning() bool {
+	return self.httpServer.IsRunning() || self.httpsServer.IsRunning()
+}

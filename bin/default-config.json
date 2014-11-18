@@ -1,10 +1,23 @@
 {
-	"tasks":[],
-	"certificates":[],
-	"serve_http":true,
-	"serve_https":true,
-	"http_port":80,
-	"https_port":443,
-	"admin_rules":[],
-	"admin_hash":"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"
+  "services": null,
+  "tls": {
+    "named_certificates": null,
+    "default_certificates": {
+      "certificate_path": "",
+      "key_path": "",
+      "authority_paths": null
+    }
+  },
+  "http": {
+    "enabled": false,
+    "port": 0
+  },
+  "https": {
+    "enabled": false,
+    "port": 0
+  },
+  "admin": {
+    "rules": null,
+    "password_hash": ""
+  }
 }
