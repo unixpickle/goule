@@ -18,7 +18,7 @@ type schemeRouter struct {
 	overseer *Overseer
 }
 
-func (self schemeRouter) ServeHTTP(x http.ResponseWriter, y *http.Request) {
+func (self *schemeRouter) ServeHTTP(x http.ResponseWriter, y *http.Request) {
 	Route(x, y, self.scheme, self.overseer)
 }
 
@@ -26,8 +26,10 @@ func (self schemeRouter) ServeHTTP(x http.ResponseWriter, y *http.Request) {
 func NewOverseer() *Overseer {
 	httpRouter := schemeRouter{"http", nil}
 	httpsRouter := schemeRouter{"https", nil}
-	result := &Overseer{NewHTTPServer(httpRouter), NewHTTPSServer(httpsRouter),
+	result := &Overseer{NewHTTPServer(&httpRouter), NewHTTPSServer(&httpsRouter),
 		sync.RWMutex{}, AdminSettings{}}
+    httpRouter.overseer = result
+	httpsRouter.overseer = result
 	return result
 }
 

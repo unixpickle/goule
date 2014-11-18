@@ -9,15 +9,21 @@
     }
   },
   "http": {
-    "enabled": false,
-    "port": 0
+    "enabled": true,
+    "port": 1337
   },
   "https": {
     "enabled": false,
     "port": 0
   },
   "admin": {
-    "rules": null,
+    "rules": [
+      {
+        "scheme": "http",
+        "hostname": "localhost",
+        "path": "/admin"
+      }
+    ],
     "password_hash": ""
   }
 }

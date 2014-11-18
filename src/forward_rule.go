@@ -26,6 +26,7 @@ type ForwardRule struct {
 
 // MatchesURL returns true if the receiving SourceURL matches a specified URL.
 func (self SourceURL) MatchesURL(url *url.URL) bool {
+	// TODO: here, determine hostname of URL by looking for ":"
 	if url.Scheme != self.Scheme || url.Host != self.Hostname {
 		return false
 	}

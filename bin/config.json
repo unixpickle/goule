@@ -17,7 +17,13 @@
     "port": 0
   },
   "admin": {
-    "rules": null,
+    "rules": [
+      {
+        "scheme": "http",
+        "hostname": "localhost",
+        "path": "/admin"
+      }
+    ],
     "password_hash": ""
   }
 }
