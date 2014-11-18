@@ -9,24 +9,65 @@ import (
 )
 
 type HTTPServer struct {
-	handler  http.Handler
-	listener *net.Listener
-	mutex    *sync.Mutex
+	mutex      sync.RWMutex
+	handler    http.Handler
+	listener   *net.Listener
+	listenPort int
+	setting    ServerSetting
 }
 
 func NewHTTPServer(handler http.Handler) *HTTPServer {
-	return &HTTPServer{handler, nil, &sync.Mutex{}}
+	return &HTTPServer{sync.Mutex{}, handler, nil, 0, false, 0}
 }
 
-func (self *HTTPServer) Run(port int) error {
+// Update applies a given server setting to an HTTPServer.
+// If the setting is enabled but the receiver is not actively serving, it will
+// start its server.
+// Conversely, if the setting is disabled but the receiver is actively serving,
+// it will stop.
+// If both the setting and the receiver are serving, the server may still stop
+// itself to change port numbers.
+// The returned error will be nil unless the server could not start or restart.
+func (self *HTTPServer) Update(setting ServerSetting) error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
-
-	if self.listener != nil {
-		return errors.New("Server was already running.")
+	if !setting.Enabled && self.listener != nil {
+		// Stop the presses! Jk, just the server.
+		self.stop()
+		self.setting = setting
+		return nil
+	} else if setting.Enabled && self.listener == nil {
+		// Start the server at the given port.
+		self.setting = setting
+		return self.start()
+	} else if setting.Enabled && setting.Port != self.listenPort {
+		// Restart the server to run on the new port
+		self.stop()
+		self.setting = setting
+		return self.start()
 	}
+	return nil
+}
 
-	listener, err := net.Listen("tcp", ":"+strconv.Itoa(port))
+// GetSetting returns the last setting which was passed via Update().
+func (self *HTTPServer) GetSetting() ServerSetting {
+	self.mutex.RLock()
+	defer self.mutex.RUnlock()
+	return self.setting
+}
+
+// IsRunning returns whether or not the server is actively listening for
+// incoming connections.
+func (self *HTTPServer) IsRunning() bool {
+	self.mutex.RLock()
+	defer self.mutex.RUnlock()
+	return self.listener != nil
+}
+
+// start starts the server.
+// This method assumes that the receiver is already write-locked.
+func (self *HTTPServer) start() error {
+	listener, err := net.Listen("tcp", ":"+strconv.Itoa(self.setting.Port))
 	if err != nil {
 		return err
 	}
@@ -38,8 +79,7 @@ func (self *HTTPServer) Run(port int) error {
 		if err := http.Serve(listener, self.handler); err != nil {
 			self.mutex.Lock()
 			if self.listener == &listener {
-				(*self.listener).Close()
-				self.listener = nil
+				self.stop()
 			}
 			self.mutex.Unlock()
 		}
@@ -48,21 +88,9 @@ func (self *HTTPServer) Run(port int) error {
 	return nil
 }
 
-func (self *HTTPServer) Stop() error {
-	self.mutex.Lock()
-	defer self.mutex.Unlock()
-
-	if self.listener == nil {
-		return errors.New("Server wasn't running.")
-	}
-
+// stop stops the listener.
+// This method assumes that the receiver is already write-locked.
+func (self *HTTPServer) stop() {
 	(*self.listener).Close()
 	self.listener = nil
-	return nil
-}
-
-func (self *HTTPServer) IsRunning() bool {
-	self.mutex.Lock()
-	defer self.mutex.Unlock()
-	return self.listener != nil
 }

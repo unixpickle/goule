@@ -33,17 +33,20 @@ type CertInfo struct {
 	AuthorityPaths []string `json:"authority_paths"`
 }
 
+type ServerSetting struct {
+	Enabled bool
+	Port    int
+}
+
 type Configuration struct {
-	LoadedPath  string              `json:"-"`
-	Services    []ServiceInfo       `json:"services"`
-	Certs       map[string]CertInfo `json:"certs"`
-	DefaultCert CertInfo            `json:"default_cert"`
-	ServeHTTP   bool                `json:"serve_http"`
-	ServeHTTPS  bool                `json:"serve_https"`
-	HTTPPort    int                 `json:"http_port"`
-	HTTPSPort   int                 `json:"https_port"`
-	AdminRules  []SourceURL         `json:"admin_rules"`
-	AdminHash   string              `json:"admin_hash"`
+	LoadedPath   string              `json:"-"`
+	Services     []ServiceInfo       `json:"services"`
+	Certs        map[string]CertInfo `json:"certs"`
+	DefaultCert  CertInfo            `json:"default_cert"`
+	HTTPSetting  ServerSetting       `json:"http"`
+	HTTPSSetting ServerSetting       `json:"https"`
+	AdminRules   []SourceURL         `json:"admin_rules"`
+	AdminHash    string              `json:"admin_hash"`
 }
 
 func NewConfiguration() *Configuration {
