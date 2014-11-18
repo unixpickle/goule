@@ -1,7 +1,6 @@
 package goule
 
 import (
-	"errors"
 	"net"
 	"net/http"
 	"strconv"
@@ -13,11 +12,11 @@ type HTTPServer struct {
 	handler    http.Handler
 	listener   *net.Listener
 	listenPort int
-	setting    ServerSetting
+	setting    ServerSettings
 }
 
 func NewHTTPServer(handler http.Handler) *HTTPServer {
-	return &HTTPServer{sync.Mutex{}, handler, nil, 0, ServerSetting{}}
+	return &HTTPServer{sync.RWMutex{}, handler, nil, 0, ServerSettings{}}
 }
 
 // Update applies a given server setting to an HTTPServer.
@@ -28,7 +27,7 @@ func NewHTTPServer(handler http.Handler) *HTTPServer {
 // If both the setting and the receiver are serving, the server may still stop
 // itself to change port numbers.
 // The returned error will be nil unless the server could not start or restart.
-func (self *HTTPServer) Update(setting ServerSetting) error {
+func (self *HTTPServer) Update(setting ServerSettings) error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 	if !setting.Enabled && self.listener != nil {
@@ -50,7 +49,7 @@ func (self *HTTPServer) Update(setting ServerSetting) error {
 }
 
 // GetSetting returns the last setting which was passed via Update().
-func (self *HTTPServer) GetSetting() ServerSetting {
+func (self *HTTPServer) GetSettings() ServerSettings {
 	self.mutex.RLock()
 	defer self.mutex.RUnlock()
 	return self.setting

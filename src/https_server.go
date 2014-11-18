@@ -2,7 +2,6 @@ package goule
 
 import (
 	"crypto/tls"
-	"errors"
 	"net"
 	"net/http"
 	"strconv"
@@ -10,17 +9,17 @@ import (
 )
 
 type HTTPSServer struct {
-	mutex      sync.Mutex
+	mutex      sync.RWMutex
 	handler    http.Handler
 	listener   *net.Listener
 	listenPort int
-	setting    ServerSetting
+	setting    ServerSettings
 	tls        TLSInfo
 }
 
 func NewHTTPSServer(handler http.Handler) *HTTPSServer {
-	return &HTTPSServer{sync.Mutex{}, handler, nil, 0, ServerSetting{},
-		TLSSetting{}}
+	return &HTTPSServer{sync.RWMutex{}, handler, nil, 0, ServerSettings{},
+		TLSInfo{}}
 }
 
 // Update applies a given server setting to an HTTPSServer.
@@ -31,7 +30,7 @@ func NewHTTPSServer(handler http.Handler) *HTTPSServer {
 // If both the setting and the receiver are serving, the server may still stop
 // itself to change port numbers.
 // The returned error will be nil unless the server could not start or restart.
-func (self *HTTPSServer) Update(setting ServerSetting) error {
+func (self *HTTPSServer) Update(setting ServerSettings) error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 	if !setting.Enabled && self.listener != nil {
@@ -55,7 +54,7 @@ func (self *HTTPSServer) Update(setting ServerSetting) error {
 // UpdateTLS updates the certificates which this server will use via SNI and by
 // default.
 // If the server is actively running, this may trigger it to restart.
-func (self *HTTPSServer) UpdateTLS(info TLS) error {
+func (self *HTTPSServer) UpdateTLS(info TLSInfo) error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 	self.tls = info
@@ -63,10 +62,11 @@ func (self *HTTPSServer) UpdateTLS(info TLS) error {
 		self.stop()
 		return self.start()
 	}
+	return nil
 }
 
 // GetSetting returns the last setting which was passed via Update().
-func (self *HTTPSServer) GetSetting() ServerSetting {
+func (self *HTTPSServer) GetSettings() ServerSettings {
 	self.mutex.RLock()
 	defer self.mutex.RUnlock()
 	return self.setting
@@ -74,7 +74,7 @@ func (self *HTTPSServer) GetSetting() ServerSetting {
 
 // GetTLS returns the last TLS info that was passed via UpdateTLS().
 func (self *HTTPSServer) GetTLS() TLSInfo {
-	self.mutex.Rlock()
+	self.mutex.RLock()
 	defer self.mutex.RUnlock()
 	return self.tls
 }
@@ -89,7 +89,7 @@ func (self *HTTPSServer) IsRunning() bool {
 
 // start starts the server.
 // This method assumes that the receiver is already write-locked.
-func (self *HTTPServer) start() error {
+func (self *HTTPSServer) start() error {
 	config, err := self.createTLSConfig()
 	if err != nil {
 		return err
@@ -118,11 +118,13 @@ func (self *HTTPServer) start() error {
 
 // stop stops the listener.
 // This method assumes that the receiver is already write-locked.
-func (self *HTTPServer) stop() {
+func (self *HTTPSServer) stop() {
 	(*self.listener).Close()
 	self.listener = nil
 }
 
+// createTLSConfig builds a TLS configuration that uses the certificates of the
+// receiver.
 func (self *HTTPSServer) createTLSConfig() (*tls.Config, error) {
 	// TODO: in a future release of Go, this will be improved since they are
 	// adding a GetCertificate() method to tls.Config!
@@ -130,22 +132,37 @@ func (self *HTTPSServer) createTLSConfig() (*tls.Config, error) {
 	// Build up the tls.Config to have all the certificates we need
 	certs := self.tls.Named
 	config := &tls.Config{}
+
 	if config.NextProtos == nil {
 		config.NextProtos = []string{"http/1.1"}
 	}
+
 	// TODO: here, put the CAs into the configuration
-	// TODO: here, set the default certificate!
-	config.Certificates = make([]tls.Certificate, len(certs))
-	for i, cert := range certs {
-		var err error
+
+	var err error
+	config.Certificates = make([]tls.Certificate, 1)
+
+	// Set the default certificate
+	config.Certificates[0], err = tls.LoadX509KeyPair(
+		self.tls.Default.CertificatePath, self.tls.Default.KeyPath)
+	if err != nil {
+		return nil, err
+	}
+
+	// idx is the current certificate index.
+	idx := 1
+
+	// Add each certificate to the Certificates list and NameToCertificate map.
+	for host, cert := range certs {
 		certPath := cert.CertificatePath
 		keyPath := cert.KeyPath
-		config.Certificates[i], err = tls.LoadX509KeyPair(certPath, keyPath)
+		pair, err := tls.LoadX509KeyPair(certPath, keyPath)
 		if err != nil {
 			return nil, err
 		}
+		config.Certificates = append(config.Certificates, pair)
+		config.NameToCertificate[host] = &config.Certificates[idx]
+		idx++
 	}
-	// TODO: here, build NameToCertificate manually
-	config.BuildNameToCertificate()
 	return config, nil
 }

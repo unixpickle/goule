@@ -3,7 +3,6 @@ package goule
 import (
 	"encoding/json"
 	"io/ioutil"
-	"sync"
 )
 
 type ExecutableInfo struct {
@@ -27,19 +26,23 @@ type ServiceInfo struct {
 	Executables  []ExecutableInfo `json:"executables"`
 }
 
-type ServerSetting struct {
-	Enabled bool
-	Port    int
+type ServerSettings struct {
+	Enabled bool `json:"enabled"`
+	Port    int  `json:"port"`
+}
+
+type AdminSettings struct {
+	Rules        []SourceURL `json:"rules"`
+	PasswordHash string      `json:"password_hash"`
 }
 
 type Configuration struct {
-	LoadedPath   string              `json:"-"`
-	Services     []ServiceInfo       `json:"services"`
-	TLS          TLSInfo             `json:"tls"`
-	HTTPSetting  ServerSetting       `json:"http"`
-	HTTPSSetting ServerSetting       `json:"https"`
-	AdminRules   []SourceURL         `json:"admin_rules"`
-	AdminHash    string              `json:"admin_hash"`
+	LoadedPath    string         `json:"-"`
+	Services      []ServiceInfo  `json:"services"`
+	TLS           TLSInfo        `json:"tls"`
+	HTTPSettings  ServerSettings `json:"http"`
+	HTTPSSettings ServerSettings `json:"https"`
+	Admin         AdminSettings  `json:"admin"`
 }
 
 func NewConfiguration() *Configuration {

@@ -42,7 +42,7 @@ func (self SourceURL) SubpathForURL(url *url.URL) string {
 // Apply attempts to apply a forward rule to a given URL.
 // The return value is the destination to forward to, or nil if the forward
 // rule is not applicable.
-func (self ForwardRule) Apply(url *url.URL) *URL {
+func (self ForwardRule) Apply(url *url.URL) *url.URL {
 	if !self.From.MatchesURL(url) {
 		return nil
 	}
@@ -50,5 +50,5 @@ func (self ForwardRule) Apply(url *url.URL) *URL {
 	result.Scheme = self.To.Scheme
 	result.Host = self.To.Hostname + ":" + strconv.Itoa(self.To.Port)
 	result.Path = self.To.Path + self.From.SubpathForURL(url)
-	return result
+	return &result
 }
