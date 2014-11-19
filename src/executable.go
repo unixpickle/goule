@@ -23,7 +23,7 @@ func (self *Executable) Start() error {
 		return errors.New("Executable already running.")
 	}
 
-	task := exec.Command(self.info.Arguments[0], 
+	task := exec.Command(self.info.Arguments[0],
 		self.info.Arguments[1:len(self.info.Arguments)]...)
 	for key, value := range self.info.Environment {
 		task.Env = append(task.Env, key+"="+value)
