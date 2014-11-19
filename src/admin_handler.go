@@ -3,6 +3,7 @@ package goule
 import (
 	"net/http"
 	pathlib "path"
+	"regexp"
 	"runtime"
 	"strings"
 )
@@ -19,13 +20,22 @@ func AdminHandler(res http.ResponseWriter, req *http.Request, path string) {
 		return
 	}
 
-	// TODO: here, validate the path before serving the file; this is a security
-	// concern.
+	// Validate the path
+	charMatch := "[a-zA-Z0-9\\-]"
+	htmlMatch := charMatch + "*\\.html"
+	cssMatch := "style\\/" + charMatch + "*\\.css"
+	matched, _ := regexp.MatchString("^\\/("+htmlMatch+"|"+cssMatch+
+		")$", path)
 
-	// Serve static file
-	_, filename, _, _ := runtime.Caller(1)
-	actualPath := pathlib.Join(pathlib.Dir(filename), "../static"+path)
-	http.ServeFile(res, req, actualPath)
+	if matched {
+		// Serve static file
+		_, filename, _, _ := runtime.Caller(1)
+		actualPath := pathlib.Join(pathlib.Dir(filename), "../static"+path)
+		http.ServeFile(res, req, actualPath)
+	} else {
+		res.Header().Set("Content-Type", "text/plain")
+		res.Write([]byte("Invalid path: " + path))
+	}
 }
 
 func AdminAPICall(res http.ResponseWriter, req *http.Request, api string) {

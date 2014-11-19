@@ -29,7 +29,7 @@ func (self SourceURL) MatchesURL(url *url.URL) bool {
 	hostname := url.Host
 	idx := strings.Index(hostname, ":")
 	if idx != -1 {
-		hostname = hostname[0 : idx]
+		hostname = hostname[0:idx]
 	}
 	if url.Scheme != self.Scheme || hostname != self.Hostname {
 		return false

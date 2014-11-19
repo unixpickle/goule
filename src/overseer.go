@@ -28,7 +28,7 @@ func NewOverseer() *Overseer {
 	httpsRouter := schemeRouter{"https", nil}
 	result := &Overseer{NewHTTPServer(&httpRouter), NewHTTPSServer(&httpsRouter),
 		sync.RWMutex{}, AdminSettings{}}
-    httpRouter.overseer = result
+	httpRouter.overseer = result
 	httpsRouter.overseer = result
 	return result
 }
