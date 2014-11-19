@@ -1,18 +1,19 @@
 package goule
 
 import (
+	"errors"
 	"os/exec"
 	"sync"
 )
 
 type Executable struct {
-	mutex   sync.RWMutex
 	info    ExecutableInfo
-	running *Cmd
+	mutex   sync.RWMutex
+	running *exec.Cmd
 }
 
-func NewExecutable() *Executable {
-	return new(Executable)
+func NewExecutable(info ExecutableInfo) *Executable {
+	return &Executable{info, sync.RWMutex{}, nil}
 }
 
 func (self *Executable) Start() error {
@@ -22,8 +23,9 @@ func (self *Executable) Start() error {
 		return errors.New("Executable already running.")
 	}
 
-	task := exec.Command(self.info.arguments...)
-	for key, value := range self.info.environment {
+	task := exec.Command(self.info.Arguments[0], 
+		self.info.Arguments[1:len(self.info.Arguments)]...)
+	for key, value := range self.info.Environment {
 		task.Env = append(task.Env, key+"="+value)
 	}
 
@@ -67,4 +69,8 @@ func (self *Executable) IsRunning() bool {
 	self.mutex.RLock()
 	defer self.mutex.RUnlock()
 	return self.running != nil
+}
+
+func (self *Executable) GetInfo() ExecutableInfo {
+	return self.info
 }
