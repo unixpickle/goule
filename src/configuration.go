@@ -7,6 +7,7 @@ import (
 
 type ExecutableInfo struct {
 	Dirname          string            `json:"dirname"`
+	LogId            string            `json:"log_id"`
 	LogStdout        bool              `json:"log_stdout"`
 	LogStderr        bool              `json:"log_stderr"`
 	SetGroupId       bool              `json:"set_group_id"`

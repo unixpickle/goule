@@ -21,26 +21,46 @@ func (self *Executable) Start() error {
 	if self.running != nil {
 		return errors.New("Executable already running.")
 	}
-	self.running = exec.Command(self.info.arguments...)
+
+	task := exec.Command(self.info.arguments...)
 	for key, value := range self.info.environment {
-		self.running.Env = append(self.running.Env, key+"="+value)
+		task.Env = append(task.Env, key+"="+value)
 	}
-	// TODO: set up stdout and stderr to get the output
-	// TODO: set the user ID and group ID
-	if err := self.running.Start(); err != nil {
-		self.running = nil
+
+	var err error
+	// Attempt to pipe to the log files
+	if task.Stdout, err = createLogStdout(self); err != nil {
 		return err
 	}
+	if task.Stderr, err = createLogStderr(self); err != nil {
+		return err
+	}
+	// Run the task
+	if err = task.Start(); err != nil {
+		return err
+	}
+	self.running = task
+
+	// In the background, wait for the task to stop
+	go func() {
+		task.Wait()
+		self.mutex.Lock()
+		if self.running == task {
+			self.running = nil
+		}
+		self.mutex.Unlock()
+	}()
+
 	return nil
 }
 
 func (self *Executable) Stop() {
 	self.mutex.Lock()
-	defer self.mutex.Unlock()
 	if self.running.Process != nil {
 		self.running.Process.Kill()
 	}
 	self.running = nil
+	self.mutex.Unlock()
 }
 
 func (self *Executable) IsRunning() bool {
