@@ -21,14 +21,17 @@ func (self *Executable) Start() error {
 	if self.running != nil {
 		return errors.New("Executable already running.")
 	}
-	return errors.New("NYI")
-	// self.running = exec.Command(self.info.arguments[0])
-
-	// TODO: add the rest of the arguments
+	self.running = exec.Command(self.info.arguments...)
+	for key, value := range self.info.environment {
+		self.running.Env = append(self.running.Env, key+"="+value)
+	}
 	// TODO: set up stdout and stderr to get the output
 	// TODO: set the user ID and group ID
-	// TODO: set up the environment
-	// TODO: run the process etc.
+	if err := self.running.Start(); err != nil {
+		self.running = nil
+		return err
+	}
+	return nil
 }
 
 func (self *Executable) Stop() {
