@@ -15,14 +15,14 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
  * Add features to executable system
-   * Relaunching + extended state: IsRunning, IsRelaunching
-   * Targetted start/stop/restart functions
-   * Logging to a file
+   * Functionality: automatic relaunch, stop, start, status
  * Create HTTP reverse proxy
  * Apply HTTP proxy to forward rules
  * Implement web interface
    * JSON/AJAX APIs
    * Hellish nightmare of implementing a GUI
+ * Logging to a file
+ * Buffered/truncated logging
 
 ## Done
 
@@ -33,8 +33,8 @@ I'm moving things from my TODO list to this spot once I do them:
    * Setup static file server
  * Make admin HTTP static file server secure!
  * Create executable management system
+    * Targetted start/stop functions (no restart, for various reasons)
 
 ## Possible features down the road
 
  * Logging to websockets
- * Logging which removes old data to avoid overflow
