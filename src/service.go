@@ -1,6 +1,9 @@
 package goule
 
-import "sync"
+import (
+	"errors"
+	"sync"
+)
 
 type Service struct {
 	mutex        sync.RWMutex
