@@ -36,7 +36,7 @@ func (self *Service) SetForwardRules(rules []ForwardRule) {
 	self.mutex.Unlock()
 }
 
-func (self *Service) GetExecutableInfos() ([]ExecutableInfo, []ExecutableStatus) {
+func (self *Service) GetExecutables() ([]ExecutableInfo, []ExecutableStatus) {
 	self.mutex.RLock()
 	defer self.mutex.RUnlock()
 	list := make([]ExecutableInfo, len(self.executables))
@@ -48,7 +48,7 @@ func (self *Service) GetExecutableInfos() ([]ExecutableInfo, []ExecutableStatus)
 	return list, stats
 }
 
-func (self *Service) UpdateExecutableInfos(infos []ExecutableInfo) {
+func (self *Service) UpdateExecutables(infos []ExecutableInfo) {
 	self.mutex.Lock()
 	self.stopAllInternal()
 	self.executables = make([]*Executable, len(infos))
@@ -80,6 +80,24 @@ func (self *Service) StartAutolaunch() {
 		}
 	}
 	self.mutex.Unlock()
+}
+
+func (self *Service) StartAt(idx int) error {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	if idx < 0 || idx >= len(self.executables) {
+		return errors.New("Invalid executable index.")
+	}
+	return self.executables[idx].Start()
+}
+
+func (self *Service) StopAt(idx int) error {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	if idx < 0 || idx >= len(self.executables) {
+		return errors.New("Invalid executable index.")
+	}
+	return self.executables[idx].Stop()
 }
 
 func (self *Service) stopAllInternal() {
