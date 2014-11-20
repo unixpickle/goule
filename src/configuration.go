@@ -5,11 +5,17 @@ import (
 	"io/ioutil"
 )
 
+type LogSettings struct {
+	Enabled bool `json:"enabled"`
+	CapSize bool `json:"cap_size"`
+	MaxSize int  `json:"max_size"`
+}
+
 type ExecutableInfo struct {
 	Dirname          string            `json:"dirname"`
 	LogId            string            `json:"log_id"`
-	LogStdout        bool              `json:"log_stdout"`
-	LogStderr        bool              `json:"log_stderr"`
+	Stdout           LogSettings       `json:"stdout"`
+	Stderr           LogSettings       `json:"stderr"`
 	SetGroupId       bool              `json:"set_group_id"`
 	SetUserId        bool              `json:"set_user_id"`
 	GroupId          int               `json:"group_id"`

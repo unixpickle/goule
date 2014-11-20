@@ -5,16 +5,16 @@ import (
 	"io/ioutil"
 )
 
-// createLogStdout takes an already-locked executable and creates a stream for
-// its standard output.
-func createLogStdout(exc *Executable) (io.Writer, error) {
+// createLogStdout takes the info for an executable and returns a writer to which
+// standard output should be written.
+func createLogStdout(info ExecutableInfo) (io.Writer, error) {
 	// TODO: here, open a file etc.
 	return ioutil.Discard, nil
 }
 
-// createLogStderr takes an already-locked executable and creates a steram for
-// its standard error.
-func createLogStderr(exc *Executable) (io.Writer, error) {
+// createLogStderr takes the info for an executable and returns a writer to which
+// standard error should be written.
+func createLogStderr(info ExecutableInfo) (io.Writer, error) {
 	// TODO: here, open a file etc.
 	return ioutil.Discard, nil
 }
