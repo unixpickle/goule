@@ -91,7 +91,8 @@ func (self *Service) StartAt(idx int) error {
 	if idx < 0 || idx >= len(self.executables) {
 		return errors.New("Invalid executable index.")
 	}
-	return self.executables[idx].Start()
+	self.executables[idx].Start()
+	return nil
 }
 
 func (self *Service) StopAt(idx int) error {
@@ -100,7 +101,8 @@ func (self *Service) StopAt(idx int) error {
 	if idx < 0 || idx >= len(self.executables) {
 		return errors.New("Invalid executable index.")
 	}
-	return self.executables[idx].Stop()
+	self.executables[idx].Stop()
+	return nil
 }
 
 func (self *Service) stopAllInternal() {

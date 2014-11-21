@@ -10,7 +10,7 @@ type StoppableLock struct {
 	mutex          sync.Mutex
 	stopped        bool
 	timeoutSkipped bool
-	skipTimeout    chan bool
+	skipTimeout    chan struct{}
 }
 
 // NewStoppableLock creates an unlocked unstopped StoppableLock
@@ -21,7 +21,7 @@ func NewStoppableLock() *StoppableLock {
 // Lock seizes the lock or returns false if the lock has been stopped.
 func (self *StoppableLock) Lock() bool {
 	self.mutex.Lock()
-	if stopped {
+	if self.stopped {
 		self.mutex.Unlock()
 		return false
 	}
@@ -44,7 +44,7 @@ func (self *StoppableLock) Stop() {
 	}
 	self.stopped = true
 	if self.skipTimeout != nil && !self.timeoutSkipped {
-		self.skipTimeout <- true
+		self.skipTimeout <- struct{}{}
 		self.timeoutSkipped = true
 	}
 	self.Unlock()
@@ -54,11 +54,8 @@ func (self *StoppableLock) Stop() {
 // The caller must currently own the lock.
 // The Wait() will return true, but it may do so prematurely.
 func (self *StoppableLock) SkipWait() {
-	if self.timeoutSkipped {
-		return
-	}
-	if self.skipTimeout != nil {
-		self.skipTimeout <- true
+	if self.skipTimeout != nil && !self.timeoutSkipped {
+		self.skipTimeout <- struct{}{}
 		self.timeoutSkipped = true
 	}
 }
@@ -68,19 +65,19 @@ func (self *StoppableLock) SkipWait() {
 func (self *StoppableLock) Wait(duration time.Duration) bool {
 	if self.stopped {
 		return false
-	} else if self.killTimeout != nil {
+	} else if self.skipTimeout != nil {
 		panic("StoppableLock already waiting on another thread.")
 	} else {
-		channel := make(chan bool, 1)
-		self.killTimeout = channel
-		self.timoutKilled = false
+		channel := make(chan struct{}, 1)
+		self.skipTimeout = channel
+		self.timeoutSkipped = false
 		self.Unlock()
 		select {
 		case <-channel:
 		case <-time.After(duration):
 		}
 		self.mutex.Lock()
-		self.killTimeout = nil
+		self.skipTimeout = nil
 		if self.stopped {
 			self.mutex.Unlock()
 			return false
