@@ -35,6 +35,7 @@ func (self *StoppableLock) Unlock() {
 
 // Stop stops the lock.
 // The caller must currently own the lock.
+// After the call, the owner loses ownership of the lock.
 // No further Lock() or Wait() calls will work.
 // Any current timeouts will be canceled.
 func (self *StoppableLock) Stop() {
@@ -46,6 +47,7 @@ func (self *StoppableLock) Stop() {
 		self.skipTimeout <- true
 		self.timeoutSkipped = true
 	}
+	self.Unlock()
 }
 
 // SkipTimeout stops any current Wait() that's running.
