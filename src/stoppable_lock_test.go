@@ -1,6 +1,9 @@
 package goule
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestStop(t *testing.T) {
 	// Serial stops
@@ -10,7 +13,7 @@ func TestStop(t *testing.T) {
 	}
 	lock.Stop()
 	if lock.Lock() {
-		t.Fatal("Lock should have failed.")
+		t.Error("Lock should have failed.")
 	}
 	
 	// Parallel stops
@@ -30,5 +33,64 @@ func TestStop(t *testing.T) {
 	b := <-channel
 	if !a || b {
 		t.Error("Parallel Stop() failed.")
+	}
+}
+
+func TestSkipWait(t *testing.T) {
+	lock := NewStoppableLock()
+	waitingChannel := make(chan struct{})
+	channel := make(chan bool)
+	
+	go func() {
+		lock.Lock()
+		waitingChannel <- struct{}{}
+		res := lock.Wait(time.Hour)
+		if res {
+			lock.Unlock()
+		}
+		channel <- res
+	}()
+	
+	<-waitingChannel
+	lock.Lock()
+	lock.SkipWait()
+	lock.Unlock()
+	
+	select {
+	case val := <-channel:
+		if !val {
+			t.Fatal("Wait returned false after SkipWait")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Wait timed out after SkipWait call.")
+	}
+}
+
+func TestStopWait(t *testing.T) {
+	lock := NewStoppableLock()
+	waitingChannel := make(chan struct{})
+	channel := make(chan bool)
+	
+	go func() {
+		lock.Lock()
+		waitingChannel <- struct{}{}
+		res := lock.Wait(time.Hour)
+		if res {
+			lock.Unlock()
+		}
+		channel <- res
+	}()
+	
+	<-waitingChannel
+	lock.Lock()
+	lock.Stop()
+	
+	select {
+	case val := <-channel:
+		if val {
+			t.Fatal("Wait returned true after Stop")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("Wait timed out after SkipWait call.")
 	}
 }

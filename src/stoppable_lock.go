@@ -53,11 +53,14 @@ func (self *StoppableLock) Stop() {
 // SkipTimeout stops any current Wait() that's running.
 // The caller must currently own the lock.
 // The Wait() will return true, but it may do so prematurely.
-func (self *StoppableLock) SkipWait() {
+// Returns true if and only if the lock was currently Wait()ing.
+func (self *StoppableLock) SkipWait() bool {
 	if self.skipTimeout != nil && !self.timeoutSkipped {
 		self.skipTimeout <- struct{}{}
 		self.timeoutSkipped = true
+		return true
 	}
+	return false
 }
 
 // Wait waits for the StoppableLock to be stopped, the wait to be canceled, or
