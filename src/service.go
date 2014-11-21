@@ -39,14 +39,14 @@ func (self *Service) SetForwardRules(rules []ForwardRule) {
 	self.mutex.Unlock()
 }
 
-func (self *Service) GetExecutables() ([]ExecutableInfo, []ExecutableStatus) {
+func (self *Service) GetExecutables() ([]ExecutableInfo, []ExecutableStats) {
 	self.mutex.RLock()
 	defer self.mutex.RUnlock()
 	list := make([]ExecutableInfo, len(self.executables))
-	stats := make([]ExecutableStatus, len(self.executables))
+	stats := make([]ExecutableStats, len(self.executables))
 	for i, exc := range self.executables {
 		list[i] = exc.GetInfo()
-		stats[i] = exc.GetStatus()
+		stats[i] = exc.GetStats()
 	}
 	return list, stats
 }

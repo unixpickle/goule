@@ -15,17 +15,27 @@ const (
 
 type ExecutableStatus int
 
+type ExecutableStats struct {
+	Status     ExecutableStatus `json:"status"`
+	LastTerm   time.Time        `json:"last_term"`
+	LastLaunch time.Time        `json:"last_launch"`
+	LastError  time.Time        `json:"last_error"`
+	Error      string           `json:"error"`
+}
+
 type Executable struct {
 	info       ExecutableInfo
 	globalLock sync.Mutex
 	bgLock     *StoppableLock
-	status     ExecutableStatus
+	stats      ExecutableStats
 	command    *exec.Cmd
 }
 
 // NewExecutable creates a new executable which is not running.
 func NewExecutable(info ExecutableInfo) *Executable {
-	return &Executable{info, sync.Mutex{}, nil, EXECUTABLE_HALTED, nil}
+	result := new(Executable)
+	result.info = info
+	return result
 }
 
 // Start starts the executable if it is not currently running or if it is in the
@@ -39,7 +49,7 @@ func (self *Executable) Start() {
 		self.bgLock.Unlock()
 	} else {
 		self.bgLock = NewStoppableLock()
-		self.status = EXECUTABLE_STARTING
+		self.stats.Status = EXECUTABLE_STARTING
 		go self.backgroundThread(self.bgLock)
 	}
 }
@@ -52,6 +62,8 @@ func (self *Executable) Stop() {
 	if !self.attemptLock() {
 		return
 	}
+
+	self.stats.LastTerm = time.Now()
 
 	// Kill the task if it's running
 	if self.command != nil && self.command.Process != nil {
@@ -68,16 +80,17 @@ func (self *Executable) GetInfo() ExecutableInfo {
 	return self.info
 }
 
-// GetStatus returns the current status of the executable in a thread-safe
-// manner.
-func (self *Executable) GetStatus() ExecutableStatus {
+// GetStats returns the live info for the executable.
+func (self *Executable) GetStats() ExecutableStats {
 	self.globalLock.Lock()
 	defer self.globalLock.Unlock()
 	if !self.attemptLock() {
-		return EXECUTABLE_HALTED
+		info := self.stats
+		info.Status = EXECUTABLE_HALTED
+		return info
 	}
 	defer self.bgLock.Unlock()
-	return self.status
+	return self.stats
 }
 
 // attemptLock attempts to lock bgLock.
@@ -123,21 +136,26 @@ func (self *Executable) backgroundThread(lock *StoppableLock) {
 		return
 	}
 	for {
-		cmd, _ := self.createCommand()
+		cmd, err := self.createCommand()
 		if cmd != nil {
-			self.status = EXECUTABLE_RUNNING
+			self.stats.Status = EXECUTABLE_RUNNING
+			self.stats.LastLaunch = time.Now()
 			self.command = cmd
 			lock.Unlock()
 			cmd.Wait()
 			if !lock.Lock() {
 				return
 			}
+			self.stats.LastTerm = time.Now()
+		} else {
+			self.stats.LastError = time.Now()
+			self.stats.Error = err.Error()
 		}
 		if !self.info.Relaunch {
 			lock.Stop()
 			return
 		}
-		self.status = EXECUTABLE_RESTARTING
+		self.stats.Status = EXECUTABLE_RESTARTING
 		if !lock.Wait(time.Second * time.Duration(self.info.RelaunchInterval)) {
 			return
 		}

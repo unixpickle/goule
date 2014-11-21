@@ -11,15 +11,19 @@ type LogSettings struct {
 	MaxSize int  `json:"max_size"`
 }
 
+type UserIdentity struct {
+	SetGroupId bool `json:"set_group_id"`
+	SetUserId  bool `json:"set_user_id"`
+	GroupId    int  `json:"group_id"`
+	UserId     int  `json:"user_id"`
+}
+
 type ExecutableInfo struct {
 	Dirname          string            `json:"dirname"`
 	LogId            string            `json:"log_id"`
 	Stdout           LogSettings       `json:"stdout"`
 	Stderr           LogSettings       `json:"stderr"`
-	SetGroupId       bool              `json:"set_group_id"`
-	SetUserId        bool              `json:"set_user_id"`
-	GroupId          int               `json:"group_id"`
-	UserId           int               `json:"user_id"`
+	Identity         UserIdentity      `json:"identity"`
 	Arguments        []string          `json:"arguments"`
 	Environment      map[string]string `json:"environment"`
 	Autolaunch       bool              `json:"autolaunch"`

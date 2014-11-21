@@ -15,7 +15,7 @@ func TestStop(t *testing.T) {
 	if lock.Lock() {
 		t.Error("Lock should have failed.")
 	}
-	
+
 	// Parallel stops
 	lock = NewStoppableLock()
 	channel := make(chan bool)
@@ -40,7 +40,7 @@ func TestSkipWait(t *testing.T) {
 	lock := NewStoppableLock()
 	waitingChannel := make(chan struct{})
 	channel := make(chan bool)
-	
+
 	go func() {
 		lock.Lock()
 		waitingChannel <- struct{}{}
@@ -50,12 +50,12 @@ func TestSkipWait(t *testing.T) {
 		}
 		channel <- res
 	}()
-	
+
 	<-waitingChannel
 	lock.Lock()
 	lock.SkipWait()
 	lock.Unlock()
-	
+
 	select {
 	case val := <-channel:
 		if !val {
@@ -70,7 +70,7 @@ func TestStopWait(t *testing.T) {
 	lock := NewStoppableLock()
 	waitingChannel := make(chan struct{})
 	channel := make(chan bool)
-	
+
 	go func() {
 		lock.Lock()
 		waitingChannel <- struct{}{}
@@ -80,11 +80,11 @@ func TestStopWait(t *testing.T) {
 		}
 		channel <- res
 	}()
-	
+
 	<-waitingChannel
 	lock.Lock()
 	lock.Stop()
-	
+
 	select {
 	case val := <-channel:
 		if val {

@@ -14,7 +14,6 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Add errors and launch/exit dates to ExecutableInfo
  * Begin JSON/AJAX APIs for managing services and executables
  * Create HTTP reverse proxy
  * Apply HTTP proxy to forward rules
@@ -37,6 +36,7 @@ I'm moving things from my TODO list to this spot once I do them:
     * Functionality: automatic relaunch, stop, start, status
  * Rewrite executable system to be nicer (once I know how)
  * Create tests for StoppableLock
+ * Add errors and launch/exit dates to ExecutableInfo
 
 ## Possible TODOs down the road
 
