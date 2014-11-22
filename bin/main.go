@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -26,5 +28,11 @@ func main() {
 		os.Exit(1)
 	}
 	fmt.Println("Goule running.")
-	select {}
+	
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	
+	<-sigChan
+	fmt.Println("Goule shutting down...")
+	overseer.Stop()
 }

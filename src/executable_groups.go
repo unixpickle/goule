@@ -17,7 +17,7 @@ func NewExecutableGroups(infos []ServiceInfo) ExecutableGroups {
 }
 
 // Remove deletes an executable group from the list and stops it.
-// This is not thread-safe.
+// This method is not thread-safe.
 func (self ExecutableGroups) Remove(name string) {
 	if group, ok := self[name]; ok {
 		group.StopAll()
@@ -27,7 +27,7 @@ func (self ExecutableGroups) Remove(name string) {
 
 // Add adds an executable group to the list if it is not already present.
 // Returns true if the group was added.
-// This is not thread-safe.
+// This method is not thread-safe.
 func (self ExecutableGroups) Add(info ServiceInfo) bool {
 	if _, ok := self[info.Name]; ok {
 		return false
@@ -40,10 +40,19 @@ func (self ExecutableGroups) Add(info ServiceInfo) bool {
 	return true
 }
 
-// Autolaunch runs StartAutolaunch on all the receiver's groups.
+// Autolaunch calls StartAutolaunch on all the receiver's groups.
+// This method is not thread-safe.
 func (self ExecutableGroups) Autolaunch() {
 	for _, group := range self {
 		group.StartAutolaunch()
+	}
+}
+
+// StopAll calls StopAll on all the receiver's groups.
+// This method is not thread-safe.
+func (self ExecutableGroups) StopAll() {
+	for _, group := range self {
+		group.StopAll()
 	}
 }
 
@@ -97,4 +106,13 @@ func (self ExecutableGroup) StopAt(idx int) error {
 	}
 	self[idx].Stop()
 	return nil
+}
+
+// GetDescriptions returns the description for each element in this group.
+func (self ExecutableGroup) GetDescriptions() []ExecutableDescription {
+	result := make([]ExecutableDescription, len(self))
+	for i, item := range self {
+		result[i] = item.GetDescription()
+	}
+	return result
 }

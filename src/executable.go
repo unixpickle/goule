@@ -22,6 +22,11 @@ type ExecutableStats struct {
 	Error      string           `json:"error"`
 }
 
+type ExecutableDescription struct {
+	Stats ExecutableStats `json:"stats"`
+	Info  ExecutableInfo  `json:"info"`
+}
+
 type Executable struct {
 	info    ExecutableInfo
 	bgLock  *StoppableLock
@@ -85,6 +90,12 @@ func (self *Executable) GetStats() ExecutableStats {
 	}
 	defer self.bgLock.Unlock()
 	return self.stats
+}
+
+// GetDescription returns the description for this executable.
+// This method is not thread safe.
+func (self *Executable) GetDescription() ExecutableDescription {
+	return ExecutableDescription{self.GetStats(), self.GetInfo()}
 }
 
 // attemptLock attempts to lock bgLock.

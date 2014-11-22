@@ -14,7 +14,6 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Rewrite the entire thing to be simpler
  * Begin JSON/AJAX APIs for managing services and executables
    * Call for changing the password
    * Call for changing HTTP settings

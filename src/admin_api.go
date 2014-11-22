@@ -81,7 +81,7 @@ func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 }
 
 func ListServicesAPI(ctx *Context, body []byte) (interface{}, error) {
-	return "This API is not yet implemented!", nil
+	return ctx.Overseer.GetServiceDescriptions(), nil
 }
 
 func readRequest(ctx *http.Request) ([]byte, error) {
