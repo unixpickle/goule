@@ -106,6 +106,7 @@ func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
 	return true, nil
 }
 
+// The interface for the "set_http" API call.
 func SetHTTPAPI(ctx *Context, body []byte) (interface{}, error) {
 	var settings ServerSettings
 	if err := json.Unmarshal(body, &settings); err != nil {
@@ -115,6 +116,7 @@ func SetHTTPAPI(ctx *Context, body []byte) (interface{}, error) {
 	return true, nil
 }
 
+// The interface for the "set_https" API call.
 func SetHTTPSAPI(ctx *Context, body []byte) (interface{}, error) {
 	var settings ServerSettings
 	if err := json.Unmarshal(body, &settings); err != nil {
