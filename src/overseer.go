@@ -96,6 +96,33 @@ func (self *Overseer) SetPasswordHash(newHash string) {
 	self.configuration.Save()
 }
 
+// SetHTTPSettings updates the HTTP settings and adjusts the server accordingly.
+// This is thread-safe.
+func (self *Overseer) SetHTTPSettings(settings ServerSettings) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	self.configuration.HTTPSettings = settings
+	self.httpServer.Stop()
+	if settings.Enabled {
+		self.httpServer.Start(settings.Port)
+	}
+	self.configuration.Save()
+}
+
+// SetHTTPSSettings updates the HTTPS settings and adjusts the server
+// accordingly.
+// This is thread-safe.
+func (self *Overseer) SetHTTPSSettings(settings ServerSettings) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	self.configuration.HTTPSSettings = settings
+	self.httpsServer.Stop()
+	if settings.Enabled {
+		self.httpsServer.Start(settings.Port, self.configuration.TLS)
+	}
+	self.configuration.Save()
+}
+
 // GetSessions returns the overseer's session manager.
 // This is thread-safe.
 func (self *Overseer) GetSessions() *Sessions {
@@ -103,6 +130,8 @@ func (self *Overseer) GetSessions() *Sessions {
 	return self.sessions
 }
 
+// GetServiceDescriptions returns descriptions for every service.
+// This is thread-safe.
 func (self *Overseer) GetServiceDescriptions() []ServiceDescription {
 	self.mutex.RLock()
 	defer self.mutex.RUnlock()

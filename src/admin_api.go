@@ -12,6 +12,9 @@ import (
 
 type apiFunc func(*Context, []byte) (interface{}, error)
 
+// TryAdminAPI checks if the passed context corresponds to an API call.
+// Returns true if and only if the context was an API call.
+// This will send a response and process the request synchronously.
 func TryAdminAPI(ctx *Context) bool {
 	// The API path must start with "/api/"
 	if !strings.HasPrefix(ctx.Admin.Path, "/api/") {
@@ -32,6 +35,8 @@ func TryAdminAPI(ctx *Context) bool {
 	return true
 }
 
+// RunAPICall runs an API call on a given context, given the request data.
+// Returns false if any sort of API error occurred.
 func RunAPICall(ctx *Context, contents []byte, api string) bool {
 	// Prevent unauthorized requests
 	if !ctx.Admin.Authorized && api != "auth" {
@@ -41,7 +46,8 @@ func RunAPICall(ctx *Context, contents []byte, api string) bool {
 	}
 	// Lookup the API and find the associated function
 	handlers := map[string]apiFunc{"auth": AuthAPI,
-		"services": ListServicesAPI, "change_password": ChangePasswordAPI}
+		"services": ListServicesAPI, "change_password": ChangePasswordAPI,
+		"set_http": SetHTTPAPI, "set_https": SetHTTPSAPI}
 	handler, ok := handlers[api]
 	if !ok {
 		respondJSON(ctx.Response, http.StatusNotFound, "No such API: "+api)
@@ -58,6 +64,7 @@ func RunAPICall(ctx *Context, contents []byte, api string) bool {
 	return true
 }
 
+// The interface for the "auth" API call.
 func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 	var password string
 	if err := json.Unmarshal(body, &password); err != nil {
@@ -77,13 +84,15 @@ func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 	cookie := &http.Cookie{Name: SessionIdCookie, Value: sessionId,
 		Path: ctx.Admin.Rule.Path, Domain: ctx.Admin.Rule.Hostname}
 	http.SetCookie(ctx.Response, cookie)
-	return "Authentication successful.", nil
+	return true, nil
 }
 
+// The interface for the "services" API call.
 func ListServicesAPI(ctx *Context, body []byte) (interface{}, error) {
 	return ctx.Overseer.GetServiceDescriptions(), nil
 }
 
+// The interface for the "change_password" API call.
 func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
 	var password string
 	if err := json.Unmarshal(body, &password); err != nil {
@@ -94,7 +103,25 @@ func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
 	hash := sha256.Sum256([]byte(password))
 	hex := hex.EncodeToString(hash[:])
 	ctx.Overseer.SetPasswordHash(strings.ToLower(hex))
-	return "Changed successfully.", nil
+	return true, nil
+}
+
+func SetHTTPAPI(ctx *Context, body []byte) (interface{}, error) {
+	var settings ServerSettings
+	if err := json.Unmarshal(body, &settings); err != nil {
+		return nil, err
+	}
+	ctx.Overseer.SetHTTPSettings(settings)
+	return true, nil
+}
+
+func SetHTTPSAPI(ctx *Context, body []byte) (interface{}, error) {
+	var settings ServerSettings
+	if err := json.Unmarshal(body, &settings); err != nil {
+		return nil, err
+	}
+	ctx.Overseer.SetHTTPSSettings(settings)
+	return true, nil
 }
 
 func readRequest(ctx *http.Request) ([]byte, error) {

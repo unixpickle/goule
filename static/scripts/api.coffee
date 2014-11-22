@@ -25,3 +25,9 @@ window.goule.listServices = (callback) ->
 
 window.goule.changePassword = (newPassword, callback) ->
 	window.goule.boolApi 'change_password', newPassword, callback
+
+window.goule.setHttp = (enabled, port, callback) ->
+	window.goule.boolApi 'set_http', {enabled: enabled, port: port}, callback
+
+window.goule.setHttps = (enabled, port, callback) ->
+	window.goule.boolApi 'set_https', {enabled: enabled, port: port}, callback

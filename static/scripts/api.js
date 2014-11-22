@@ -44,4 +44,18 @@
     return window.goule.boolApi('change_password', newPassword, callback);
   };
 
+  window.goule.setHttp = function(enabled, port, callback) {
+    return window.goule.boolApi('set_http', {
+      enabled: enabled,
+      port: port
+    }, callback);
+  };
+
+  window.goule.setHttps = function(enabled, port, callback) {
+    return window.goule.boolApi('set_https', {
+      enabled: enabled,
+      port: port
+    }, callback);
+  };
+
 }).call(this);
