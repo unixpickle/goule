@@ -12,10 +12,6 @@ import (
 
 type handlerFunc func(*RouteRequest, []byte) ([]byte, error)
 
-type AuthAPIBody struct {
-	Password string `json:"password"`
-}
-
 func RouteAdminAPI(req *RouteRequest) bool {
 	if !strings.HasPrefix(req.AdminPath, "/api/") {
 		return false
@@ -30,7 +26,8 @@ func RouteAdminAPI(req *RouteRequest) bool {
 	}
 
 	// Get the handler to use
-	handlers := map[string]handlerFunc{"auth": AuthAPI}
+	handlers := map[string]handlerFunc{"auth": AuthAPI,
+		"services": ListServicesAPI}
 	handler, ok := handlers[api]
 	if !ok {
 		respondError(req.Response, http.StatusNotFound, "No such API: "+api)
@@ -55,6 +52,32 @@ func RouteAdminAPI(req *RouteRequest) bool {
 		req.Response.Write(responseData)
 	}
 	return true
+}
+
+func AuthAPI(req *RouteRequest, body []byte) ([]byte, error) {
+	var password string
+	if err := json.Unmarshal(body, &password); err != nil {
+		return nil, err
+	}
+
+	// Check the password
+	hash := sha256.Sum256([]byte(password))
+	hex := hex.EncodeToString(hash[:])
+	adminHash := req.Overseer.GetAdminSettings().PasswordHash
+	if strings.ToLower(hex) != strings.ToLower(adminHash) {
+		return nil, errors.New("The provided password was incorrect.")
+	}
+
+	// Create a new session
+	sessionId := req.Overseer.GetSessions().Login()
+	cookie := &http.Cookie{Name: SessionIdCookie, Value: sessionId,
+		Path: req.AdminRule.Path}
+	http.SetCookie(req.Response, cookie)
+	return []byte("\"Authentication successful.\""), nil
+}
+
+func ListServicesAPI(req *RouteRequest, body []byte) ([]byte, error) {
+	return json.Marshal(req.Overseer.GetServices())
 }
 
 func readRequest(req *http.Request) ([]byte, error) {
@@ -83,26 +106,4 @@ func respondError(res http.ResponseWriter, code int, msg string) {
 	res.Header().Set("Content-Length", strconv.Itoa(len(data)))
 	res.WriteHeader(code)
 	res.Write(data)
-}
-
-func AuthAPI(req *RouteRequest, body []byte) ([]byte, error) {
-	var value AuthAPIBody
-	if err := json.Unmarshal(body, &value); err != nil {
-		return nil, err
-	}
-
-	// Check the password
-	hash := sha256.Sum256([]byte(value.Password))
-	hex := hex.EncodeToString(hash[:])
-	adminHash := req.Overseer.GetAdminSettings().PasswordHash
-	if strings.ToLower(hex) != strings.ToLower(adminHash) {
-		return nil, errors.New("The provided password was incorrect.")
-	}
-
-	// Create a new session
-	sessionId := req.Overseer.GetSessions().Login()
-	cookie := &http.Cookie{Name: SessionIdCookie, Value: sessionId,
-		Path: req.AdminRule.Path}
-	http.SetCookie(req.Response, cookie)
-	return []byte("\"Authentication successful.\""), nil
 }

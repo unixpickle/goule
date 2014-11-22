@@ -6,17 +6,25 @@ import (
 )
 
 type Overseer struct {
-	httpServer  *HTTPServer
-	httpsServer *HTTPSServer
-	adminMutex  sync.RWMutex
-	admin       AdminSettings
-	services    []Service
-	sessions    *Sessions
+	httpServer    *HTTPServer
+	httpsServer   *HTTPSServer
+	adminMutex    sync.RWMutex
+	admin         AdminSettings
+	servicesMutex sync.RWMutex
+	services      []*Service
+	sessions      *Sessions
 }
 
 type schemeRouter struct {
 	scheme   string
 	overseer *Overseer
+}
+
+type ServiceDescription struct {
+	Name            string            `json:"name"`
+	ForwardRules    []ForwardRule     `json:"forward_rules"`
+	ExecutableInfos []ExecutableInfo  `json:"executable_infos"`
+	ExecutableStats []ExecutableStats `json:"executable_stats"`
 }
 
 func (self *schemeRouter) ServeHTTP(x http.ResponseWriter, y *http.Request) {
@@ -29,7 +37,7 @@ func NewOverseer() *Overseer {
 	httpsRouter := schemeRouter{"https", nil}
 	result := &Overseer{NewHTTPServer(&httpRouter),
 		NewHTTPSServer(&httpsRouter), sync.RWMutex{}, AdminSettings{},
-		[]Service{}, NewSessions()}
+		sync.RWMutex{}, []*Service{}, NewSessions()}
 	httpRouter.overseer = result
 	httpsRouter.overseer = result
 	return result
@@ -74,6 +82,21 @@ func (self *Overseer) GetAdminSettings() AdminSettings {
 // GetSessions is a non-blocking non-locking operation
 func (self *Overseer) GetSessions() *Sessions {
 	return self.sessions
+}
+
+// GetServices takes a snapshot of all the active services.
+func (self *Overseer) GetServices() []ServiceDescription {
+	self.servicesMutex.RLock()
+	defer self.servicesMutex.RUnlock()
+	result := make([]ServiceDescription, len(self.services))
+	for i, service := range self.services {
+		result[i].Name = service.GetName()
+		result[i].ForwardRules = service.GetForwardRules()
+		info, stats := service.GetExecutables()
+		result[i].ExecutableInfos = info
+		result[i].ExecutableStats = stats
+	}
+	return result
 }
 
 func (self *Overseer) IsRunning() bool {
