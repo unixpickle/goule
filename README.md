@@ -15,7 +15,6 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
  * Begin JSON/AJAX APIs for managing services and executables
-   * Implement login AJAX call
    * Call for listing services
    * Call for changing the password
    * Call for changing HTTP settings
@@ -50,6 +49,7 @@ I'm moving things from my TODO list to this spot once I do them:
  * Begin JSON/AJAX APIs for managing services and executables
    * Make Sessions a part of Overseer
    * Create request context for routing handlers
+   * Implement login AJAX call
 
 ## Possible TODOs down the road
 

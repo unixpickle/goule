@@ -5,6 +5,8 @@ import (
 	"net/url"
 )
 
+const SessionIdCookie = "goule_id"
+
 type RouteRequest struct {
 	Response   http.ResponseWriter
 	Request    *http.Request
@@ -12,6 +14,7 @@ type RouteRequest struct {
 	Overseer   *Overseer
 	Authorized bool
 	AdminPath  string
+	AdminRule  SourceURL
 }
 
 func NewRouteRequest(res http.ResponseWriter, req *http.Request,
@@ -20,7 +23,7 @@ func NewRouteRequest(res http.ResponseWriter, req *http.Request,
 	url := *req.URL
 	url.Scheme = scheme
 	url.Host = req.Host
-	return &RouteRequest{res, req, url, overseer, false, ""}
+	return &RouteRequest{res, req, url, overseer, false, "", SourceURL{}}
 }
 
 func Route(req *RouteRequest) {
@@ -45,8 +48,9 @@ func handleAdminRule(req *RouteRequest) bool {
 	for _, source := range req.Overseer.GetAdminSettings().Rules {
 		if source.MatchesURL(&req.URL) {
 			// Configure the administrative fields of the RouteRequest
+			req.AdminRule = source
 			req.AdminPath = source.SubpathForURL(&req.URL)
-			cookie, _ := req.Request.Cookie("goule_id")
+			cookie, _ := req.Request.Cookie(SessionIdCookie)
 			if cookie != nil {
 				if req.Overseer.GetSessions().Validate(cookie.Value) {
 					req.Authorized = true

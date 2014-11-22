@@ -19,6 +19,7 @@ type Sessions struct {
 
 func NewSessions() *Sessions {
 	res := new(Sessions)
+	res.sessions = map[string]time.Time{}
 	res.secret = "default"
 	res.timeout = 30 * 60
 	return res
