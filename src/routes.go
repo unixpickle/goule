@@ -27,16 +27,13 @@ func NewRouteRequest(res http.ResponseWriter, req *http.Request,
 }
 
 func Route(req *RouteRequest) {
-	if handleForwardRule(req) {
-		return
-	} else if handleAdminRule(req) {
-		return
+	if !handleAdminRule(req) {
+		if !handleForwardRule(req) {
+			// TODO: send a nice 404 page here.
+			req.Response.Header().Set("Content-Type", "text/plain")
+			req.Response.Write([]byte("No forward rule found."))
+		}
 	}
-
-	// No rules found. In the future, we might consider sending a meaningful 404
-	// page.
-	req.Response.Header().Set("Content-Type", "text/plain")
-	req.Response.Write([]byte("No forward rule found."))
 }
 
 func handleForwardRule(req *RouteRequest) bool {
@@ -54,9 +51,12 @@ func handleAdminRule(req *RouteRequest) bool {
 			if cookie != nil {
 				if req.Overseer.GetSessions().Validate(cookie.Value) {
 					req.Authorized = true
+					http.SetCookie(req.Response, cookie)
 				}
 			}
-			AdminHandler(req)
+			if !RouteAdminSite(req) {
+				RouteAdminAPI(req)
+			}
 			return true
 		}
 	}
