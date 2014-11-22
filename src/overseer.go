@@ -28,7 +28,7 @@ type ServiceDescription struct {
 }
 
 func (self *schemeRouter) ServeHTTP(x http.ResponseWriter, y *http.Request) {
-	Route(NewRouteRequest(x, y, self.overseer, self.scheme))
+	Route(NewRouteContext(x, y, self.overseer, self.scheme))
 }
 
 // NewOverseer creates a new overseer with a completely disabled configuration.

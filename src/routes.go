@@ -7,7 +7,7 @@ import (
 
 const SessionIdCookie = "goule_id"
 
-type RouteRequest struct {
+type RouteContext struct {
 	Response   http.ResponseWriter
 	Request    *http.Request
 	URL        url.URL
@@ -17,45 +17,45 @@ type RouteRequest struct {
 	AdminRule  SourceURL
 }
 
-func NewRouteRequest(res http.ResponseWriter, req *http.Request,
-	overseer *Overseer, scheme string) *RouteRequest {
+func NewRouteContext(res http.ResponseWriter, ctx *http.Request,
+	overseer *Overseer, scheme string) *RouteContext {
 	// The server won't know if TLS was used, so we need to specify manually.
-	url := *req.URL
+	url := *ctx.URL
 	url.Scheme = scheme
-	url.Host = req.Host
-	return &RouteRequest{res, req, url, overseer, false, "", SourceURL{}}
+	url.Host = ctx.Host
+	return &RouteContext{res, ctx, url, overseer, false, "", SourceURL{}}
 }
 
-func Route(req *RouteRequest) {
-	if !handleAdminRule(req) {
-		if !handleForwardRule(req) {
+func Route(ctx *RouteContext) {
+	if !ForwardToAdmin(ctx) {
+		if !ForwardToService(ctx) {
 			// TODO: send a nice 404 page here.
-			req.Response.Header().Set("Content-Type", "text/plain")
-			req.Response.Write([]byte("No forward rule found."))
+			ctx.Response.Header().Set("Content-Type", "text/plain")
+			ctx.Response.Write([]byte("No forward rule found."))
 		}
 	}
 }
 
-func handleForwardRule(req *RouteRequest) bool {
+func ForwardToService(ctx *RouteContext) bool {
 	// TODO: here, check services' forward rules
 	return false
 }
 
-func handleAdminRule(req *RouteRequest) bool {
-	for _, source := range req.Overseer.GetAdminSettings().Rules {
-		if source.MatchesURL(&req.URL) {
+func ForwardToAdmin(ctx *RouteContext) bool {
+	for _, source := range ctx.Overseer.GetAdminSettings().Rules {
+		if source.MatchesURL(&ctx.URL) {
 			// Configure the administrative fields of the RouteRequest
-			req.AdminRule = source
-			req.AdminPath = source.SubpathForURL(&req.URL)
-			cookie, _ := req.Request.Cookie(SessionIdCookie)
+			ctx.AdminRule = source
+			ctx.AdminPath = source.SubpathForURL(&ctx.URL)
+			cookie, _ := ctx.Request.Cookie(SessionIdCookie)
 			if cookie != nil {
-				if req.Overseer.GetSessions().Validate(cookie.Value) {
-					req.Authorized = true
-					http.SetCookie(req.Response, cookie)
+				if ctx.Overseer.GetSessions().Validate(cookie.Value) {
+					ctx.Authorized = true
+					http.SetCookie(ctx.Response, cookie)
 				}
 			}
-			if !RouteAdminSite(req) {
-				RouteAdminAPI(req)
+			if !RouteAdminSite(ctx) {
+				RouteAdminAPI(ctx)
 			}
 			return true
 		}
