@@ -5,11 +5,15 @@ import (
 )
 
 // ExecutableGroups maps a service name to an ExecutableGroup.
-type ExecutableGroups map[string]*ExecutableGroup
+type ExecutableGroups map[string]ExecutableGroup
 
 // NewExecutableGroups creates an empty ExecutableGroups
-func NewExecutableGroups() ExecutableGroups {
-	return ExecutableGroups{}
+func NewExecutableGroups(infos []ServiceInfo) ExecutableGroups {
+	res := ExecutableGroups{}
+	for _, info := range infos {
+		res.Add(info)
+	}
+	return res
 }
 
 // Remove deletes an executable group from the list and stops it.
@@ -24,7 +28,7 @@ func (self ExecutableGroups) Remove(name string) {
 // Add adds an executable group to the list if it is not already present.
 // Returns true if the group was added.
 // This is not thread-safe.
-func (self ExecutableGroups) Add(ServiceInfo info) bool {
+func (self ExecutableGroups) Add(info ServiceInfo) bool {
 	if _, ok := self[info.Name]; ok {
 		return false
 	}
@@ -37,7 +41,7 @@ func (self ExecutableGroups) Add(ServiceInfo info) bool {
 }
 
 // Autolaunch runs StartAutolaunch on all the receiver's groups.
-func (self Services) Autolaunch() {
+func (self ExecutableGroups) Autolaunch() {
 	for _, group := range self {
 		group.StartAutolaunch()
 	}
@@ -67,7 +71,7 @@ func (self ExecutableGroup) StartAll() {
 // This method is not thread-safe.
 func (self ExecutableGroup) StartAutolaunch() {
 	for _, exc := range self {
-		if exc.Info.Autolaunch {
+		if exc.GetInfo().Autolaunch {
 			exc.Start()
 		}
 	}

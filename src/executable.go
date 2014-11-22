@@ -23,7 +23,7 @@ type ExecutableStats struct {
 }
 
 type Executable struct {
-	Info    ExecutableInfo
+	info    ExecutableInfo
 	bgLock  *StoppableLock
 	stats   ExecutableStats
 	command *exec.Cmd
@@ -32,7 +32,7 @@ type Executable struct {
 // NewExecutable creates a new executable which is not running.
 func NewExecutable(info ExecutableInfo) *Executable {
 	result := new(Executable)
-	result.Info = info
+	result.info = info
 	return result
 }
 
@@ -69,7 +69,13 @@ func (self *Executable) Stop() {
 	self.bgLock = nil
 }
 
-// GetStats returns the live info for the executable.
+// GetInfo returns the info for the executable.
+// This is thread-safe.
+func (self *Executable) GetInfo() ExecutableInfo {
+	return self.info
+}
+
+// GetStats returns the current stats for the executable.
 // This method is not thread-safe.
 func (self *Executable) GetStats() ExecutableStats {
 	if !self.attemptLock() {

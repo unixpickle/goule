@@ -19,8 +19,8 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Failed to read configuration:", err)
 		os.Exit(1)
 	}
-	overseer := goule.NewOverseer()
-	overseer.Update(config)
+	overseer := goule.NewOverseer(*config)
+	overseer.Start()
 	if !overseer.IsRunning() {
 		fmt.Fprintln(os.Stderr, "No webservers are running!")
 		os.Exit(1)

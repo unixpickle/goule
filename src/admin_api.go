@@ -10,16 +10,16 @@ import (
 	"strings"
 )
 
-type apiFunc func(*RouteContext, []byte) (interface{}, error)
+type apiFunc func(*Context, []byte) (interface{}, error)
 
-func RouteAdminAPI(ctx *RouteContext) bool {
+func TryAdminAPI(ctx *Context) bool {
 	// The API path must start with "/api/"
-	if !strings.HasPrefix(ctx.AdminPath, "/api/") {
+	if !strings.HasPrefix(ctx.Admin.Path, "/api/") {
 		return false
 	}
 
 	// Get the API name from the URL path
-	api := ctx.AdminPath[5:]
+	api := ctx.Admin.Path[5:]
 
 	// Read the request body
 	contents, err := readRequest(ctx.Request)
@@ -28,16 +28,16 @@ func RouteAdminAPI(ctx *RouteContext) bool {
 		return true
 	}
 
-	runAPI(ctx, contents, api)
+	RunAPICall(ctx, contents, api)
 	return true
 }
 
-func runAPI(ctx *RouteContext, contents []byte, api string) {
+func RunAPICall(ctx *Context, contents []byte, api string) bool {
 	// Prevent unauthorized requests
-	if !ctx.Authorized && api != "auth" {
+	if !ctx.Admin.Authorized && api != "auth" {
 		respondJSON(ctx.Response, http.StatusUnauthorized,
 			"Permissions denied.")
-		return
+		return false
 	}
 	// Lookup the API and find the associated function
 	handlers := map[string]apiFunc{"auth": AuthAPI,
@@ -45,19 +45,20 @@ func runAPI(ctx *RouteContext, contents []byte, api string) {
 	handler, ok := handlers[api]
 	if !ok {
 		respondJSON(ctx.Response, http.StatusNotFound, "No such API: "+api)
-		return
+		return false
 	}
 	// Run the API
 	reply, err := handler(ctx, contents)
 	if err != nil {
 		respondJSON(ctx.Response, http.StatusBadRequest, err.Error())
-		return
+		return false
 	}
 	// Send the APIs response
 	respondJSON(ctx.Response, http.StatusOK, reply)
+	return true
 }
 
-func AuthAPI(ctx *RouteContext, body []byte) (interface{}, error) {
+func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 	var password string
 	if err := json.Unmarshal(body, &password); err != nil {
 		return nil, err
@@ -66,7 +67,7 @@ func AuthAPI(ctx *RouteContext, body []byte) (interface{}, error) {
 	// Check the password
 	hash := sha256.Sum256([]byte(password))
 	hex := hex.EncodeToString(hash[:])
-	adminHash := ctx.Overseer.GetAdminSettings().PasswordHash
+	adminHash := ctx.Overseer.GetConfiguration().Admin.PasswordHash
 	if strings.ToLower(hex) != strings.ToLower(adminHash) {
 		return nil, errors.New("The provided password was incorrect.")
 	}
@@ -74,13 +75,13 @@ func AuthAPI(ctx *RouteContext, body []byte) (interface{}, error) {
 	// Create a new session
 	sessionId := ctx.Overseer.GetSessions().Login()
 	cookie := &http.Cookie{Name: SessionIdCookie, Value: sessionId,
-		Path: ctx.AdminRule.Path}
+		Path: ctx.Admin.Rule.Path}
 	http.SetCookie(ctx.Response, cookie)
 	return "Authentication successful.", nil
 }
 
-func ListServicesAPI(ctx *RouteContext, body []byte) (interface{}, error) {
-	return ctx.Overseer.GetServices(), nil
+func ListServicesAPI(ctx *Context, body []byte) (interface{}, error) {
+	return "This API is not yet implemented!", nil
 }
 
 func readRequest(ctx *http.Request) ([]byte, error) {

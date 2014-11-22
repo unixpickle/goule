@@ -7,11 +7,11 @@ import (
 	"runtime"
 )
 
-func RouteAdminSite(ctx *RouteContext) bool {
+func TryAdminSite(ctx *Context) bool {
 	// Forward "/" to index page.
-	if ctx.AdminPath == "/" || ctx.AdminPath == "" {
-		ctx.AdminPath = "/index.html"
-		return RouteAdminSite(ctx)
+	if ctx.Admin.Path == "/" || ctx.Admin.Path == "" {
+		ctx.Admin.Path = "/index.html"
+		return TryAdminSite(ctx)
 	}
 
 	// Validate the path for a static file request
@@ -20,12 +20,12 @@ func RouteAdminSite(ctx *RouteContext) bool {
 	cssMatch := "style\\/" + charMatch + "*\\.css"
 	scriptMatch := "script\\/" + charMatch + "*\\.js"
 	matched, _ := regexp.MatchString("^\\/("+htmlMatch+"|"+cssMatch+"|"+
-		scriptMatch+")$", ctx.AdminPath)
+		scriptMatch+")$", ctx.Admin.Path)
 
 	if matched {
 		// Serve static file
 		_, filename, _, _ := runtime.Caller(1)
-		actualPath := path.Join(path.Dir(filename), "../static"+ctx.AdminPath)
+		actualPath := path.Join(path.Dir(filename), "../static"+ctx.Admin.Path)
 		http.ServeFile(ctx.Response, ctx.Request, actualPath)
 		return true
 	} else {
