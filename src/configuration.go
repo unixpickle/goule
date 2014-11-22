@@ -1,15 +1,17 @@
 package goule
 
 import (
+	"./exec"
+	"./server"
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
 )
 
-type ServiceInfo struct {
-	Name         string           `json:"name"`
-	ForwardRules []ForwardRule    `json:"forward_rules"`
-	Executables  []ExecutableInfo `json:"executables"`
+type Service struct {
+	Name         string          `json:"name"`
+	ForwardRules []ForwardRule   `json:"forward_rules"`
+	Executables  []exec.Settings `json:"executables"`
 }
 
 type ServerSettings struct {
@@ -25,8 +27,8 @@ type AdminSettings struct {
 
 type Configuration struct {
 	LoadedPath    string         `json:"-"`
-	Services      []ServiceInfo  `json:"services"`
-	TLS           TLSInfo        `json:"tls"`
+	Services      []Service      `json:"services"`
+	TLS           server.TLSInfo `json:"tls"`
 	HTTPSettings  ServerSettings `json:"http"`
 	HTTPSSettings ServerSettings `json:"https"`
 	Admin         AdminSettings  `json:"admin"`
@@ -51,7 +53,7 @@ func (self *Configuration) Read(path string) error {
 func (self *Configuration) Save() error {
 	if data, err := json.Marshal(self); err == nil {
 		var out bytes.Buffer
-	    json.Indent(&out, data, "", "  ")
+		json.Indent(&out, data, "", "  ")
 		return ioutil.WriteFile(self.LoadedPath, out.Bytes(), 0700)
 	} else {
 		return err

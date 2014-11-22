@@ -89,7 +89,7 @@ func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 
 // The interface for the "services" API call.
 func ListServicesAPI(ctx *Context, body []byte) (interface{}, error) {
-	return ctx.Overseer.GetServiceDescriptions(), nil
+	return ctx.Overseer.GetServiceInfos(), nil
 }
 
 // The interface for the "change_password" API call.

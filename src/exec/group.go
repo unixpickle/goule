@@ -51,6 +51,15 @@ func (self GroupMap) StopAll() {
 // Group is an ordered list of Exec pointers.
 type Group []*Exec
 
+// NewGroup creates a new Group from a list of executable settings.
+func NewGroup(settings []Settings) Group {
+	result := make(Group, len(settings))
+	for i, setting := range settings {
+		result[i] = NewExec(setting)
+	}
+	return result
+}
+
 // StopAll stops all the executables that belong to this group.
 // This is not thread-safe.
 func (self Group) StopAll() {

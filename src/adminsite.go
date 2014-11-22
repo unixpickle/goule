@@ -10,7 +10,7 @@ import (
 func TryAdminSite(ctx *Context) bool {
 	// The admin control URL should have a "/" after it.
 	if ctx.Admin.Path == "" {
-		http.Redirect(ctx.Response, ctx.Request, ctx.Admin.Rule.Path + "/",
+		http.Redirect(ctx.Response, ctx.Request, ctx.Admin.Rule.Path+"/",
 			http.StatusMovedPermanently)
 		return true
 	}
