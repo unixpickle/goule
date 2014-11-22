@@ -1,4 +1,4 @@
-package goule
+package exec
 
 import (
 	"sync"
@@ -6,7 +6,7 @@ import (
 )
 
 // StoppableLock provides extended stoppable mutex functionality with timeouts.
-type StoppableLock struct {
+type Lock struct {
 	mutex          sync.Mutex
 	stopped        bool
 	timeoutSkipped bool
@@ -14,12 +14,12 @@ type StoppableLock struct {
 }
 
 // NewStoppableLock creates an unlocked unstopped StoppableLock
-func NewStoppableLock() *StoppableLock {
-	return &StoppableLock{sync.Mutex{}, false, false, nil}
+func NewLock() *Lock {
+	return &Lock{sync.Mutex{}, false, false, nil}
 }
 
 // Lock seizes the lock or returns false if the lock has been stopped.
-func (self *StoppableLock) Lock() bool {
+func (self *Lock) Lock() bool {
 	self.mutex.Lock()
 	if self.stopped {
 		self.mutex.Unlock()
@@ -29,7 +29,7 @@ func (self *StoppableLock) Lock() bool {
 }
 
 // Unlock releases the lock.
-func (self *StoppableLock) Unlock() {
+func (self *Lock) Unlock() {
 	self.mutex.Unlock()
 }
 
@@ -38,7 +38,7 @@ func (self *StoppableLock) Unlock() {
 // After the call, the owner loses ownership of the lock.
 // No further Lock() or Wait() calls will work.
 // Any current timeouts will be canceled.
-func (self *StoppableLock) Stop() {
+func (self *Lock) Stop() {
 	if self.stopped {
 		return
 	}
@@ -54,7 +54,7 @@ func (self *StoppableLock) Stop() {
 // The caller must currently own the lock.
 // The Wait() will return true, but it may do so prematurely.
 // Returns true if and only if the lock was currently Wait()ing.
-func (self *StoppableLock) SkipWait() bool {
+func (self *Lock) SkipWait() bool {
 	if self.skipTimeout != nil && !self.timeoutSkipped {
 		self.skipTimeout <- struct{}{}
 		self.timeoutSkipped = true
@@ -65,7 +65,7 @@ func (self *StoppableLock) SkipWait() bool {
 
 // Wait waits for the StoppableLock to be stopped, the wait to be canceled, or
 // for a timeout to elapse.
-func (self *StoppableLock) Wait(duration time.Duration) bool {
+func (self *Lock) Wait(duration time.Duration) bool {
 	if self.stopped {
 		return false
 	} else if self.skipTimeout != nil {
