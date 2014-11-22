@@ -1,4 +1,4 @@
-package goule
+package admin
 
 import (
 	"net/http"

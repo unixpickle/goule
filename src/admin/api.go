@@ -1,6 +1,8 @@
-package goule
+package admin
 
 import (
+	"../"
+	"../httputil"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -12,10 +14,9 @@ import (
 
 type apiFunc func(*Context, []byte) (interface{}, error)
 
-// TryAdminAPI checks if the passed context corresponds to an API call.
-// Returns true if and only if the context was an API call.
-// This will send a response and process the request synchronously.
-func TryAdminAPI(ctx *Context) bool {
+// TryAPI runs an API if applicable and returns whether or not it performed an
+// API call.
+func TryAPI(ctx *Context) bool {
 	// The API path must start with "/api/"
 	if !strings.HasPrefix(ctx.Admin.Path, "/api/") {
 		return false
@@ -25,22 +26,23 @@ func TryAdminAPI(ctx *Context) bool {
 	api := ctx.Admin.Path[5:]
 
 	// Read the request body
-	contents, err := readRequest(ctx.Request)
+	contents, err := httputil.ReadRequest(ctx.Request, 0x10000)
 	if err != nil {
-		respondJSON(ctx.Response, http.StatusBadRequest, err.Error())
-		return true
+		httputil.RespondJSON(ctx.Response, http.StatusBadRequest, err.Error())
+	} else {
+		RunAPICall(ctx, api, contents)
 	}
-
-	RunAPICall(ctx, contents, api)
 	return true
 }
 
-// RunAPICall runs an API call on a given context, given the request data.
-// Returns false if any sort of API error occurred.
-func RunAPICall(ctx *Context, contents []byte, api string) bool {
+// RunAPICall runs an API call.
+// Returns false if and only if an API error occurred.
+// If the API returns a value which cannot be marshaled to JSON, RunAPICall
+// returns true even though it responds with an error code.
+func RunAPICall(ctx *Context, api string, contents []byte) bool {
 	// Prevent unauthorized requests
-	if !ctx.Admin.Authorized && api != "auth" {
-		respondJSON(ctx.Response, http.StatusUnauthorized,
+	if !ctx.Authorized && api != "auth" {
+		httputil.RespondJSON(ctx.Response, http.StatusUnauthorized,
 			"Permissions denied.")
 		return false
 	}
@@ -50,21 +52,21 @@ func RunAPICall(ctx *Context, contents []byte, api string) bool {
 		"set_http": SetHTTPAPI, "set_https": SetHTTPSAPI}
 	handler, ok := handlers[api]
 	if !ok {
-		respondJSON(ctx.Response, http.StatusNotFound, "No such API: "+api)
+		httputil.RespondJSON(ctx.Response, http.StatusNotFound, "No API: "+api)
 		return false
 	}
 	// Run the API
 	reply, err := handler(ctx, contents)
 	if err != nil {
-		respondJSON(ctx.Response, http.StatusBadRequest, err.Error())
+		httputil.RespondJSON(ctx.Response, http.StatusBadRequest, err.Error())
 		return false
+	} else {
+		httputil.RespondJSON(ctx.Response, http.StatusOK, reply)
+		return true
 	}
-	// Send the APIs response
-	respondJSON(ctx.Response, http.StatusOK, reply)
-	return true
 }
 
-// The interface for the "auth" API call.
+// AuthAPI is the interface for the "auth" API call.
 func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 	var password string
 	if err := json.Unmarshal(body, &password); err != nil {
@@ -87,12 +89,12 @@ func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 	return true, nil
 }
 
-// The interface for the "services" API call.
+// ListServicesAPI is the interface for the "services" API call.
 func ListServicesAPI(ctx *Context, body []byte) (interface{}, error) {
 	return ctx.Overseer.GetServiceInfos(), nil
 }
 
-// The interface for the "change_password" API call.
+// ChangePasswordAPI is the interface for the "change_password" API call.
 func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
 	var password string
 	if err := json.Unmarshal(body, &password); err != nil {
@@ -106,9 +108,9 @@ func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
 	return true, nil
 }
 
-// The interface for the "set_http" API call.
+// SetHTTPAPI is the interface for the "set_http" API call.
 func SetHTTPAPI(ctx *Context, body []byte) (interface{}, error) {
-	var settings ServerSettings
+	var settings goule.ServerSettings
 	if err := json.Unmarshal(body, &settings); err != nil {
 		return nil, err
 	}
@@ -116,49 +118,12 @@ func SetHTTPAPI(ctx *Context, body []byte) (interface{}, error) {
 	return true, nil
 }
 
-// The interface for the "set_https" API call.
+// SetHTTPSAPI is the interface for the "set_https" API call.
 func SetHTTPSAPI(ctx *Context, body []byte) (interface{}, error) {
-	var settings ServerSettings
+	var settings goule.ServerSettings
 	if err := json.Unmarshal(body, &settings); err != nil {
 		return nil, err
 	}
 	ctx.Overseer.SetHTTPSSettings(settings)
 	return true, nil
-}
-
-func readRequest(ctx *http.Request) ([]byte, error) {
-	// Cap the data limit
-	response := []byte{}
-	for {
-		next := make([]byte, 4096)
-		num, err := ctx.Body.Read(next)
-		response = append(response, next[0:num]...)
-		if len(response) > 0x10000 {
-			return nil, errors.New("Request exceeded 0x10000 bytes.")
-		}
-		if err != nil {
-			break
-		}
-	}
-	return response, nil
-}
-
-func respondJSON(res http.ResponseWriter, code int, msg interface{}) {
-	res.Header().Set("Content-Type", "application/json")
-	if marshaled, err := json.Marshal(msg); err == nil {
-		res.Header().Set("Content-Length", strconv.Itoa(len(marshaled)))
-		res.WriteHeader(code)
-		res.Write(marshaled)
-	} else {
-		data := []byte("Failed to encode object")
-		res.Header().Set("Content-Length", strconv.Itoa(len(data)))
-		// Preserve error code (if there is one)
-		if code == 200 {
-			res.WriteHeader(http.StatusInternalServerError)
-		} else {
-			res.WriteHeader(code)
-		}
-		res.Write(data)
-	}
-
 }
