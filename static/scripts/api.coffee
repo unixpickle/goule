@@ -14,10 +14,14 @@ window.goule.api = (name, object, callback) ->
 		success: (data) -> callback null, data
 	return
 
+window.goule.boolApi = (name, object, callback) ->
+	window.goule.api name, object, (err, obj) -> callback not err?
+
 window.goule.auth = (password, callback) ->
-	window.goule.api 'auth', password, (err, result) ->
-		if err? then callback false
-		else callback true
+	window.goule.boolApi 'auth', password, callback
 
 window.goule.listServices = (callback) ->
 	window.goule.api 'services', null, callback
+
+window.goule.changePassword = (newPassword, callback) ->
+	window.goule.boolApi 'change_password', newPassword, callback

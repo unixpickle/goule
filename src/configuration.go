@@ -1,6 +1,7 @@
 package goule
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 )
@@ -82,4 +83,14 @@ func (self *Configuration) Read(path string) error {
 	}
 	self.LoadedPath = path
 	return nil
+}
+
+func (self *Configuration) Save() error {
+	if data, err := json.Marshal(self); err == nil {
+		var out bytes.Buffer
+	    json.Indent(&out, data, "", "  ")
+		return ioutil.WriteFile(self.LoadedPath, out.Bytes(), 0700)
+	} else {
+		return err
+	}
 }

@@ -55,7 +55,9 @@ func TryAdmin(ctx *Context) bool {
 			if cookie != nil {
 				if ctx.Overseer.GetSessions().Validate(cookie.Value) {
 					ctx.Admin.Authorized = true
-					http.SetCookie(ctx.Response, cookie)
+					cookieCopy := *cookie
+					cookieCopy.Path = source.Path
+					http.SetCookie(ctx.Response, &cookieCopy)
 				}
 			}
 			if !TryAdminSite(ctx) {

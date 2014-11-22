@@ -26,18 +26,22 @@
     });
   };
 
-  window.goule.auth = function(password, callback) {
-    return window.goule.api('auth', password, function(err, result) {
-      if (err != null) {
-        return callback(false);
-      } else {
-        return callback(true);
-      }
+  window.goule.boolApi = function(name, object, callback) {
+    return window.goule.api(name, object, function(err, obj) {
+      return callback(err == null);
     });
+  };
+
+  window.goule.auth = function(password, callback) {
+    return window.goule.boolApi('auth', password, callback);
   };
 
   window.goule.listServices = function(callback) {
     return window.goule.api('services', null, callback);
+  };
+
+  window.goule.changePassword = function(newPassword, callback) {
+    return window.goule.boolApi('change_password', newPassword, callback);
   };
 
 }).call(this);

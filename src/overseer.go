@@ -84,6 +84,18 @@ func (self *Overseer) GetConfiguration() Configuration {
 	return self.configuration
 }
 
+// SetPasswordHash updates the password hash for this overseer.
+// This will change the session secret.
+// The new configuration will be saved before this returns.
+// This is thread-safe.
+func (self *Overseer) SetPasswordHash(newHash string) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	self.configuration.Admin.PasswordHash = newHash
+	self.sessions.SetSecret(newHash)
+	self.configuration.Save()
+}
+
 // GetSessions returns the overseer's session manager.
 // This is thread-safe.
 func (self *Overseer) GetSessions() *Sessions {

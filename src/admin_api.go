@@ -41,7 +41,7 @@ func RunAPICall(ctx *Context, contents []byte, api string) bool {
 	}
 	// Lookup the API and find the associated function
 	handlers := map[string]apiFunc{"auth": AuthAPI,
-		"services": ListServicesAPI}
+		"services": ListServicesAPI, "change_password": ChangePasswordAPI}
 	handler, ok := handlers[api]
 	if !ok {
 		respondJSON(ctx.Response, http.StatusNotFound, "No such API: "+api)
@@ -75,13 +75,26 @@ func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 	// Create a new session
 	sessionId := ctx.Overseer.GetSessions().Login()
 	cookie := &http.Cookie{Name: SessionIdCookie, Value: sessionId,
-		Path: ctx.Admin.Rule.Path}
+		Path: ctx.Admin.Rule.Path, Domain: ctx.Admin.Rule.Hostname}
 	http.SetCookie(ctx.Response, cookie)
 	return "Authentication successful.", nil
 }
 
 func ListServicesAPI(ctx *Context, body []byte) (interface{}, error) {
 	return ctx.Overseer.GetServiceDescriptions(), nil
+}
+
+func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
+	var password string
+	if err := json.Unmarshal(body, &password); err != nil {
+		return nil, err
+	}
+
+	// Hash the password and save it
+	hash := sha256.Sum256([]byte(password))
+	hex := hex.EncodeToString(hash[:])
+	ctx.Overseer.SetPasswordHash(strings.ToLower(hex))
+	return "Changed successfully.", nil
 }
 
 func readRequest(ctx *http.Request) ([]byte, error) {
