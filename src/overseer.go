@@ -10,7 +10,8 @@ type Overseer struct {
 	httpsServer *HTTPSServer
 	adminMutex  sync.RWMutex
 	admin       AdminSettings
-	// TODO: something here for services
+	services    []Service
+	sessions    *Sessions
 }
 
 type schemeRouter struct {
@@ -19,15 +20,16 @@ type schemeRouter struct {
 }
 
 func (self *schemeRouter) ServeHTTP(x http.ResponseWriter, y *http.Request) {
-	Route(x, y, self.scheme, self.overseer)
+	Route(NewRouteRequest(x, y, self.overseer, self.scheme))
 }
 
 // NewOverseer creates a new overseer with a completely disabled configuration.
 func NewOverseer() *Overseer {
 	httpRouter := schemeRouter{"http", nil}
 	httpsRouter := schemeRouter{"https", nil}
-	result := &Overseer{NewHTTPServer(&httpRouter), NewHTTPSServer(&httpsRouter),
-		sync.RWMutex{}, AdminSettings{}}
+	result := &Overseer{NewHTTPServer(&httpRouter),
+		NewHTTPSServer(&httpsRouter), sync.RWMutex{}, AdminSettings{},
+		[]Service{}, NewSessions()}
 	httpRouter.overseer = result
 	httpsRouter.overseer = result
 	return result
@@ -57,6 +59,8 @@ func (self *Overseer) GetConfiguration() *Configuration {
 func (self *Overseer) SetAdminSettings(s AdminSettings) {
 	self.adminMutex.Lock()
 	self.admin = s
+	self.sessions.SetSecret(s.PasswordHash)
+	self.sessions.SetTimeout(s.SessionTimeout)
 	self.adminMutex.Unlock()
 }
 
@@ -65,6 +69,11 @@ func (self *Overseer) GetAdminSettings() AdminSettings {
 	self.adminMutex.RLock()
 	defer self.adminMutex.RUnlock()
 	return self.admin
+}
+
+// GetSessions is a non-blocking non-locking operation
+func (self *Overseer) GetSessions() *Sessions {
+	return self.sessions
 }
 
 func (self *Overseer) IsRunning() bool {

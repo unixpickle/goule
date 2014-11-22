@@ -43,8 +43,9 @@ type ServerSettings struct {
 }
 
 type AdminSettings struct {
-	Rules        []SourceURL `json:"rules"`
-	PasswordHash string      `json:"password_hash"`
+	Rules          []SourceURL `json:"rules"`
+	PasswordHash   string      `json:"password_hash"`
+	SessionTimeout int         `json:"session_timeout"`
 }
 
 type Configuration struct {

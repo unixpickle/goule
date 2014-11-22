@@ -2,21 +2,22 @@ package goule
 
 import (
 	"net/http"
-	pathlib "path"
+	"path"
 	"regexp"
 	"runtime"
 	"strings"
 )
 
-func AdminHandler(res http.ResponseWriter, req *http.Request, path string) {
-	if path == "/" || path == "" {
-		AdminHandler(res, req, "/index.html")
+func AdminHandler(req *RouteRequest) {
+	if req.AdminPath == "/" || req.AdminPath == "" {
+		req.AdminPath = "/index.html"
+		AdminHandler(req)
 		return
 	}
 
-	if strings.HasPrefix(path, "/api/") {
-		apiName := path[5:len(path)]
-		AdminAPICall(res, req, apiName)
+	if strings.HasPrefix(req.AdminPath, "/api/") {
+		apiName := req.AdminPath[5:]
+		AdminAPICall(req, apiName)
 		return
 	}
 
@@ -25,20 +26,21 @@ func AdminHandler(res http.ResponseWriter, req *http.Request, path string) {
 	htmlMatch := charMatch + "*\\.html"
 	cssMatch := "style\\/" + charMatch + "*\\.css"
 	matched, _ := regexp.MatchString("^\\/("+htmlMatch+"|"+cssMatch+
-		")$", path)
+		")$", req.AdminPath)
 
 	if matched {
 		// Serve static file
 		_, filename, _, _ := runtime.Caller(1)
-		actualPath := pathlib.Join(pathlib.Dir(filename), "../static"+path)
-		http.ServeFile(res, req, actualPath)
+		actualPath := path.Join(path.Dir(filename), "../static"+req.AdminPath)
+		http.ServeFile(req.Response, req.Request, actualPath)
 	} else {
-		res.Header().Set("Content-Type", "text/plain")
-		res.Write([]byte("Invalid path: " + path))
+		// TODO: send a nice 404 page here
+		req.Response.Header().Set("Content-Type", "text/plain")
+		req.Response.Write([]byte("Invalid path: " + req.AdminPath))
 	}
 }
 
-func AdminAPICall(res http.ResponseWriter, req *http.Request, api string) {
-	res.Header().Set("Content-Type", "application/json")
-	res.Write([]byte("\"Hi there, this is json!\""))
+func AdminAPICall(req *RouteRequest, api string) {
+	req.Response.Header().Set("Content-Type", "application/json")
+	req.Response.Write([]byte("\"Hi there! This is json.\""))
 }
