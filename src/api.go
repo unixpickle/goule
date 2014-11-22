@@ -1,29 +1,27 @@
-package admin
+package goule
 
 import (
-	"../"
-	"../httputil"
+	"./httputil"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
-type apiFunc func(*Context, []byte) (interface{}, error)
+type apiFunc func(*AdminContext, []byte) (interface{}, error)
 
 // TryAPI runs an API if applicable and returns whether or not it performed an
 // API call.
-func TryAPI(ctx *Context) bool {
+func TryAPI(ctx *AdminContext) bool {
 	// The API path must start with "/api/"
-	if !strings.HasPrefix(ctx.Admin.Path, "/api/") {
+	if !strings.HasPrefix(ctx.Path, "/api/") {
 		return false
 	}
 
 	// Get the API name from the URL path
-	api := ctx.Admin.Path[5:]
+	api := ctx.Path[5:]
 
 	// Read the request body
 	contents, err := httputil.ReadRequest(ctx.Request, 0x10000)
@@ -39,7 +37,7 @@ func TryAPI(ctx *Context) bool {
 // Returns false if and only if an API error occurred.
 // If the API returns a value which cannot be marshaled to JSON, RunAPICall
 // returns true even though it responds with an error code.
-func RunAPICall(ctx *Context, api string, contents []byte) bool {
+func RunAPICall(ctx *AdminContext, api string, contents []byte) bool {
 	// Prevent unauthorized requests
 	if !ctx.Authorized && api != "auth" {
 		httputil.RespondJSON(ctx.Response, http.StatusUnauthorized,
@@ -67,7 +65,7 @@ func RunAPICall(ctx *Context, api string, contents []byte) bool {
 }
 
 // AuthAPI is the interface for the "auth" API call.
-func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
+func AuthAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 	var password string
 	if err := json.Unmarshal(body, &password); err != nil {
 		return nil, err
@@ -84,18 +82,18 @@ func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 	// Create a new session
 	sessionId := ctx.Overseer.GetSessions().Login()
 	cookie := &http.Cookie{Name: SessionIdCookie, Value: sessionId,
-		Path: ctx.Admin.Rule.Path, Domain: ctx.Admin.Rule.Hostname}
+		Path: ctx.Rule.Path, Domain: ctx.Rule.Hostname}
 	http.SetCookie(ctx.Response, cookie)
 	return true, nil
 }
 
 // ListServicesAPI is the interface for the "services" API call.
-func ListServicesAPI(ctx *Context, body []byte) (interface{}, error) {
+func ListServicesAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 	return ctx.Overseer.GetServiceInfos(), nil
 }
 
 // ChangePasswordAPI is the interface for the "change_password" API call.
-func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
+func ChangePasswordAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 	var password string
 	if err := json.Unmarshal(body, &password); err != nil {
 		return nil, err
@@ -109,8 +107,8 @@ func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
 }
 
 // SetHTTPAPI is the interface for the "set_http" API call.
-func SetHTTPAPI(ctx *Context, body []byte) (interface{}, error) {
-	var settings goule.ServerSettings
+func SetHTTPAPI(ctx *AdminContext, body []byte) (interface{}, error) {
+	var settings ServerSettings
 	if err := json.Unmarshal(body, &settings); err != nil {
 		return nil, err
 	}
@@ -119,8 +117,8 @@ func SetHTTPAPI(ctx *Context, body []byte) (interface{}, error) {
 }
 
 // SetHTTPSAPI is the interface for the "set_https" API call.
-func SetHTTPSAPI(ctx *Context, body []byte) (interface{}, error) {
-	var settings goule.ServerSettings
+func SetHTTPSAPI(ctx *AdminContext, body []byte) (interface{}, error) {
+	var settings ServerSettings
 	if err := json.Unmarshal(body, &settings); err != nil {
 		return nil, err
 	}

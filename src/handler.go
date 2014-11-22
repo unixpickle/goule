@@ -1,27 +1,5 @@
 package goule
 
-import (
-	"./admin"
-	"net/http"
-	"net/url"
-)
-
-type Context struct {
-	Response http.ResponseWriter
-	Request  *http.Request
-	URL      url.URL
-	Overseer *Overseer
-}
-
-func NewContext(res http.ResponseWriter, req *http.Request, overseer *Overseer,
-	scheme string) *Context {
-	// Reverse-engineer the incoming URL
-	url := *req.URL
-	url.Scheme = scheme
-	url.Host = req.Host
-	return &Context{res, req, url, overseer}
-}
-
 func HandleContext(ctx *Context) {
 	if !TryAdmin(ctx) {
 		if !TryService(ctx) {
@@ -40,9 +18,9 @@ func TryService(ctx *Context) bool {
 func TryAdmin(ctx *Context) bool {
 	for _, source := range ctx.Overseer.GetConfiguration().Admin.Rules {
 		if source.MatchesURL(&ctx.URL) {
-			adminContext := admin.NewContext(ctx, source)
-			if !admin.TrySite(adminContext) {
-				admin.TryAPI(adminContext)
+			adminContext := NewAdminContext(ctx, source)
+			if !TrySite(adminContext) {
+				TryAPI(adminContext)
 			}
 			return true
 		}
