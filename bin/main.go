@@ -3,10 +3,13 @@ package main
 import (
 	"../src"
 	"fmt"
+	"math/rand"
 	"os"
+	"time"
 )
 
 func main() {
+	rand.Seed(time.Now().UTC().UnixNano())
 	if len(os.Args) != 2 {
 		fmt.Fprintln(os.Stderr, "Usage: goule <config.json>")
 		os.Exit(1)
