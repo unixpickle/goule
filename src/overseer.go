@@ -6,13 +6,9 @@ import (
 )
 
 type Overseer struct {
+	mutex         sync.RWMutex
 	httpServer    *HTTPServer
 	httpsServer   *HTTPSServer
-	adminMutex    sync.RWMutex
-	admin         AdminSettings
-	servicesMutex sync.RWMutex
-	services      []*Service
-	sessions      *Sessions
 }
 
 type schemeRouter struct {

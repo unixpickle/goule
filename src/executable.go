@@ -2,7 +2,6 @@ package goule
 
 import (
 	"os/exec"
-	"sync"
 	"time"
 )
 
@@ -24,26 +23,23 @@ type ExecutableStats struct {
 }
 
 type Executable struct {
-	info       ExecutableInfo
-	globalLock sync.Mutex
-	bgLock     *StoppableLock
-	stats      ExecutableStats
-	command    *exec.Cmd
+	Info    ExecutableInfo
+	bgLock  *StoppableLock
+	stats   ExecutableStats
+	command *exec.Cmd
 }
 
 // NewExecutable creates a new executable which is not running.
 func NewExecutable(info ExecutableInfo) *Executable {
 	result := new(Executable)
-	result.info = info
+	result.Info = info
 	return result
 }
 
 // Start starts the executable if it is not currently running or if it is in the
 // process of restarting.
+// This method is not thread-safe.
 func (self *Executable) Start() {
-	self.globalLock.Lock()
-	defer self.globalLock.Unlock()
-
 	if self.attemptLock() {
 		self.bgLock.SkipWait()
 		self.bgLock.Unlock()
@@ -55,10 +51,8 @@ func (self *Executable) Start() {
 }
 
 // Stop stops the executable if it is currently running.
+// This method is not thread-safe.
 func (self *Executable) Stop() {
-	self.globalLock.Lock()
-	defer self.globalLock.Unlock()
-
 	if !self.attemptLock() {
 		return
 	}
@@ -75,15 +69,9 @@ func (self *Executable) Stop() {
 	self.bgLock = nil
 }
 
-// GetInfo returns the current executable info in a thread-safe manner.
-func (self *Executable) GetInfo() ExecutableInfo {
-	return self.info
-}
-
 // GetStats returns the live info for the executable.
+// This method is not thread-safe.
 func (self *Executable) GetStats() ExecutableStats {
-	self.globalLock.Lock()
-	defer self.globalLock.Unlock()
 	if !self.attemptLock() {
 		info := self.stats
 		info.Status = EXECUTABLE_HALTED
@@ -94,7 +82,7 @@ func (self *Executable) GetStats() ExecutableStats {
 }
 
 // attemptLock attempts to lock bgLock.
-// This method assumes that self is already globally locked.
+// This method is not thread-safe.
 func (self *Executable) attemptLock() bool {
 	if self.bgLock == nil {
 		return false
