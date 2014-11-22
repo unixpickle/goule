@@ -26,4 +26,18 @@
     });
   };
 
+  window.goule.auth = function(password, callback) {
+    return window.goule.api('auth', password, function(err, result) {
+      if (err != null) {
+        return callback(false);
+      } else {
+        return callback(true);
+      }
+    });
+  };
+
+  window.goule.listServices = function(callback) {
+    return window.goule.api('services', null, callback);
+  };
+
 }).call(this);
