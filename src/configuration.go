@@ -1,41 +1,17 @@
 package goule
 
 import (
+	"./exec"
+	"./server"
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
 )
 
-type LogSettings struct {
-	Enabled bool `json:"enabled"`
-	CapSize bool `json:"cap_size"`
-	MaxSize int  `json:"max_size"`
-}
-
-type UserIdentity struct {
-	SetGroupId bool `json:"set_group_id"`
-	SetUserId  bool `json:"set_user_id"`
-	GroupId    int  `json:"group_id"`
-	UserId     int  `json:"user_id"`
-}
-
-type ExecutableInfo struct {
-	Dirname          string            `json:"dirname"`
-	LogId            string            `json:"log_id"`
-	Stdout           LogSettings       `json:"stdout"`
-	Stderr           LogSettings       `json:"stderr"`
-	Identity         UserIdentity      `json:"identity"`
-	Arguments        []string          `json:"arguments"`
-	Environment      map[string]string `json:"environment"`
-	Autolaunch       bool              `json:"autolaunch"`
-	Relaunch         bool              `json:"relaunch"`
-	RelaunchInterval int               `json:"relaunch_interval"`
-}
-
-type ServiceInfo struct {
-	Name         string           `json:"name"`
-	ForwardRules []ForwardRule    `json:"forward_rules"`
-	Executables  []ExecutableInfo `json:"executables"`
+type Service struct {
+	Name         string          `json:"name"`
+	ForwardRules []ForwardRule   `json:"forward_rules"`
+	Executables  []exec.Settings `json:"executables"`
 }
 
 type ServerSettings struct {
@@ -49,21 +25,10 @@ type AdminSettings struct {
 	SessionTimeout int         `json:"session_timeout"`
 }
 
-type CertificateInfo struct {
-	CertificatePath string   `json:"certificate_path"`
-	KeyPath         string   `json:"key_path"`
-	AuthorityPaths  []string `json:"authority_paths"`
-}
-
-type TLSInfo struct {
-	Named   map[string]CertificateInfo `json:"named_certificates"`
-	Default CertificateInfo            `json:"default_certificates"`
-}
-
 type Configuration struct {
 	LoadedPath    string         `json:"-"`
-	Services      []ServiceInfo  `json:"services"`
-	TLS           TLSInfo        `json:"tls"`
+	Services      []Service      `json:"services"`
+	TLS           server.TLSInfo `json:"tls"`
 	HTTPSettings  ServerSettings `json:"http"`
 	HTTPSSettings ServerSettings `json:"https"`
 	Admin         AdminSettings  `json:"admin"`
@@ -88,7 +53,7 @@ func (self *Configuration) Read(path string) error {
 func (self *Configuration) Save() error {
 	if data, err := json.Marshal(self); err == nil {
 		var out bytes.Buffer
-	    json.Indent(&out, data, "", "  ")
+		json.Indent(&out, data, "", "  ")
 		return ioutil.WriteFile(self.LoadedPath, out.Bytes(), 0700)
 	} else {
 		return err

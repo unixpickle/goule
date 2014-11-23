@@ -1,4 +1,4 @@
-package goule
+package server
 
 import (
 	"crypto/tls"
@@ -8,23 +8,34 @@ import (
 	"sync"
 )
 
-type HTTPSServer struct {
+type CertificateInfo struct {
+	CertificatePath string   `json:"certificate_path"`
+	KeyPath         string   `json:"key_path"`
+	AuthorityPaths  []string `json:"authority_paths"`
+}
+
+type TLSInfo struct {
+	Named   map[string]CertificateInfo `json:"named_certificates"`
+	Default CertificateInfo            `json:"default_certificates"`
+}
+
+type HTTPS struct {
 	mutex      sync.RWMutex
 	handler    http.Handler
 	listener   *net.Listener
 	listenPort int
 }
 
-// NewHTTPSServer creates a new HTTPSServer with a given handler.
-// The newly created HTTPSServer will not be listening.
-func NewHTTPSServer(handler http.Handler) *HTTPSServer {
-	return &HTTPSServer{sync.RWMutex{}, handler, nil, 0}
+// NewHTTPS creates a new HTTPS with a given handler.
+// The newly created HTTPS will not be listening.
+func NewHTTPS(handler http.Handler) *HTTPS {
+	return &HTTPS{sync.RWMutex{}, handler, nil, 0}
 }
 
 // Start starts the server on the specified port with the specified TLS info.
 // An error is returned if the server cannot be started or is already running.
 // This is thread-safe.
-func (self *HTTPSServer) Start(port int, info TLSInfo) error {
+func (self *HTTPS) Start(port int, info TLSInfo) error {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
@@ -57,7 +68,7 @@ func (self *HTTPSServer) Start(port int, info TLSInfo) error {
 
 // Stop stops the server if it was running.
 // This is thread-safe.
-func (self *HTTPSServer) Stop() {
+func (self *HTTPS) Stop() {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 	if self.listener != nil {
@@ -69,14 +80,14 @@ func (self *HTTPSServer) Stop() {
 // Status returns whether or not the server is listening and which port it is
 // using.
 // This is thread-safe.
-func (self *HTTPSServer) Status() (bool, int) {
+func (self *HTTPS) Status() (bool, int) {
 	self.mutex.RLock()
 	defer self.mutex.RUnlock()
 	return self.listener != nil, self.listenPort
 }
 
 // IsRunning returns the first return value of Status.
-func (self *HTTPSServer) IsRunning() bool {
+func (self *HTTPS) IsRunning() bool {
 	x, _ := self.Status()
 	return x
 }

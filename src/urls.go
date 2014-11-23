@@ -6,12 +6,14 @@ import (
 	"strings"
 )
 
+// SourceURL represents a URL which goule receives a request on.
 type SourceURL struct {
 	Scheme   string `json:"scheme"`
 	Hostname string `json:"hostname"`
 	Path     string `json:"path"`
 }
 
+// DestinationURL represents a URL which goule can proxy to.
 type DestinationURL struct {
 	Scheme   string `json:"scheme"`
 	Hostname string `json:"hostname"`
@@ -19,12 +21,14 @@ type DestinationURL struct {
 	Path     string `json:"path"`
 }
 
+// ForwardRule specifies a SourceURL to forward to a DestinationURL.
 type ForwardRule struct {
 	From SourceURL      `json:"from"`
 	To   DestinationURL `json:"to"`
 }
 
-// MatchesURL returns true if the receiving SourceURL matches a specified URL.
+// MatchesURL returns true if and only if the receiving SourceURL matches the
+// specified URL.
 func (self SourceURL) MatchesURL(url *url.URL) bool {
 	hostname := url.Host
 	idx := strings.Index(hostname, ":")
@@ -37,16 +41,15 @@ func (self SourceURL) MatchesURL(url *url.URL) bool {
 	return strings.HasPrefix(url.Path, self.Path)
 }
 
-// SubpathForURL returns the path components that a given URL contains that the
-// receiving SourceURL does not.
-// This subpath can be appended to the proxy destination in some cases.
+// SubpathForURL returns the subpath that a given URL contains that a SourceURL
+// does not.
 func (self SourceURL) SubpathForURL(url *url.URL) string {
-	return url.Path[len(self.Path):len(url.Path)]
+	return url.Path[len(self.Path):]
 }
 
 // Apply attempts to apply a forward rule to a given URL.
-// The return value is the destination to forward to, or nil if the forward
-// rule is not applicable.
+// The return value is the destination URL if the forward rule matches the
+// specified URL. Otherwise, Apply returns nil.
 func (self ForwardRule) Apply(url *url.URL) *url.URL {
 	if !self.From.MatchesURL(url) {
 		return nil

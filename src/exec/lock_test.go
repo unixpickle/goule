@@ -1,4 +1,4 @@
-package goule
+package exec
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 
 func TestStop(t *testing.T) {
 	// Serial stops
-	lock := NewStoppableLock()
+	lock := NewLock()
 	if !lock.Lock() {
 		t.Fatal("Lock should have succeeded.")
 	}
@@ -17,7 +17,7 @@ func TestStop(t *testing.T) {
 	}
 
 	// Parallel stops
-	lock = NewStoppableLock()
+	lock = NewLock()
 	channel := make(chan bool)
 	fn := func() {
 		if lock.Lock() {
@@ -37,7 +37,7 @@ func TestStop(t *testing.T) {
 }
 
 func TestSkipWait(t *testing.T) {
-	lock := NewStoppableLock()
+	lock := NewLock()
 	waitingChannel := make(chan struct{})
 	channel := make(chan bool)
 
@@ -67,7 +67,7 @@ func TestSkipWait(t *testing.T) {
 }
 
 func TestStopWait(t *testing.T) {
-	lock := NewStoppableLock()
+	lock := NewLock()
 	waitingChannel := make(chan struct{})
 	channel := make(chan bool)
 

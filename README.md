@@ -50,6 +50,7 @@ I'm moving things from my TODO list to this spot once I do them:
    * Call for changing the password
    * Call for changing HTTP settings
    * Call for changing HTTPS settings
+ * Restructured entire thing to use subpackages
 
 ## Possible TODOs down the road
 
