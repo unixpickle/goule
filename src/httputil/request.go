@@ -10,7 +10,7 @@ import (
 func ReadRequest(req *http.Request, limit int) ([]byte, error) {
 	data := []byte{}
 	for {
-		next := make([]byte, 4096)
+		next := make([]byte, 0x1000)
 		num, err := req.Body.Read(next)
 		data = append(data, next[0:num]...)
 		if len(data) > limit {
