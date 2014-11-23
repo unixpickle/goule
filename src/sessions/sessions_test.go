@@ -1,8 +1,8 @@
 package sessions
 
 import (
-	"time"
 	"testing"
+	"time"
 )
 
 func TestLoginLogout(t *testing.T) {
