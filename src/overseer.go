@@ -132,6 +132,57 @@ func (self *Overseer) SetHTTPSSettings(settings ServerSettings) {
 	self.configuration.Save()
 }
 
+// AddService adds a service based on its information.
+// Returns false if and only if the new service's name conflicts with an
+// existing service.
+// This is thread-safe.
+func (self *Overseer) AddService(service Service) bool {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	for _, x := range self.configuration.Services {
+		if x.Name == service.Name {
+			return false
+		}
+	}
+
+	// Add the service to the configuration.
+	self.configuration.Services = append(self.configuration.Services, service)
+	self.configuration.Save()
+
+	// Run the new group.
+	group := exec.NewGroup(service.Executables)
+	self.groups.Add(service.Name, group)
+	group.StartAutolaunch()
+
+	return true
+}
+
+// RemoveService removes a service by name.
+// Returns false if and only if the service could not be found.
+// This is thread-safe.
+func (self *Overseer) RemoveService(name string) bool {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	found := false
+	for i, x := range self.configuration.Services {
+		if x.Name == name {
+			// Remove the service by replacing it with the last service in the
+			// list.
+			idx := len(self.configuration.Services) - 1
+			self.configuration.Services[i] = self.configuration.Services[idx]
+			self.configuration.Services = self.configuration.Services[0:idx]
+			found = true
+			break
+		}
+	}
+	if !found {
+		return false
+	}
+	self.configuration.Save()
+	self.groups.Remove(name)
+	return true
+}
+
 // GetSessions returns the overseer's session manager.
 // This is thread-safe.
 func (self *Overseer) GetSessions() *sessions.Manager {
