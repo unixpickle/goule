@@ -32,6 +32,18 @@ func (self GroupMap) Add(name string, group Group) bool {
 	return true
 }
 
+// Rename renames an executable group without affecting its execution.
+// Returns true if and only if the named group was found.
+// This is not thread-safe.
+func (self GroupMap) Rename(name string, newName string) bool {
+	if group, ok := self[name]; ok {
+		self[newName] = group
+		delete(self, name)
+		return true
+	}
+	return false
+}
+
 // StartAutolaunch calls StartAutolaunch on all the contained groups.
 // This is not thread-safe.
 func (self GroupMap) StartAutolaunch() {
@@ -55,7 +67,7 @@ type Group []*Exec
 func NewGroup(settings []Settings) Group {
 	result := make(Group, len(settings))
 	for i, setting := range settings {
-		result[i] = NewExec(setting)
+		result[i] = NewExec(&setting)
 	}
 	return result
 }

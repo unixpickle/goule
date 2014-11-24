@@ -14,9 +14,23 @@ type CertificateInfo struct {
 	AuthorityPaths  []string `json:"authority_paths"`
 }
 
+func (self *CertificateInfo) Copy() CertificateInfo {
+	cas := make([]string, len(self.AuthorityPaths))
+	copy(cas, self.AuthorityPaths)
+	return CertificateInfo{self.CertificatePath, self.KeyPath, cas}
+}
+
 type TLSInfo struct {
 	Named   map[string]CertificateInfo `json:"named_certificates"`
 	Default CertificateInfo            `json:"default_certificates"`
+}
+
+func (self *TLSInfo) Copy() TLSInfo {
+	newMap := make(map[string]CertificateInfo)
+	for key, cert := range self.Named {
+		newMap[key] = cert.Copy()
+	}
+	return TLSInfo{newMap, self.Default.Copy()}
 }
 
 type HTTPS struct {

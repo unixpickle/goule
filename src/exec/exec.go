@@ -16,35 +16,6 @@ const (
 // Valid values are: HALTED, STARTED, RUNNING, RESTARTING.
 type Status int
 
-// LogSettings stores the configuration for the logging facility.
-type LogSettings struct {
-	Enabled bool `json:"enabled"`
-	CapSize bool `json:"cap_size"`
-	MaxSize int  `json:"max_size"`
-}
-
-// UserIdentity stores the UID and GID to use for an executable.
-type UserIdentity struct {
-	SetGroupId bool `json:"set_group_id"`
-	SetUserId  bool `json:"set_user_id"`
-	GroupId    int  `json:"group_id"`
-	UserId     int  `json:"user_id"`
-}
-
-// Settings holds the configuration of an executable.
-type Settings struct {
-	Dirname          string            `json:"dirname"`
-	LogId            string            `json:"log_id"`
-	Stdout           LogSettings       `json:"stdout"`
-	Stderr           LogSettings       `json:"stderr"`
-	Identity         UserIdentity      `json:"identity"`
-	Arguments        []string          `json:"arguments"`
-	Environment      map[string]string `json:"environment"`
-	Autolaunch       bool              `json:"autolaunch"`
-	Relaunch         bool              `json:"relaunch"`
-	RelaunchInterval int               `json:"relaunch_interval"`
-}
-
 // Info includes statistics about an Exec's lifetime, its current status,
 // and its settings.
 type Info struct {
@@ -56,6 +27,12 @@ type Info struct {
 	Settings   Settings  `json:"settings"`
 }
 
+func (self *Info) Copy() Info {
+	res := *self
+	res.Settings = self.Settings.Copy()
+	return res
+}
+
 // An Exec can be started, stopped, restarted, etc.
 // It represents a program or the potential to run a program.
 type Exec struct {
@@ -65,9 +42,9 @@ type Exec struct {
 }
 
 // NewExec creates a new executable which is not running.
-func NewExec(info Settings) *Exec {
+func NewExec(info *Settings) *Exec {
 	result := new(Exec)
-	result.info.Settings = info
+	result.info.Settings = info.Copy()
 	return result
 }
 
@@ -107,19 +84,19 @@ func (self *Exec) Stop() {
 // GetSettings returns the settings for the executable.
 // This is thread-safe.
 func (self *Exec) GetSettings() Settings {
-	return self.info.Settings
+	return self.info.Settings.Copy()
 }
 
 // GetInfo returns the info for the executable.
 // This is not thread-safe.
 func (self *Exec) GetInfo() Info {
 	if !self.attemptLock() {
-		info := self.info
+		info := self.info.Copy()
 		info.Status = HALTED
 		return info
 	}
 	defer self.bgLock.Unlock()
-	return self.info
+	return self.info.Copy()
 }
 
 func (self *Exec) attemptLock() bool {
@@ -142,6 +119,8 @@ func (self *Exec) createCommand() (*execlib.Cmd, error) {
 	}
 
 	// TODO: here, set UID and GID
+
+	task.Dir = self.info.Settings.Dirname
 
 	var err error
 	// Attempt to pipe to the log files
