@@ -55,8 +55,7 @@ func (self *Overseer) Start() {
 		self.httpServer.Start(self.configuration.HTTPSettings.Port)
 	}
 	if self.configuration.HTTPSSettings.Enabled {
-		self.httpsServer.Start(self.configuration.HTTPSSettings.Port,
-			self.configuration.TLS)
+		self.startHTTPS()
 	}
 
 	// Start executable groups
@@ -111,11 +110,11 @@ func (self *Overseer) SetHTTPSettings(settings ServerSettings) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 	self.configuration.HTTPSettings = settings
+	self.configuration.Save()
 	self.httpServer.Stop()
 	if settings.Enabled {
 		self.httpServer.Start(settings.Port)
 	}
-	self.configuration.Save()
 }
 
 // SetHTTPSSettings updates the HTTPS settings and adjusts the server
@@ -125,11 +124,12 @@ func (self *Overseer) SetHTTPSSettings(settings ServerSettings) {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 	self.configuration.HTTPSSettings = settings
-	self.httpsServer.Stop()
-	if settings.Enabled {
-		self.httpsServer.Start(settings.Port, self.configuration.TLS)
-	}
 	self.configuration.Save()
+	// Restart the HTTPS server if needed
+	if settings.Enabled {
+		self.httpsServer.Stop()
+		self.startHttps()
+	}
 }
 
 // AddService adds a service based on its information.
@@ -183,6 +183,22 @@ func (self *Overseer) RemoveService(name string) bool {
 	return true
 }
 
+// SetTLS sets the TLS settings for the HTTPS server.
+// If the HTTPS server is running, it will be restarted.
+// This is thread-safe.
+func (self *Overseer) SetTLS(info server.TLSInfo) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	// Update the configuration
+	self.configuration.TLS = info
+	self.configuration.Save()
+	// Restart the HTTPS server if needed
+	if self.configuration.HTTPSSettings.Enabled {
+		self.httpsServer.Stop()
+		self.startHTTPS()
+	}
+}
+
 // GetSessions returns the overseer's session manager.
 // This is thread-safe.
 func (self *Overseer) GetSessions() *sessions.Manager {
@@ -203,6 +219,11 @@ func (self *Overseer) GetServiceInfos() []ServiceInfo {
 		}
 	}
 	return result
+}
+
+func (self *Overseer) startHTTPS() {
+	self.httpsServer.Start(self.configuration.HTTPSSettings.Port,
+		self.configuration.TLS)
 }
 
 type schemeRouter struct {
