@@ -128,7 +128,7 @@ func (self *Overseer) SetHTTPSSettings(settings ServerSettings) {
 	// Restart the HTTPS server if needed
 	if settings.Enabled {
 		self.httpsServer.Stop()
-		self.startHttps()
+		self.startHTTPS()
 	}
 }
 
