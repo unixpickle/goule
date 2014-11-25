@@ -14,7 +14,8 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Create tests for server subpackage
+ * Move subpackages back to main package
+ * Create tests for server
  * Create HTTP reverse proxy
  * Create tests for HTTP reverse proxy
  * Apply HTTP proxy to forward rules
