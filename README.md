@@ -14,12 +14,6 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Begin JSON/AJAX APIs for managing services and executables
-   * Call for changing TLS settings
-   * Call for changing admin forward rules
-   * Call for changing service's name
-   * Call for changing service's forward rules
-   * Call for changing service's executables
  * Create tests for server subpackage
  * Create HTTP reverse proxy
  * Create tests for HTTP reverse proxy
@@ -52,6 +46,11 @@ I'm moving things from my TODO list to this spot once I do them:
    * Call for changing the password
    * Call for changing HTTP settings
    * Call for changing HTTPS settings
+   * Call for changing TLS settings
+   * Call for changing admin forward rules
+   * Call for changing service's name
+   * Call for changing service's forward rules
+   * Call for changing service's executables
  * Restructured entire thing to use subpackages
  * Create deep-copy methods for all internal data structures
  * Use deep-copy methods for new Overseer

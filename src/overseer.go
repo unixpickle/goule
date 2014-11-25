@@ -243,7 +243,7 @@ func (self *Overseer) SetServiceExecutables(name string,
 	if index < 0 {
 		return false
 	}
-	
+
 	service := &self.configuration.Services[index]
 
 	// Update the configuration.
