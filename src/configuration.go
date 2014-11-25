@@ -14,6 +14,16 @@ type Service struct {
 	Executables  []exec.Settings `json:"executables"`
 }
 
+func (self *Service) Copy() Service {
+	rules := make([]ForwardRule, len(self.ForwardRules))
+	copy(rules, self.ForwardRules)
+	execs := make([]exec.Settings, len(self.Executables))
+	for i := range self.Executables {
+		execs[i] = self.Executables[i].Copy()
+	}
+	return Service{self.Name, rules, execs}
+}
+
 type ServerSettings struct {
 	Enabled bool `json:"enabled"`
 	Port    int  `json:"port"`
@@ -23,6 +33,12 @@ type AdminSettings struct {
 	Rules          []SourceURL `json:"rules"`
 	PasswordHash   string      `json:"password_hash"`
 	SessionTimeout int         `json:"session_timeout"`
+}
+
+func (self *AdminSettings) Copy() AdminSettings {
+	rules := make([]SourceURL, len(self.Rules))
+	copy(rules, self.Rules)
+	return AdminSettings{rules, self.PasswordHash, self.SessionTimeout}
 }
 
 type Configuration struct {
@@ -36,6 +52,15 @@ type Configuration struct {
 
 func NewConfiguration() *Configuration {
 	return &Configuration{}
+}
+
+func (self *Configuration) Copy() Configuration {
+	services := make([]Service, len(self.Services))
+	for i := range self.Services {
+		services[i] = self.Services[i].Copy()
+	}
+	return Configuration{self.LoadedPath, services, self.TLS.Copy(),
+		self.HTTPSettings, self.HTTPSSettings, self.Admin.Copy()}
 }
 
 func (self *Configuration) Read(path string) error {

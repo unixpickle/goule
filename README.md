@@ -14,9 +14,6 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Create deep-copy methods for all internal data structures
- * Figure out a better structure for Overseer (i.e. rewrite it.)
-   * Use deep-copy methods for new Overseer
  * Begin JSON/AJAX APIs for managing services and executables
    * Call for changing TLS settings
    * Call for changing admin forward rules
@@ -56,6 +53,8 @@ I'm moving things from my TODO list to this spot once I do them:
    * Call for changing HTTP settings
    * Call for changing HTTPS settings
  * Restructured entire thing to use subpackages
+ * Create deep-copy methods for all internal data structures
+ * Use deep-copy methods for new Overseer
 
 ## Possible TODOs down the road
 

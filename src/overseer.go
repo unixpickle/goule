@@ -27,7 +27,7 @@ type ServiceInfo struct {
 }
 
 // NewOverseer creates a new overseer with a given configuration.
-func NewOverseer(config Configuration) *Overseer {
+func NewOverseer(config *Configuration) *Overseer {
 	httpRouter := schemeRouter{"http", nil}
 	httpsRouter := schemeRouter{"https", nil}
 	sessions := sessions.NewManager()
@@ -37,8 +37,9 @@ func NewOverseer(config Configuration) *Overseer {
 	for _, service := range config.Services {
 		groups.Add(service.Name, exec.NewGroup(service.Executables))
 	}
-	result := &Overseer{sync.RWMutex{}, config, server.NewHTTP(&httpRouter),
-		server.NewHTTPS(&httpsRouter), groups, sessions}
+	result := &Overseer{sync.RWMutex{}, config.Copy(),
+		server.NewHTTP(&httpRouter), server.NewHTTPS(&httpsRouter), groups,
+		sessions}
 	httpRouter.overseer = result
 	httpsRouter.overseer = result
 	return result
@@ -90,7 +91,7 @@ func (self *Overseer) IsRunning() bool {
 func (self *Overseer) GetConfiguration() Configuration {
 	self.mutex.RLock()
 	defer self.mutex.RUnlock()
-	return self.configuration
+	return self.configuration.Copy()
 }
 
 // SetPasswordHash updates the password hash for this overseer.
@@ -136,7 +137,7 @@ func (self *Overseer) SetHTTPSSettings(settings ServerSettings) {
 // Returns false if and only if the new service's name conflicts with an
 // existing service.
 // This is thread-safe.
-func (self *Overseer) AddService(service Service) bool {
+func (self *Overseer) AddService(service *Service) bool {
 	self.mutex.Lock()
 	defer self.mutex.Unlock()
 
@@ -146,7 +147,8 @@ func (self *Overseer) AddService(service Service) bool {
 	}
 
 	// Add the service to the configuration.
-	self.configuration.Services = append(self.configuration.Services, service)
+	self.configuration.Services = append(self.configuration.Services,
+		service.Copy())
 	self.configuration.Save()
 
 	// Run the new group.
@@ -241,11 +243,14 @@ func (self *Overseer) SetServiceExecutables(name string,
 	if index < 0 {
 		return false
 	}
+	
+	service := &self.configuration.Services[index]
 
 	// Update the configuration.
-	self.configuration.Services[index].Executables =
-		make([]exec.Settings, len(execs))
-	copy(self.configuration.Services[index].Executables, execs)
+	service.Executables = make([]exec.Settings, len(execs))
+	for i := range execs {
+		service.Executables[i] = execs[i].Copy()
+	}
 	self.configuration.Save()
 
 	// Update the executable group.
@@ -290,7 +295,9 @@ func (self *Overseer) GetServiceInfos() []ServiceInfo {
 	result := []ServiceInfo{}
 	for _, info := range self.configuration.Services {
 		if group, ok := self.groups[info.Name]; ok {
-			desc := ServiceInfo{info.Name, info.ForwardRules, group.GetInfos()}
+			rules := make([]ForwardRule, len(info.ForwardRules))
+			copy(rules, info.ForwardRules)
+			desc := ServiceInfo{info.Name, rules, group.GetInfos()}
 			result = append(result, desc)
 		}
 	}
