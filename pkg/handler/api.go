@@ -1,22 +1,23 @@
-package goule
+package handler
 
 import (
-	"./exec"
-	"./httputil"
-	"./server"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"github.com/unixpickle/goule/pkg/config"
+	"github.com/unixpickle/goule/pkg/exec"
+	"github.com/unixpickle/goule/pkg/httputil"
+	"github.com/unixpickle/goule/pkg/server"
 	"net/http"
 	"strings"
 )
 
-type apiFunc func(*AdminContext, []byte) (interface{}, error)
+type apiFunc func(*Context, []byte) (interface{}, error)
 
 // TryAPI runs an API if applicable and returns whether or not it performed an
 // API call.
-func TryAPI(ctx *AdminContext) bool {
+func TryAPI(ctx *Context) bool {
 	// The API path must start with "/api/"
 	if !strings.HasPrefix(ctx.Path, "/api/") {
 		return false
@@ -39,7 +40,7 @@ func TryAPI(ctx *AdminContext) bool {
 // Returns false if and only if an API error occurred.
 // If the API returns a value which cannot be marshaled to JSON, RunAPICall
 // returns true even though it responds with an error code.
-func RunAPICall(ctx *AdminContext, api string, contents []byte) bool {
+func RunAPICall(ctx *Context, api string, contents []byte) bool {
 	// Prevent unauthorized requests
 	if !ctx.Authorized && api != "auth" {
 		httputil.RespondJSON(ctx.Response, http.StatusUnauthorized,
@@ -70,7 +71,7 @@ func RunAPICall(ctx *AdminContext, api string, contents []byte) bool {
 }
 
 // AuthAPI is the interface for the "auth" API call.
-func AuthAPI(ctx *AdminContext, body []byte) (interface{}, error) {
+func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 	var password string
 	if err := json.Unmarshal(body, &password); err != nil {
 		return nil, err
@@ -93,12 +94,12 @@ func AuthAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 }
 
 // ListServicesAPI is the interface for the "services" API call.
-func ListServicesAPI(ctx *AdminContext, body []byte) (interface{}, error) {
+func ListServicesAPI(ctx *Context, body []byte) (interface{}, error) {
 	return ctx.Overseer.GetServiceInfos(), nil
 }
 
 // ChangePasswordAPI is the interface for the "change_password" API call.
-func ChangePasswordAPI(ctx *AdminContext, body []byte) (interface{}, error) {
+func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
 	var password string
 	if err := json.Unmarshal(body, &password); err != nil {
 		return nil, err
@@ -112,8 +113,8 @@ func ChangePasswordAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 }
 
 // SetHTTPAPI is the interface for the "set_http" API call.
-func SetHTTPAPI(ctx *AdminContext, body []byte) (interface{}, error) {
-	var settings ServerSettings
+func SetHTTPAPI(ctx *Context, body []byte) (interface{}, error) {
+	var settings config.ServerSettings
 	if err := json.Unmarshal(body, &settings); err != nil {
 		return nil, err
 	}
@@ -122,8 +123,8 @@ func SetHTTPAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 }
 
 // SetHTTPSAPI is the interface for the "set_https" API call.
-func SetHTTPSAPI(ctx *AdminContext, body []byte) (interface{}, error) {
-	var settings ServerSettings
+func SetHTTPSAPI(ctx *Context, body []byte) (interface{}, error) {
+	var settings config.ServerSettings
 	if err := json.Unmarshal(body, &settings); err != nil {
 		return nil, err
 	}
@@ -131,7 +132,7 @@ func SetHTTPSAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 	return true, nil
 }
 
-func SetTLSAPI(ctx *AdminContext, body []byte) (interface{}, error) {
+func SetTLSAPI(ctx *Context, body []byte) (interface{}, error) {
 	var tls server.TLSInfo
 	if err := json.Unmarshal(body, &tls); err != nil {
 		return nil, err
@@ -140,8 +141,8 @@ func SetTLSAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 	return true, nil
 }
 
-func SetAdminRulesAPI(ctx *AdminContext, body []byte) (interface{}, error) {
-	var rules []SourceURL
+func SetAdminRulesAPI(ctx *Context, body []byte) (interface{}, error) {
+	var rules []config.SourceURL
 	if err := json.Unmarshal(body, &rules); err != nil {
 		return nil, err
 	}
@@ -149,7 +150,7 @@ func SetAdminRulesAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 	return true, nil
 }
 
-func RenameServiceAPI(ctx *AdminContext, body []byte) (interface{}, error) {
+func RenameServiceAPI(ctx *Context, body []byte) (interface{}, error) {
 	var oldNew []string
 	if err := json.Unmarshal(body, &oldNew); err != nil {
 		return nil, err
@@ -161,7 +162,7 @@ func RenameServiceAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 	return res, nil
 }
 
-func SetServiceRulesAPI(ctx *AdminContext, body []byte) (interface{}, error) {
+func SetServiceRulesAPI(ctx *Context, body []byte) (interface{}, error) {
 	var info setRulesCall
 	if err := json.Unmarshal(body, &info); err != nil {
 		return nil, err
@@ -170,7 +171,7 @@ func SetServiceRulesAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 	return res, nil
 }
 
-func SetServiceExecsAPI(ctx *AdminContext, body []byte) (interface{}, error) {
+func SetServiceExecsAPI(ctx *Context, body []byte) (interface{}, error) {
 	var info setExecutablesCall
 	if err := json.Unmarshal(body, &info); err != nil {
 		return nil, err
@@ -180,8 +181,8 @@ func SetServiceExecsAPI(ctx *AdminContext, body []byte) (interface{}, error) {
 }
 
 type setRulesCall struct {
-	name  string        `json:"name"`
-	rules []ForwardRule `json:"rules"`
+	name  string               `json:"name"`
+	rules []config.ForwardRule `json:"rules"`
 }
 
 type setExecutablesCall struct {

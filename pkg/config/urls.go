@@ -1,4 +1,4 @@
-package goule
+package config
 
 import (
 	"net/url"

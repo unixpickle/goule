@@ -1,6 +1,8 @@
-package goule
+package handler
 
-func HandleContext(ctx *Context) {
+import "github.com/unixpickle/goule/pkg/overseer"
+
+func Handle(ctx *overseer.Context) {
 	if !TryAdmin(ctx) {
 		if !TryService(ctx) {
 			// TODO: send a nice 404 page here.
@@ -10,15 +12,15 @@ func HandleContext(ctx *Context) {
 	}
 }
 
-func TryService(ctx *Context) bool {
+func TryService(ctx *overseer.Context) bool {
 	// TODO: here, check services' forward rules
 	return false
 }
 
-func TryAdmin(ctx *Context) bool {
+func TryAdmin(ctx *overseer.Context) bool {
 	for _, source := range ctx.Overseer.GetConfiguration().Admin.Rules {
 		if source.MatchesURL(&ctx.URL) {
-			adminContext := NewAdminContext(ctx, source)
+			adminContext := NewContext(ctx, source)
 			if !TrySite(adminContext) {
 				TryAPI(adminContext)
 			}
