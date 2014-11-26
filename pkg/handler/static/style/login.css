@@ -1,0 +1,35 @@
+#login {
+	display: inline-block;
+	width: 420px;
+	height: 420px;
+	border-radius: 225px;
+	background-color: white;
+	border: 15px solid #64bcd4;
+	text-align: center;
+}
+
+#login-lock {
+	margin-top: 40px;
+	width: 120px;
+	height: 120px;
+}
+
+#login-input {
+	position: absolute;
+	top: 120px;
+	left: 85px;
+	margin-top: 50px;
+	display: inline;
+	outline: none;
+	border: none;
+	width: 250px;
+	height: 90px;
+	line-height: 90px;
+	text-align: center;
+	font-size: 85px;
+	color: #64bcd4;
+}
+
+#login-input:focus {
+  outline: none;
+}
