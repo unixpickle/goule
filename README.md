@@ -14,8 +14,16 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Move subpackages back to main package
  * Create tests for server
+ * Create tests for config
+ * Implement APIs
+   * Get admin rules
+   * Get admin session timeout
+   * Set admin session timeout
+   * Set TLS
+   * Get HTTP settings
+   * Get HTTPS settings
+   * Add service
  * Create HTTP reverse proxy
  * Create tests for HTTP reverse proxy
  * Apply HTTP proxy to forward rules
@@ -29,7 +37,7 @@ Here is a general TODO list which outlines everything that must be done before G
 
 I'm moving things from my TODO list to this spot once I do them:
 
- * Update [router.go](src/router.go) to forward to the admin site if applicable
+ * Update router.go to forward to the admin site if applicable
    * Begin JSON/AJAX control API
    * Setup static file server
  * Make admin HTTP static file server secure!
@@ -55,6 +63,7 @@ I'm moving things from my TODO list to this spot once I do them:
  * Restructured entire thing to use subpackages
  * Create deep-copy methods for all internal data structures
  * Use deep-copy methods for new Overseer
+ * Restructured for `go get`
 
 ## Possible TODOs down the road
 
