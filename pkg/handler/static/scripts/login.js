@@ -4,13 +4,33 @@
     window.goule = {};
   }
 
-  window.goule.showLogin = function() {
-    $('#login').css({
-      display: 'inline-block',
-      opacity: '0'
-    });
-    $('#controls').fadeOut();
-    return $('#login').fadeIn();
+  window.goule.login = {};
+
+  window.goule.login.show = function(animate) {
+    window.goule.headerControls.hide(animate);
+    if (animate) {
+      $('#login').css({
+        display: 'inline-block',
+        opacity: '0'
+      });
+      return $('#login').fadeIn();
+    } else {
+      return $('#login').css({
+        display: 'inline-block',
+        opacity: '1.0'
+      });
+    }
+  };
+
+  window.goule.login.hide = function(animate) {
+    window.goule.headerControls.show(animate);
+    if (animate) {
+      return $('#login').fadeOut();
+    } else {
+      return $('#login').css({
+        display: 'none'
+      });
+    }
   };
 
   $(function() {
@@ -22,6 +42,8 @@
         $('#login-input').prop('disabled', false);
         if (!succ) {
           return $('#login-input').effect('shake');
+        } else {
+          return window.goule.login.hide(true);
         }
       });
     });
