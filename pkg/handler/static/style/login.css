@@ -1,4 +1,5 @@
 #login {
+	margin-top: 50px;
 	display: inline-block;
 	width: 420px;
 	height: 420px;
@@ -30,6 +31,8 @@
 	
 	padding-left: 25px;
 	padding-right: 25px;
+	padding-top: 0;
+	padding-bottom: 0;
 	line-height: 50px;
 	text-align: center;
 	font-size: 30px;
