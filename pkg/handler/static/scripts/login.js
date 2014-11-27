@@ -4,35 +4,25 @@
     window.goule = {};
   }
 
-  window.goule.showLogin = function(animate) {
-    if (animate == null) {
-      animate = false;
-    }
-    if (animate) {
-      $('#login').css({
-        display: 'inline-block',
-        opacity: '0'
-      });
-      $('#controls').fadeOut();
-      $('#login').fadeIn();
-    } else {
-      $('#login').css({
-        display: 'inline-block'
-      });
-    }
-    return $('#login-input').focus();
+  window.goule.showLogin = function() {
+    $('#login').css({
+      display: 'inline-block',
+      opacity: '0'
+    });
+    $('#controls').fadeOut();
+    return $('#login').fadeIn();
   };
 
   $(function() {
-    window.goule.showLogin();
-    return $('#login-input').keyup(function() {
-      var size;
-      size = 90 - 5 * $('#login-input').val().length;
-      if (size < 30) {
-        size = 30;
-      }
-      return $('#login-input').css({
-        'font-size': "" + size + "px"
+    $('#login-input').focus();
+    return $('#login-form').submit(function(e) {
+      e.preventDefault();
+      $('#login-input').prop('disabled', true);
+      return window.goule.auth($('#login-input').val(), function(succ) {
+        $('#login-input').prop('disabled', false);
+        if (!succ) {
+          return $('#login-input').effect('shake');
+        }
       });
     });
   });

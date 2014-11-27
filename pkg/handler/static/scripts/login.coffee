@@ -1,17 +1,16 @@
 window.goule = {} if not window.goule?
 
-window.goule.showLogin = (animate = false) ->
-	if animate
-		$('#login').css display: 'inline-block', opacity: '0'
-		$('#controls').fadeOut()
-		$('#login').fadeIn()
-	else
-		$('#login').css display: 'inline-block'
-	$('#login-input').focus()
+window.goule.showLogin = ->
+	$('#login').css display: 'inline-block', opacity: '0'
+	$('#controls').fadeOut()
+	$('#login').fadeIn()
 
 $ ->
-	window.goule.showLogin()
-	$('#login-input').keyup ->
-		size = 90 - 5 * $('#login-input').val().length
-		size = 30 if size < 30
-		$('#login-input').css 'font-size': "#{size}px"
+	$('#login-input').focus()
+	$('#login-form').submit (e) ->
+		e.preventDefault()
+		$('#login-input').prop 'disabled', true
+		window.goule.auth $('#login-input').val(), (succ) ->
+			$('#login-input').prop 'disabled', false
+			if not succ
+				$('#login-input').effect 'shake'

@@ -3,19 +3,20 @@
   <head>
     <title>Goule</title>
     <script src="scripts/jquery.js"></script>
+    <script src="scripts/jqueryui.js"></script>
     <script src="scripts/api.js"></script>
     <script src="scripts/login.js"></script>
+    <link rel="stylesheet" type="text/css" href="jqueryui.css">
     <link rel="stylesheet" type="text/css" href="style/main.css" />
     <link rel="stylesheet" type="text/css" href="style/login.css" />
   </head>
   <body>
     <div id="login">
-      <div class="filler">
+      <form class="filler" id="login-form">
         <img id="login-lock" class="noselect" src="images/lock.png"
              draggable="false" />
-        <br />
         <input id="login-input" type="password" />
-      </div>
+      </form>
     </div>
   </body>
 </html>

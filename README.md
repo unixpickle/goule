@@ -28,6 +28,8 @@ Here is a general TODO list which outlines everything that must be done before G
  * Create tests for HTTP reverse proxy
  * Apply HTTP proxy to forward rules
  * Implement web interface
+   * Slim down jquery-ui configuration
+   * Resize lock
    * JSON/AJAX APIs
    * Hellish nightmare of implementing a GUI
  * Logging to a file
@@ -64,6 +66,8 @@ I'm moving things from my TODO list to this spot once I do them:
  * Create deep-copy methods for all internal data structures
  * Use deep-copy methods for new Overseer
  * Restructured for `go get`
+ * Implement web interface
+   * Login UI
 
 ## Possible TODOs down the road
 
