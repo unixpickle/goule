@@ -10,7 +10,6 @@ class HeaderControls
       $('#header-controls').fadeIn()
     else
       $('#header-controls').css display: 'block', opacity: '1.0'
-    @selectTab 0, false
   
   hide: (animate) ->
     if animate
@@ -18,7 +17,7 @@ class HeaderControls
     else
       $('#header-controls').css display: 'none'
   
-  selectTab: (idx, animate) ->
+  selectTab: (idx, animate, animateShow = true) ->
     return if @selected is idx
     @selected = idx
     tab = @tabs[idx]
@@ -29,7 +28,12 @@ class HeaderControls
       $('#tab-selector').animate attributes, 'fast', ->
     else
       $('#tab-selector').css 'width': width + 'px', 'right': right + 'px'
-    return
+    if idx is 0
+      window.goule.services.show animateShow
+      window.goule.adminSettings.hide animateShow
+    else
+      window.goule.adminSettings.show animateShow
+      window.goule.services.hide animateShow
 
 window.goule.headerControls = new HeaderControls()
 

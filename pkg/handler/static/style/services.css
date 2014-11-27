@@ -1,0 +1,19 @@
+#add-service-button {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 60px;
+  height: 60px;
+  
+  background-color: #64bcd4;
+  background-image: url('../images/plus.png');
+  background-size: 50% 50%;
+  background-repeat: no-repeat;
+  background-position: center;
+  
+  border-radius: 30px;
+  border: none;
+  cursor: pointer;
+  
+  display: none;
+}

@@ -3,7 +3,6 @@ window.goule = {} if not window.goule?
 window.goule.login = {}
 
 window.goule.login.show = (animate) ->
-  window.goule.headerControls.hide animate
   if animate
     $('#login').css display: 'inline-block', opacity: '0'
     $('#login').fadeIn()
@@ -11,7 +10,6 @@ window.goule.login.show = (animate) ->
     $('#login').css display: 'inline-block', opacity: '1.0'
 
 window.goule.login.hide = (animate) ->
-  window.goule.headerControls.show animate
   if animate
     $('#login').fadeOut()
   else
@@ -28,3 +26,5 @@ $ ->
         $('#login-input').effect 'shake'
       else
         window.goule.login.hide true
+        window.goule.headerControls.show true
+        window.goule.headerControls.selectTab 0, false

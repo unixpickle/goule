@@ -7,7 +7,6 @@
   window.goule.login = {};
 
   window.goule.login.show = function(animate) {
-    window.goule.headerControls.hide(animate);
     if (animate) {
       $('#login').css({
         display: 'inline-block',
@@ -23,7 +22,6 @@
   };
 
   window.goule.login.hide = function(animate) {
-    window.goule.headerControls.show(animate);
     if (animate) {
       return $('#login').fadeOut();
     } else {
@@ -43,7 +41,9 @@
         if (!succ) {
           return $('#login-input').effect('shake');
         } else {
-          return window.goule.login.hide(true);
+          window.goule.login.hide(true);
+          window.goule.headerControls.show(true);
+          return window.goule.headerControls.selectTab(0, false);
         }
       });
     });

@@ -14,14 +14,13 @@
 
     HeaderControls.prototype.show = function(animate) {
       if (animate) {
-        $('#header-controls').fadeIn();
+        return $('#header-controls').fadeIn();
       } else {
-        $('#header-controls').css({
+        return $('#header-controls').css({
           display: 'block',
           opacity: '1.0'
         });
       }
-      return this.selectTab(0, false);
     };
 
     HeaderControls.prototype.hide = function(animate) {
@@ -34,8 +33,11 @@
       }
     };
 
-    HeaderControls.prototype.selectTab = function(idx, animate) {
+    HeaderControls.prototype.selectTab = function(idx, animate, animateShow) {
       var attributes, right, tab, width;
+      if (animateShow == null) {
+        animateShow = true;
+      }
       if (this.selected === idx) {
         return;
       }
@@ -54,6 +56,13 @@
           'width': width + 'px',
           'right': right + 'px'
         });
+      }
+      if (idx === 0) {
+        window.goule.services.show(animateShow);
+        return window.goule.adminSettings.hide(animateShow);
+      } else {
+        window.goule.adminSettings.show(animateShow);
+        return window.goule.services.hide(animateShow);
       }
     };
 

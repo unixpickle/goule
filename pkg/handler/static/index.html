@@ -7,10 +7,15 @@
     <script src="scripts/api.js"></script>
     <script src="scripts/login.js"></script>
     <script src="scripts/header-controls.js"></script>
+    <script src="scripts/services.js"></script>
+    <script src="scripts/admin-settings.js"></script>
     <link rel="stylesheet" type="text/css" href="style/jqueryui.css">
     <link rel="stylesheet" type="text/css" href="style/main.css" />
     <link rel="stylesheet" type="text/css" href="style/login.css" />
     <link rel="stylesheet" type="text/css" href="style/header.css" />
+    <link rel="stylesheet" type="text/css" href="style/services.css" />
+    <link rel="stylesheet" type="text/css" href="style/admin-settings.css" />
+    <link rel="stylesheet" type="text/css" href="style/separator.css" />
   </head>
   <body>
     <div id="header">
@@ -34,6 +39,46 @@
              draggable="false" />
         <input id="login-input" type="password" />
       </form>
+    </div>
+    <button id="add-service-button"></button>
+    <div id="admin-settings-container">
+      <div class="separator"><div></div><label>Server Settings</label></div>
+      <input type="checkbox" id="http-enabled" /> Serve HTTP
+      <br />
+      HTTP port: <input id="http-port" />
+      <br /><br />
+      <input type="checkbox" id="https-enabled" /> Serve HTTPS
+      <br />
+      HTTPS port: <input id="https-port" />
+      <br /><br />
+      Session timeout: <input id="session-timeout" />
+      
+      <div class="separator"><div></div><label>Change Password</label></div>
+      <form id="change-password-form">
+        <table>
+          <tr>
+            <td>New password:</td>
+            <td><input id="new-password" type="password" /></td>
+          </tr>
+          <tr>
+            <td>Confirm password:</td>
+            <td><input id="confirm-password" type="password" /></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <button id="change-password-button">Change password</button>
+            </td>
+          </tr>
+        </table>
+      </form>
+      <br />
+      
+      <div class="separator"><div></div><label>Forward Rules</label></div>
+      Some stuff here
+      
+      <div class="separator"><div></div><label>TLS Settings</label></div>
+      Some other stuff here
     </div>
   </body>
 </html>

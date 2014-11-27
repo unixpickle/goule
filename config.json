@@ -1,11 +1,11 @@
 {
-  "services": null,
+  "services": [],
   "tls": {
-    "named_certificates": null,
+    "named_certificates": {},
     "default_certificates": {
       "certificate_path": "",
       "key_path": "",
-      "authority_paths": null
+      "authority_paths": []
     }
   },
   "http": {
