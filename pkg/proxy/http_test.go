@@ -117,7 +117,7 @@ func TestHttpProxy(t *testing.T) {
 	defer proxy.stop()
 
 	// Get data
-	res, err := http.Post("http://" + proxyHost + "/foo", "text/plain",
+	res, err := http.Post("http://"+proxyHost+"/foo", "text/plain",
 		bytes.NewBuffer([]byte("Request data")))
 	if err != nil {
 		t.Fatal("Failed to make request:", err)
@@ -133,7 +133,7 @@ func TestHttpProxy(t *testing.T) {
 	if res.StatusCode != 404 {
 		t.Error("Expected status 404, got:", res.StatusCode)
 	}
-	
+
 	info := <-incoming
 	if !bytes.Equal(info.data, []byte("Request data")) {
 		t.Error("Sent unexpected post data:", string(info.data))

@@ -20,7 +20,7 @@ func proxyHTTPInternal(context *Context, client *http.Client) (int, error) {
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	
+
 	// Build the request headers and host
 	for header, value := range RequestHeaders(context) {
 		req.Header[header] = value
@@ -28,13 +28,13 @@ func proxyHTTPInternal(context *Context, client *http.Client) (int, error) {
 	if !context.Settings.RewriteHost {
 		req.Host = context.ProxyURL.Host
 	}
-	
+
 	// Send the request
 	res, err := client.Do(req)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	
+
 	// Write the response headers
 	for header, value := range ResponseHeaders(context, res.Header) {
 		context.Response.Header()[header] = value
