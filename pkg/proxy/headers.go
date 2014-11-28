@@ -1,26 +1,23 @@
 package proxy
 
-import (
-	"net/http"
-	"strings"
-)
+import "net/http"
 
 // RequestHeaders adds "x-forwarded-*" headers to a request while removing
 // hop-by-hop headers.
 func RequestHeaders(context *Context) http.Header {
 	result := http.Header{}
-	
+
 	// Copy all regular headers
 	for header, values := range context.Request.Header {
 		if !IsHopByHop(header, context.Settings) && !IsForwardedHeader(header) {
 			result[header] = values
 		}
 	}
-	
+
 	if context.Settings.RewriteHost {
 		result["Host"] = []string{context.ProxyURL.Host}
 	}
-	
+
 	// Set X-Forwarded-* headers.
 	// If the incoming request already had one of these headers, commas are used
 	// to add the new values to the existing ones.
@@ -44,14 +41,14 @@ func RequestHeaders(context *Context) http.Header {
 // This will remove hop-by-hop headers.
 func ResponseHeaders(context *Context, headers http.Header) http.Header {
 	result := http.Header{}
-	
+
 	// Copy all regular headers
 	for header, values := range headers {
 		if !IsHopByHop(header, context.Settings) {
 			result[header] = values
 		}
 	}
-	
+
 	return result
 }
 

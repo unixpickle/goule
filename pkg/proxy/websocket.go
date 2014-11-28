@@ -2,10 +2,8 @@ package proxy
 
 import (
 	"errors"
-	"io"
 	"net"
 	"net/http"
-	"sync"
 )
 
 func ProxyWebsocket(context *Context) {
@@ -28,22 +26,22 @@ func proxyWebsocketInternal(context *Context) (int, error) {
 				errors.New("Cannot connect to proxy destination.")
 		}
 		defer conn.Close()
-		
+
 		// Send the request
 		if err := context.Request.Write(conn); err != nil {
 			return http.StatusInternalServerError, err
 		}
-		
+
 		// Hijack the original connection
 		origConn, bf, err := hj.Hijack()
 		if err != nil {
 			return http.StatusInternalServerError, err
 		}
-		
+
 		// Pipe conn and origConn
 		Pipe(bf, conn)
 		origConn.Close()
-		
+
 		return 0, nil
 	}
 }

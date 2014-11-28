@@ -9,12 +9,12 @@ func Pipe(a io.ReadWriter, b io.ReadWriter) {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	go func() {
-		io.Copy(bf, conn)
+		io.Copy(b, a)
 		wg.Add(-1)
-	}
+	}()
 	go func() {
-		io.Copy(conn, bf)
+		io.Copy(a, b)
 		wg.Add(-1)
-	}
+	}()
 	wg.Wait()
 }
