@@ -28,6 +28,11 @@ Here is a general TODO list which outlines everything that must be done before G
  * Create tests for HTTP reverse proxy
  * Apply HTTP proxy to forward rules
  * Implement web interface
+   * Finish admin page
+     * Implement HTTP/HTTPS settings
+     * Implement session timeout setting
+     * Create list of forward rules
+     * Create editor for TLS configuration
    * Slim down jquery-ui configuration
    * Resize lock
    * JSON/AJAX APIs
