@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -10,6 +12,8 @@ import (
 
 const NORMAL_PORT = 12354
 const PROXY_PORT = 12355
+const NORMAL_PORT_2 = 12356
+const PROXY_PORT_2 = 12357
 
 type serverCb func(w http.ResponseWriter, r *http.Request)
 
@@ -19,7 +23,7 @@ type server struct {
 }
 
 func TestHttpRewriteHost(t *testing.T) {
-	client := &http.Client{}
+	client := new(http.Client)
 	settings := &Settings{false, true}
 
 	incoming := make(chan string, 1)
@@ -74,6 +78,71 @@ func TestHttpRewriteHost(t *testing.T) {
 	}
 }
 
+func TestHttpProxy(t *testing.T) {
+	client := new(http.Client)
+	settings := new(Settings)
+
+	incoming := make(chan resInfo, 1)
+	proxyHost := "localhost:" + strconv.Itoa(PROXY_PORT_2)
+	normalHost := "localhost:" + strconv.Itoa(NORMAL_PORT_2)
+
+	// Create normal server
+	normal := newServer(func(w http.ResponseWriter, r *http.Request) {
+		if data, err := ioutil.ReadAll(r.Body); err != nil {
+			t.Fatal("Failed to read incoming data:", err)
+		} else {
+			incoming <- resInfo{data, r.Header}
+		}
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(404)
+		w.Write([]byte("Some kind of 404 page!"))
+	})
+
+	// Create proxy server
+	proxy := newServer(func(w http.ResponseWriter, r *http.Request) {
+		proxyURL := url.URL{Scheme: "http", Host: proxyHost, Path: "/foo"}
+		destURL := url.URL{Scheme: "http", Host: normalHost, Path: "/bar"}
+		ctx := Context{r, w, &proxyURL, &destURL, settings}
+		ProxyHTTP(&ctx, client)
+	})
+
+	// Start servers
+	if err := normal.start(NORMAL_PORT_2); err != nil {
+		t.Fatalf("Failed to listen on port %d: %s", NORMAL_PORT_2, err.Error())
+	}
+	defer normal.stop()
+	if err := proxy.start(PROXY_PORT_2); err != nil {
+		t.Fatalf("Failed to listen on port %d: %s", PROXY_PORT_2, err.Error())
+	}
+	defer proxy.stop()
+
+	// Get data
+	res, err := http.Post("http://" + proxyHost + "/foo", "text/plain",
+		bytes.NewBuffer([]byte("Request data")))
+	if err != nil {
+		t.Fatal("Failed to make request:", err)
+	}
+	gotData, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal("Failed to read data:", gotData)
+	}
+	res.Body.Close()
+	if !bytes.Equal(gotData, []byte("Some kind of 404 page!")) {
+		t.Error("Got unexpected body:", string(gotData))
+	}
+	if res.StatusCode != 404 {
+		t.Error("Expected status 404, got:", res.StatusCode)
+	}
+	
+	info := <-incoming
+	if !bytes.Equal(info.data, []byte("Request data")) {
+		t.Error("Sent unexpected post data:", string(info.data))
+	}
+	if info.head.Get("Content-Type") != "text/plain" {
+		t.Error("Invalid content-type:", info.head.Get("Content-Type"))
+	}
+}
+
 func newServer(callback serverCb) *server {
 	return &server{nil, callback}
 }
@@ -96,4 +165,9 @@ func (self *server) stop() {
 
 func (self *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	self.callback(w, r)
+}
+
+type resInfo struct {
+	data []byte
+	head http.Header
 }
