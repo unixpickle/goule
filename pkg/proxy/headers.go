@@ -14,10 +14,6 @@ func RequestHeaders(context *Context) http.Header {
 		}
 	}
 
-	if context.Settings.RewriteHost {
-		result["Host"] = []string{context.ProxyURL.Host}
-	}
-
 	// Set X-Forwarded-* headers.
 	// If the incoming request already had one of these headers, commas are used
 	// to add the new values to the existing ones.
