@@ -33,8 +33,8 @@ func RequestHeaders(context *Context) http.Header {
 }
 
 // ResponseHeaders rewrites the response headers from an HTTP proxy target.
-// This may rewrite the "Location" header.
-// This will remove hop-by-hop headers.
+// In the future, this may rewrite the "Location" header.
+// This removes hop-by-hop headers.
 func ResponseHeaders(context *Context, headers http.Header) http.Header {
 	result := http.Header{}
 

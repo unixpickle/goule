@@ -77,7 +77,6 @@ func saveConfiguration(cfg *config.Config) {
 func setTTYEcho(enabled bool) {
 	stty, err := exec.LookPath("stty")
 	if err != nil {
-		fmt.Println("popy")
 		return
 	}
 	arg := "echo"
