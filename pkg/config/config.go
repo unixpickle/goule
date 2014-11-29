@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/unixpickle/goule/pkg/proxy"
 	"github.com/unixpickle/goule/pkg/server"
 	"io/ioutil"
 )
@@ -14,6 +15,7 @@ type Config struct {
 	HTTPSettings  ServerSettings `json:"http"`
 	HTTPSSettings ServerSettings `json:"https"`
 	Admin         AdminSettings  `json:"admin"`
+	Proxy         proxy.Settings `json:"proxy"`
 }
 
 func NewConfig() *Config {
@@ -26,7 +28,8 @@ func (self *Config) Copy() Config {
 		services[i] = self.Services[i].Copy()
 	}
 	return Config{self.LoadedPath, services, self.TLS.Copy(),
-		self.HTTPSettings, self.HTTPSSettings, self.Admin.Copy()}
+		self.HTTPSettings, self.HTTPSSettings, self.Admin.Copy(),
+		self.Proxy}
 }
 
 func (self *Config) Read(path string) error {

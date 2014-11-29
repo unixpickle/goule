@@ -16,6 +16,11 @@ Here is a general TODO list which outlines everything that must be done before G
 
  * Create tests for server
  * Create tests for config
+ * Create tests for websocket proxy
+ * Beef up tests for HTTP reverse proxy
+   * Different transfer encodings
+   * Various hop-by-hop headers
+   * Cookies
  * Implement APIs
    * Get admin rules
    * Get admin session timeout
@@ -24,9 +29,6 @@ Here is a general TODO list which outlines everything that must be done before G
    * Get HTTP settings
    * Get HTTPS settings
    * Add service
- * Create HTTP reverse proxy
- * Create tests for HTTP reverse proxy
- * Apply HTTP proxy to forward rules
  * Implement web interface
    * Finish admin page
      * Implement HTTP/HTTPS settings
@@ -73,6 +75,9 @@ I'm moving things from my TODO list to this spot once I do them:
  * Restructured for `go get`
  * Implement web interface
    * Login UI
+ * Create HTTP reverse proxy
+ * Create tests for HTTP reverse proxy
+ * Apply HTTP proxy to forward rules
 
 ## Possible TODOs down the road
 

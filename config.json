@@ -1,11 +1,11 @@
 {
-  "services": [],
+  "services": null,
   "tls": {
-    "named_certificates": {},
+    "named_certificates": null,
     "default_certificates": {
       "certificate_path": "",
       "key_path": "",
-      "authority_paths": []
+      "authority_paths": null
     }
   },
   "http": {
@@ -26,5 +26,9 @@
     ],
     "password_hash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
     "session_timeout": 0
+  },
+  "proxy": {
+    "websockets": false,
+    "rewrite_host": false
   }
 }

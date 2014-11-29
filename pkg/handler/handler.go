@@ -1,6 +1,10 @@
 package handler
 
-import "github.com/unixpickle/goule/pkg/overseer"
+import (
+	"github.com/unixpickle/goule/pkg/overseer"
+	"github.com/unixpickle/goule/pkg/proxy"
+	"net/http"
+)
 
 func Handle(ctx *overseer.Context) {
 	if !TryAdmin(ctx) {
@@ -13,7 +17,18 @@ func Handle(ctx *overseer.Context) {
 }
 
 func TryService(ctx *overseer.Context) bool {
-	// TODO: here, check services' forward rules
+	cfg := ctx.Overseer.GetConfiguration()
+	for _, service := range cfg.Services {
+		for _, rule := range service.ForwardRules {
+			if rule.From.MatchesURL(&ctx.URL) {
+				dest := rule.Apply(&ctx.URL)
+				context := proxy.Context{ctx.Request, ctx.Response, &ctx.URL,
+					dest, &cfg.Proxy}
+				proxy.ProxyRequest(&context, &http.Client{})
+				return true
+			}
+		}
+	}
 	return false
 }
 
