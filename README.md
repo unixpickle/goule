@@ -15,6 +15,10 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
  * Simplify the code and use DRY as much as possible.
+   * Use reflection for AJAX API calls
+   * Make simpler API for hashing passwords
+   * Create stubs for the shared locking/saving code in Overseer
+   * Use io.LimitedReader for httputil.ReadRequest
  * Create tests for server
  * Create tests for websocket proxy
  * Beef up tests for HTTP reverse proxy
@@ -37,6 +41,7 @@ Here is a general TODO list which outlines everything that must be done before G
      * Set service execs
  * Logging to a file
  * Buffered/truncated logging
+ * Set CAs in HTTPs server
 
 ## Done
 
