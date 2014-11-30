@@ -53,22 +53,39 @@
       <!-- Begin server settings -->
       <div class="separator"><div></div><label>Server Settings</label></div>
       <div id="as-server-settings">
-        <input type="checkbox" id="as-http-enabled" /> Serve HTTP
+        <div class="bool-field">
+          <label>Serve HTTP:</label>
+          <input type="checkbox" id="as-http-enabled" />
+        </div>
+        <div class="text-field">
+          <label>HTTP port:</label>
+          <input id="as-http-port" />
+        </div>
         <br />
-        HTTP port: <input id="as-http-port" />
-        <br /><br />
-        <input type="checkbox" id="as-https-enabled" /> Serve HTTPS
+        <div class="bool-field">
+          <label>Serve HTTPS:</label>
+          <input type="checkbox" id="as-https-enabled" />
+        </div>
+        <div class="text-field">
+          <label>HTTPS port:</label>
+          <input id="as-https-port" />
+        </div>
         <br />
-        HTTPS port: <input id="as-https-port" />
-        <br /><br />
-        Session timeout: <input id="as-session-timeout" />
-        <br /><br />
-        <input type="checkbox" id="as-rewrite-host" /> Rewrite "Host" header
+        <div class="text-field">
+          <label>Session timeout:</label>
+          <input id="as-session-timeout" />
+        </div>
         <br />
-        <input type="checkbox" id="as-websockets" /> Allow Websockets
-      
+        <div class="bool-field">
+          <label>Rewrite "Host" header:</label>
+          <input type="checkbox" id="as-rewrite-host" />
+        </div>
+        <div class="bool-field">
+          <label>Allow websockets:</label>
+          <input type="checkbox" id="as-websockets" />
+        </div>
         <br />
-        <div style="text-align: center">
+        <div class="button-field">
           <button class="save-button" style="display: none"></button>
         </div>
       </div>
@@ -76,22 +93,17 @@
       <!-- Begin change password -->
       <div class="separator"><div></div><label>Change Password</label></div>
       <form id="as-chpass-form">
-        <table>
-          <tr>
-            <td>New password:</td>
-            <td><input id="as-new-password" type="password" /></td>
-          </tr>
-          <tr>
-            <td>Confirm password:</td>
-            <td><input id="as-confirm-password" type="password" /></td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>
-              <input type="submit" value="Change Password" />
-            </td>
-          </tr>
-        </table>
+        <div class="text-field">
+          <label>New password:</label>
+          <input id="as-new-password" type="password" />
+        </div>
+        <div class="text-field">
+          <label>Confirm password:</label>
+          <input id="as-confirm-password" type="password" />
+        </div>
+        <div class="button-field">
+          <input type="submit" value="Change Password" />
+        </div>
       </form>
       <br />
       

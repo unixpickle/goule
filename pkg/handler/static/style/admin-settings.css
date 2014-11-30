@@ -8,7 +8,28 @@
   background-color: white;
 }
 
-#as-confirm-password {
-  display: block;
-  position: relative;
+#as-container .text-field input {
+  border: none;
+  background-color: #64bcd4;
+  color: #FFFFFF;
+  padding: 3px 3px 3px 3px;
+}
+
+#as-chpass-form .ui-effects-wrapper {
+  display: inline;
+}
+
+#as-container .text-field, #as-container .bool-field {
+  margin-bottom: 3px;
+  margin-top: 3px;
+}
+
+#as-container .text-field label, #as-container .bool-field label {
+  display: inline-block;
+  width: 380px;
+  text-align: right;
+}
+
+#as-container .button-field {
+  text-align: center;
 }

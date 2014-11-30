@@ -99,6 +99,9 @@ func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 	sessionId := ctx.Overseer.GetSessions().Login()
 	cookie := &http.Cookie{Name: SessionIdCookie, Value: sessionId,
 		Path: ctx.Rule.Path, Domain: ctx.Rule.Hostname}
+	if cookie.Domain == "localhost" {
+		cookie.Domain = ""
+	}
 	http.SetCookie(ctx.Response, cookie)
 	return true, nil
 }

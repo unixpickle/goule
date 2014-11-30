@@ -318,11 +318,13 @@
         return;
       }
       this.disable();
-      return window.goule.api.changePassword(newPass, function() {
-        this.enable();
-        this.passwordInput.val('');
-        return this.confirmInput.val('');
-      });
+      return window.goule.api.changePassword(newPass, (function(_this) {
+        return function() {
+          _this.enable();
+          _this.passwordInput.val('');
+          return _this.confirmInput.val('');
+        };
+      })(this));
     };
 
     return PasswordChanger;

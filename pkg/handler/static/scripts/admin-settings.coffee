@@ -13,6 +13,8 @@ class AdminSettings
       if not err?
         @serverSettings.update config
         @serverSettings.enable()
+      else
+        console.log 'failed to get configuration'
     
     container = $ '#as-container'
     if animate
@@ -166,7 +168,7 @@ class PasswordChanger
       @confirmInput.effect 'shake'
       return
     @disable()
-    window.goule.api.changePassword newPass, ->
+    window.goule.api.changePassword newPass, =>
       @enable()
       @passwordInput.val ''
       @confirmInput.val ''
