@@ -15,19 +15,15 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
  * Create tests for server
- * Create tests for config
  * Create tests for websocket proxy
  * Beef up tests for HTTP reverse proxy
    * Different transfer encodings
    * Various hop-by-hop headers
    * Cookies
  * Implement APIs
-   * Get admin rules
-   * Get admin session timeout
+   * Get full configuration
    * Set admin session timeout
    * Set TLS
-   * Get HTTP settings
-   * Get HTTPS settings
    * Add service
  * Implement web interface
    * Finish admin page
@@ -78,6 +74,7 @@ I'm moving things from my TODO list to this spot once I do them:
  * Create HTTP reverse proxy
  * Create tests for HTTP reverse proxy
  * Apply HTTP proxy to forward rules
+ * Create tests for config
 
 ## Possible TODOs down the road
 
