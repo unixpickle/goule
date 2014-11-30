@@ -66,4 +66,8 @@
     return window.goule.api.runBool('set_admin_session_timeout', timeout, callback);
   };
 
+  window.goule.api.setAdminRules = function(rules, callback) {
+    return window.goule.api.runBool('set_admin_rules', rules, callback);
+  };
+
 }).call(this);

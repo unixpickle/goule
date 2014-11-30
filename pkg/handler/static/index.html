@@ -17,6 +17,7 @@
     <link rel="stylesheet" type="text/css" href="style/admin-settings.css" />
     <link rel="stylesheet" type="text/css" href="style/separator.css" />
     <link rel="stylesheet" type="text/css" href="style/save-button.css" />
+    <link rel="stylesheet" type="text/css" href="style/inner-add-button.css" />
   </head>
   <body>
     <!-- Begin header -->
@@ -84,9 +85,8 @@
           <label>Allow websockets:</label>
           <input type="checkbox" id="as-websockets" />
         </div>
-        <br />
         <div class="button-field">
-          <button class="save-button" style="display: none"></button>
+          <button class="save-button"></button>
         </div>
       </div>
       
@@ -105,11 +105,18 @@
           <input type="submit" value="Change Password" />
         </div>
       </form>
-      <br />
       
       <!-- Begin forward rules -->
       <div class="separator"><div></div><label>Forward Rules</label></div>
-      Some stuff here
+      <div id="as-rules">
+        <div id="as-rule-list"></div>
+        <div class="button-field">
+          <div class="filler">
+            <button class="inner-add-button" id="as-add-rule"></button>
+            <button class="save-button"></button>
+          </div>
+        </div>
+      </div>
       
       <!-- Begin TLS settings -->
       <div class="separator"><div></div><label>TLS Settings</label></div>

@@ -22,8 +22,6 @@ Here is a general TODO list which outlines everything that must be done before G
    * Cookies
  * Implement web interface
    * Finish admin page
-     * Line up fields and make them look nicer
-     * Create list of forward rules
      * Create editor for TLS configuration
    * Create "add service" page
    * Slim down jquery-ui configuration
@@ -33,7 +31,6 @@ Here is a general TODO list which outlines everything that must be done before G
    * Write the rest of the AJAX API stubs
      * Add service
      * Rename service
-     * Set admin rules
      * Set TLS
      * Set service rules
      * Set service execs
@@ -88,6 +85,10 @@ I'm moving things from my TODO list to this spot once I do them:
      * Implement HTTP/HTTPS settings
      * Implement session timeout setting
      * Implement proxy settings
+     * Line up fields and make them look nicer
+     * Create list of forward rules
+   * Write the rest of the AJAX API stubs
+     * Set admin rules
 
 ## Possible TODOs down the road
 

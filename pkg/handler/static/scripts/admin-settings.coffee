@@ -4,15 +4,19 @@ class AdminSettings
   constructor: ->
     @serverSettings = new ServerSettings()
     @passwordChanger = new PasswordChanger()
+    @forwardRules = new ForwardRules()
     $('#as-container input').on 'input', => @inputChanged()
     $('#as-container input').change => @inputChanged()
   
   show: (animate) ->
     @serverSettings.disable()
+    @forwardRules.disable()
     window.goule.api.getConfig (err, config) =>
       if not err?
         @serverSettings.update config
         @serverSettings.enable()
+        @forwardRules.update config
+        @forwardRules.enable()
       else
         console.log 'failed to get configuration'
     
@@ -172,5 +176,102 @@ class PasswordChanger
       @enable()
       @passwordInput.val ''
       @confirmInput.val ''
+
+class ForwardRules
+  constructor: ->
+    @showingSave = false
+    @configRules = []
+    @listDiv = $ '#as-rule-list'
+    @container = $ '#as-rules'
+    @addButton = $ '#as-rules .inner-add-button'
+    @saveButton = $ '#as-rules .save-button'
+    @addButton.click =>
+      el = @addRule hostname: '', scheme: 'http', path: ''
+      el.find('input').focus()
+      @inputChanged()
+    @saveButton.click => @save()
+  
+  disable: -> @container.css opacity: '0.5', 'pointer-events': 'none'
+  
+  enable: -> @container.css opacity: '1.0', 'pointer-events': 'auto'
+
+  inputChanged: ->
+    if @didChange()
+      return if @showingSave
+      @showingSave = true
+      @saveButton.stop true, true
+      @addButton.stop true, true
+      @saveButton.css left: '380px', opacity: '0.0', display: 'inline-block'
+      @saveButton.animate left: '405px', opacity: '1.0'
+      @addButton.animate left: '355px'
+    else
+      return if not @showingSave
+      @showingSave = false
+      @saveButton.stop true, true
+      @addButton.stop true, true
+      @saveButton.animate {left: '380px', opacity: '0.0'}, =>
+        @saveButton.css display: 'none'
+      @addButton.animate left: '380px'
+
+  update: (config) ->
+    @configRules = config.admin.rules
+    @listDiv.empty()
+    @addRule rule for rule in @configRules
+  
+  save: ->
+    @disable()
+    rules = @getRules()
+    window.goule.api.setAdminRules rules, =>
+      @enable()
+      @configRules = rules
+      @inputChanged()
+  
+  didChange: ->
+    rules = @getRules()
+    if rules.length isnt @configRules.length
+      return true
+    for rule, i in rules
+      if not ForwardRules.rulesEqual rule, @configRules[i]
+        return true
+    return false
+  
+  getRules: ->
+    res = []
+    for input in @listDiv.find 'input'
+      # parse the URL to form a rule
+      res.push ForwardRules.parseRule $(input).val()
+    return res
+  
+  addRule: (rule) ->
+    el = $ '<div class="as-rule"><input /><button></button></div>'
+    input = el.find 'input'
+    input.val rule.scheme + "://" + rule.hostname + rule.path
+    input.on 'input', => @inputChanged()
+    el.find('button').click =>
+      el.remove()
+      @inputChanged()
+    @listDiv.append el
+    return el
+  
+  @parseRule: (ruleStr) ->
+    # A rule like "http://localhost/foo"
+    match = /^(http|https):\/\/(.*?)\/(.*)$/.exec ruleStr
+    if match?
+      return scheme: match[1], hostname: match[2], path: '/' + match[3]
+    # A rule like "http://google.com"
+    match = /^(http|https):\/\/(.*)$/.exec ruleStr
+    if match?
+      return scheme: match[1], hostname: match[2], path: ''
+    # A rule like "aqnichol.com/foo"
+    match = /^(.*)\/(.*)$/.exec ruleStr
+    if match?
+      return scheme: 'http', hostname: match[1], path: '/' + match[2]
+    # A rule like "aqnichol.com"
+    return scheme: 'http', hostname: ruleStr, path: ''
+  
+  @rulesEqual: (r1, r2) ->
+    for own key, val of r1
+      return false if r2[key] isnt val
+    return true
 
 $ -> window.goule.adminSettings = new AdminSettings()

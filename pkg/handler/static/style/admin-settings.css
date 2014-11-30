@@ -8,15 +8,13 @@
   background-color: white;
 }
 
-#as-container .text-field input {
+/* Various generic styles */
+
+#as-container .text-field input, .as-rule input {
   border: none;
   background-color: #64bcd4;
   color: #FFFFFF;
   padding: 3px 3px 3px 3px;
-}
-
-#as-chpass-form .ui-effects-wrapper {
-  display: inline;
 }
 
 #as-container .text-field, #as-container .bool-field {
@@ -32,4 +30,67 @@
 
 #as-container .button-field {
   text-align: center;
+}
+
+/* Server settings */
+
+#as-server-settings .save-button {
+  margin-top: 10px;
+  display: none;
+}
+
+/* Change password form */
+
+#as-chpass-form .ui-effects-wrapper {
+  display: inline;
+}
+
+/* Forward rules */
+
+.as-rule input {
+  margin-left: 150px;
+  font-size: 20px;
+  display: inline-block;
+  width: 500px;
+  height: 24px;
+}
+
+.as-rule button {
+  vertical-align: top;
+  margin: 2px 0 0 5px;
+  padding: 0 0 0 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 13px;
+  border: none;
+  cursor: pointer;
+  
+  background-color: red;
+  background-image: url('../images/minus.png');
+  background-size: 40% 40%;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.as-rule button:focus {
+  outline:0;
+}
+
+#as-rules .button-field {
+  margin-top: 10px;
+  height: 40px;
+}
+
+#as-rules .button-field button {
+  position: absolute;
+}
+
+#as-rules .button-field .inner-add-button {
+  left: 380px;
+  top: 0;
+}
+
+#as-rules .button-field .save-button {
+  display: none;
+  top: 0;
 }

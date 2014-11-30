@@ -41,3 +41,6 @@ window.goule.api.setProxy = (settings, callback) ->
 
 window.goule.api.setSessionTimeout = (timeout, callback) ->
   window.goule.api.runBool 'set_admin_session_timeout', timeout, callback
+
+window.goule.api.setAdminRules = (rules, callback) ->
+  window.goule.api.runBool 'set_admin_rules', rules, callback
