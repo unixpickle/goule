@@ -16,8 +16,10 @@
     <link rel="stylesheet" type="text/css" href="style/services.css" />
     <link rel="stylesheet" type="text/css" href="style/admin-settings.css" />
     <link rel="stylesheet" type="text/css" href="style/separator.css" />
+    <link rel="stylesheet" type="text/css" href="style/save-button.css" />
   </head>
   <body>
+    <!-- Begin header -->
     <div id="header">
       <div id="header-logo"></div>
       <h1 id="header-name">Goule</h1>
@@ -33,6 +35,8 @@
         <div id="tab-selector"></div>
       </div>
     </div>
+    
+    <!-- Begin login -->
     <div id="login">
       <form class="filler" id="login-form">
         <img id="login-lock" class="noselect" src="images/lock.png"
@@ -40,43 +44,62 @@
         <input id="login-input" type="password" />
       </form>
     </div>
+    
+    <!-- Begin services -->
     <button id="add-service-button"></button>
-    <div id="admin-settings-container">
+    
+    <!-- Begin admin settings (abbreviated 'as')-->
+    <div id="as-container">
+      <!-- Begin server settings -->
       <div class="separator"><div></div><label>Server Settings</label></div>
-      <input type="checkbox" id="http-enabled" /> Serve HTTP
-      <br />
-      HTTP port: <input id="http-port" />
-      <br /><br />
-      <input type="checkbox" id="https-enabled" /> Serve HTTPS
-      <br />
-      HTTPS port: <input id="https-port" />
-      <br /><br />
-      Session timeout: <input id="session-timeout" />
+      <div id="as-server-settings">
+        <input type="checkbox" id="as-http-enabled" /> Serve HTTP
+        <br />
+        HTTP port: <input id="as-http-port" />
+        <br /><br />
+        <input type="checkbox" id="as-https-enabled" /> Serve HTTPS
+        <br />
+        HTTPS port: <input id="as-https-port" />
+        <br /><br />
+        Session timeout: <input id="as-session-timeout" />
+        <br /><br />
+        <input type="checkbox" id="as-rewrite-host" /> Rewrite "Host" header
+        <br />
+        <input type="checkbox" id="as-websockets" /> Allow Websockets
       
+        <br />
+        <div style="text-align: center">
+          <button class="save-button" style="display: none"></button>
+        </div>
+      </div>
+      
+      <!-- Begin change password -->
       <div class="separator"><div></div><label>Change Password</label></div>
-      <form id="change-password-form">
+      <form id="as-chpass-form">
         <table>
           <tr>
             <td>New password:</td>
-            <td><input id="new-password" type="password" /></td>
+            <td><input id="as-new-password" type="password" /></td>
           </tr>
           <tr>
             <td>Confirm password:</td>
-            <td><input id="confirm-password" type="password" /></td>
+            <td><input id="as-confirm-password" type="password" /></td>
           </tr>
           <tr>
             <td></td>
             <td>
-              <button id="change-password-button">Change password</button>
+              <input type="submit" value="Change Password" />
             </td>
           </tr>
         </table>
       </form>
       <br />
       
+      <!-- Begin forward rules -->
       <div class="separator"><div></div><label>Forward Rules</label></div>
       Some stuff here
       
+      <!-- Begin TLS settings -->
       <div class="separator"><div></div><label>TLS Settings</label></div>
       Some other stuff here
     </div>

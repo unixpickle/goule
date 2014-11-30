@@ -36,7 +36,7 @@
     return $('#login-form').submit(function(e) {
       e.preventDefault();
       $('#login-input').prop('disabled', true);
-      return window.goule.auth($('#login-input').val(), function(succ) {
+      return window.goule.api.auth($('#login-input').val(), function(succ) {
         $('#login-input').prop('disabled', false);
         if (!succ) {
           return $('#login-input').effect('shake');

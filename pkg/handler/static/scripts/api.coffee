@@ -1,6 +1,7 @@
 window.goule = {} if not window.goule?
 
-window.goule.api = (name, object, callback) ->
+window.goule.api = {}
+window.goule.api.run = (name, object, callback) ->
   path = window.location.pathname
   match = /^(.*)index.html$/.exec path
   path = match[1] if match?
@@ -14,20 +15,29 @@ window.goule.api = (name, object, callback) ->
     success: (data) -> callback null, data
   return
 
-window.goule.boolApi = (name, object, callback) ->
-  window.goule.api name, object, (err, obj) -> callback not err?
+window.goule.api.runBool = (name, object, callback) ->
+  window.goule.api.run name, object, (err, obj) -> callback not err?
 
-window.goule.auth = (password, callback) ->
-  window.goule.boolApi 'auth', password, callback
+window.goule.api.auth = (password, callback) ->
+  window.goule.api.runBool 'auth', password, callback
 
-window.goule.listServices = (callback) ->
-  window.goule.api 'services', null, callback
+window.goule.api.listServices = (callback) ->
+  window.goule.api.run 'services', null, callback
 
-window.goule.changePassword = (newPassword, callback) ->
-  window.goule.boolApi 'change_password', newPassword, callback
+window.goule.api.changePassword = (newPassword, callback) ->
+  window.goule.api.runBool 'change_password', newPassword, callback
 
-window.goule.setHttp = (enabled, port, callback) ->
-  window.goule.boolApi 'set_http', {enabled: enabled, port: port}, callback
+window.goule.api.setHttp = (settings, callback) ->
+  window.goule.api.runBool 'set_http', settings, callback
 
-window.goule.setHttps = (enabled, port, callback) ->
-  window.goule.boolApi 'set_https', {enabled: enabled, port: port}, callback
+window.goule.api.setHttps = (settings, callback) ->
+  window.goule.api.runBool 'set_https', settings, callback
+
+window.goule.api.getConfig = (callback) ->
+  window.goule.api.run 'get_configuration', null, callback
+
+window.goule.api.setProxy = (settings, callback) ->
+  window.goule.api.runBool 'set_proxy', settings, callback
+
+window.goule.api.setSessionTimeout = (timeout, callback) ->
+  window.goule.api.runBool 'set_admin_session_timeout', timeout, callback

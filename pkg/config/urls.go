@@ -38,7 +38,7 @@ func (self SourceURL) MatchesURL(url *url.URL) bool {
 	if url.Scheme != self.Scheme || hostname != self.Hostname {
 		return false
 	}
-	
+
 	// Perform subdirectory matching.
 	if strings.HasSuffix(url.Path, "/") {
 		return strings.HasPrefix(url.Path, self.Path)
@@ -46,7 +46,7 @@ func (self SourceURL) MatchesURL(url *url.URL) bool {
 		if url.Path == self.Path {
 			return true
 		} else {
-			return strings.HasPrefix(url.Path, self.Path + "/")
+			return strings.HasPrefix(url.Path, self.Path+"/")
 		}
 	}
 }
@@ -81,7 +81,7 @@ func joinPaths(p1 string, p2 string) string {
 	} else if p2 == "" {
 		return p1
 	}
-	
+
 	// Join path components
 	s1 := strings.HasSuffix(p1, "/")
 	s2 := strings.HasPrefix(p2, "/")

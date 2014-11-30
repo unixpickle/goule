@@ -49,20 +49,21 @@ func RunAPICall(ctx *Context, api string, contents []byte) bool {
 		return false
 	}
 	// Lookup the API and find the associated function
-	handlers := map[string]apiFunc{"auth": AuthAPI,
-		"services": ListServicesAPI,
-		"change_password": ChangePasswordAPI,
-		"set_http": SetHTTPAPI,
-		"set_https": SetHTTPSAPI,
-		"set_tls": SetTLSAPI,
-		"set_admin_rules": SetAdminRulesAPI,
-		"rename": RenameServiceAPI,
-		"set_service_rules": SetServiceRulesAPI,
-		"set_service_execs": SetServiceExecsAPI,
-		"get_configuration": GetConfigurationAPI,
+	handlers := map[string]apiFunc{
+		"auth":                      AuthAPI,
+		"services":                  ListServicesAPI,
+		"change_password":           ChangePasswordAPI,
+		"set_http":                  SetHTTPAPI,
+		"set_https":                 SetHTTPSAPI,
+		"set_tls":                   SetTLSAPI,
+		"set_admin_rules":           SetAdminRulesAPI,
+		"rename":                    RenameServiceAPI,
+		"set_service_rules":         SetServiceRulesAPI,
+		"set_service_execs":         SetServiceExecsAPI,
+		"get_configuration":         GetConfigurationAPI,
 		"set_admin_session_timeout": SetAdminSessionTimeoutAPI,
-		"add_service": AddServiceAPI,
-		"set_proxy": SetProxyAPI}
+		"add_service":               AddServiceAPI,
+		"set_proxy":                 SetProxyAPI}
 	handler, ok := handlers[api]
 	if !ok {
 		httputil.RespondJSON(ctx.Response, http.StatusNotFound, "No API: "+api)

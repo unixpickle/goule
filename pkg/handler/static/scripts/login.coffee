@@ -20,7 +20,7 @@ $ ->
   $('#login-form').submit (e) ->
     e.preventDefault()
     $('#login-input').prop 'disabled', true
-    window.goule.auth $('#login-input').val(), (succ) ->
+    window.goule.api.auth $('#login-input').val(), (succ) ->
       $('#login-input').prop 'disabled', false
       if not succ
         $('#login-input').effect 'shake'

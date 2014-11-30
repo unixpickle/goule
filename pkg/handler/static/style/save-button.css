@@ -1,0 +1,14 @@
+.save-button {
+  width: 40px;
+  height: 40px;
+  
+  background-color: #64bcd4;
+  background-image: url('../images/save.png');
+  background-size: 50% 50%;
+  background-repeat: no-repeat;
+  background-position: center;
+  
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+}

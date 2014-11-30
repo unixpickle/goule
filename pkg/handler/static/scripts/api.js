@@ -4,7 +4,9 @@
     window.goule = {};
   }
 
-  window.goule.api = function(name, object, callback) {
+  window.goule.api = {};
+
+  window.goule.api.run = function(name, object, callback) {
     var match, path;
     path = window.location.pathname;
     match = /^(.*)index.html$/.exec(path);
@@ -26,36 +28,42 @@
     });
   };
 
-  window.goule.boolApi = function(name, object, callback) {
-    return window.goule.api(name, object, function(err, obj) {
+  window.goule.api.runBool = function(name, object, callback) {
+    return window.goule.api.run(name, object, function(err, obj) {
       return callback(err == null);
     });
   };
 
-  window.goule.auth = function(password, callback) {
-    return window.goule.boolApi('auth', password, callback);
+  window.goule.api.auth = function(password, callback) {
+    return window.goule.api.runBool('auth', password, callback);
   };
 
-  window.goule.listServices = function(callback) {
-    return window.goule.api('services', null, callback);
+  window.goule.api.listServices = function(callback) {
+    return window.goule.api.run('services', null, callback);
   };
 
-  window.goule.changePassword = function(newPassword, callback) {
-    return window.goule.boolApi('change_password', newPassword, callback);
+  window.goule.api.changePassword = function(newPassword, callback) {
+    return window.goule.api.runBool('change_password', newPassword, callback);
   };
 
-  window.goule.setHttp = function(enabled, port, callback) {
-    return window.goule.boolApi('set_http', {
-      enabled: enabled,
-      port: port
-    }, callback);
+  window.goule.api.setHttp = function(settings, callback) {
+    return window.goule.api.runBool('set_http', settings, callback);
   };
 
-  window.goule.setHttps = function(enabled, port, callback) {
-    return window.goule.boolApi('set_https', {
-      enabled: enabled,
-      port: port
-    }, callback);
+  window.goule.api.setHttps = function(settings, callback) {
+    return window.goule.api.runBool('set_https', settings, callback);
+  };
+
+  window.goule.api.getConfig = function(callback) {
+    return window.goule.api.run('get_configuration', null, callback);
+  };
+
+  window.goule.api.setProxy = function(settings, callback) {
+    return window.goule.api.runBool('set_proxy', settings, callback);
+  };
+
+  window.goule.api.setSessionTimeout = function(timeout, callback) {
+    return window.goule.api.runBool('set_admin_session_timeout', timeout, callback);
   };
 
 }).call(this);

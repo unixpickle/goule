@@ -14,7 +14,7 @@ func TestMatchesURL(t *testing.T) {
 	ensureMismatch(t, "http://localhost/foobar", source)
 	ensureMismatch(t, "https://localhost/foo", source)
 	ensureMismatch(t, "http://localhost1/foo", source)
-	
+
 	source = SourceURL{"https", "aqnichol.com", ""}
 	ensureMatch(t, "https://aqnichol.com", source)
 	ensureMatch(t, "https://aqnichol.com/", source)
@@ -23,7 +23,7 @@ func TestMatchesURL(t *testing.T) {
 	ensureMismatch(t, "http://aqnichol.com", source)
 	ensureMismatch(t, "https://www.aqnichol.com", source)
 	ensureMismatch(t, "http://aqnichol.net", source)
-	
+
 	source = SourceURL{"https", "aqnichol.com", "/"}
 	ensureMismatch(t, "http://aqnichol.com", source)
 }
@@ -33,12 +33,12 @@ func TestSubpathForURL(t *testing.T) {
 	ensureSubpath(t, "http://localhost/foo", source, "")
 	ensureSubpath(t, "http://localhost/foo/", source, "/")
 	ensureSubpath(t, "http://localhost/foo/bar", source, "/bar")
-	
+
 	source = SourceURL{"http", "aqnichol.com", ""}
 	ensureSubpath(t, "http://aqnichol.com", source, "")
 	ensureSubpath(t, "http://aqnichol.com/", source, "/")
 	ensureSubpath(t, "http://aqnichol.com/foo", source, "/foo")
-	
+
 	source = SourceURL{"http", "aqnichol.com", "/"}
 	ensureSubpath(t, "http://aqnichol.com/", source, "")
 	ensureSubpath(t, "http://aqnichol.com/foo", source, "foo")
