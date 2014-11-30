@@ -20,11 +20,6 @@ Here is a general TODO list which outlines everything that must be done before G
    * Different transfer encodings
    * Various hop-by-hop headers
    * Cookies
- * Implement APIs
-   * Get full configuration
-   * Set admin session timeout
-   * Set TLS
-   * Add service
  * Implement web interface
    * Finish admin page
      * Implement HTTP/HTTPS settings
@@ -75,6 +70,12 @@ I'm moving things from my TODO list to this spot once I do them:
  * Create tests for HTTP reverse proxy
  * Apply HTTP proxy to forward rules
  * Create tests for config
+ * Implement more APIs
+   * Get full configuration
+   * Set admin session timeout
+   * Set TLS
+   * Add service
+   * Set proxy settings
 
 ## Possible TODOs down the road
 

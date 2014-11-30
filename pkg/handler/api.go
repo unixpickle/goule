@@ -8,6 +8,7 @@ import (
 	"github.com/unixpickle/goule/pkg/config"
 	"github.com/unixpickle/goule/pkg/exec"
 	"github.com/unixpickle/goule/pkg/httputil"
+	"github.com/unixpickle/goule/pkg/proxy"
 	"github.com/unixpickle/goule/pkg/server"
 	"net/http"
 	"strings"
@@ -49,11 +50,19 @@ func RunAPICall(ctx *Context, api string, contents []byte) bool {
 	}
 	// Lookup the API and find the associated function
 	handlers := map[string]apiFunc{"auth": AuthAPI,
-		"services": ListServicesAPI, "change_password": ChangePasswordAPI,
-		"set_http": SetHTTPAPI, "set_https": SetHTTPSAPI,
-		"set_admin_rules": SetAdminRulesAPI, "rename": RenameServiceAPI,
+		"services": ListServicesAPI,
+		"change_password": ChangePasswordAPI,
+		"set_http": SetHTTPAPI,
+		"set_https": SetHTTPSAPI,
+		"set_tls": SetTLSAPI,
+		"set_admin_rules": SetAdminRulesAPI,
+		"rename": RenameServiceAPI,
 		"set_service_rules": SetServiceRulesAPI,
-		"set_service_execs": SetServiceExecsAPI}
+		"set_service_execs": SetServiceExecsAPI,
+		"get_configuration": GetConfigurationAPI,
+		"set_admin_session_timeout": SetAdminSessionTimeoutAPI,
+		"add_service": AddServiceAPI,
+		"set_proxy": SetProxyAPI}
 	handler, ok := handlers[api]
 	if !ok {
 		httputil.RespondJSON(ctx.Response, http.StatusNotFound, "No API: "+api)
@@ -178,6 +187,40 @@ func SetServiceExecsAPI(ctx *Context, body []byte) (interface{}, error) {
 	}
 	res := ctx.Overseer.SetServiceExecutables(info.name, info.execs)
 	return res, nil
+}
+
+func GetConfigurationAPI(ctx *Context, body []byte) (interface{}, error) {
+	return ctx.Overseer.GetConfiguration(), nil
+}
+
+func SetAdminSessionTimeoutAPI(ctx *Context, body []byte) (interface{}, error) {
+	var num int
+	if err := json.Unmarshal(body, &num); err != nil {
+		return nil, err
+	}
+	ctx.Overseer.SetSessionTimeout(num)
+	return true, nil
+}
+
+func AddServiceAPI(ctx *Context, body []byte) (interface{}, error) {
+	var service config.Service
+	if err := json.Unmarshal(body, &service); err != nil {
+		return nil, err
+	}
+	if ctx.Overseer.AddService(&service) {
+		return true, nil
+	} else {
+		return nil, errors.New("Service name already taken.")
+	}
+}
+
+func SetProxyAPI(ctx *Context, body []byte) (interface{}, error) {
+	var settings proxy.Settings
+	if err := json.Unmarshal(body, &settings); err != nil {
+		return nil, err
+	}
+	ctx.Overseer.SetProxySettings(settings)
+	return true, nil
 }
 
 type setRulesCall struct {

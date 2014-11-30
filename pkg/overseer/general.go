@@ -2,6 +2,7 @@ package overseer
 
 import (
 	"github.com/unixpickle/goule/pkg/config"
+	"github.com/unixpickle/goule/pkg/proxy"
 	"github.com/unixpickle/goule/pkg/server"
 )
 
@@ -67,5 +68,24 @@ func (self *Overseer) SetAdminRules(rules []config.SourceURL) {
 	defer self.mutex.Unlock()
 	self.configuration.Admin.Rules = make([]config.SourceURL, len(rules))
 	copy(self.configuration.Admin.Rules, rules)
+	self.configuration.Save()
+}
+
+// SetSessionTimeout sets the session timeout.
+// This is thread-safe.
+func (self *Overseer) SetSessionTimeout(timeout int) {
+	self.mutex.Lock()
+	self.mutex.Unlock()
+	self.configuration.Admin.SessionTimeout = timeout
+	self.configuration.Save()
+	self.sessions.SetTimeout(timeout)
+}
+
+// SetProxySettings sets the proxy settings.
+// This is thread-safe.
+func (self *Overseer) SetProxySettings(settings proxy.Settings) {
+	self.mutex.Lock()
+	self.mutex.Unlock()
+	self.configuration.Proxy = settings
 	self.configuration.Save()
 }
