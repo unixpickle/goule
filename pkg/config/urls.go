@@ -38,11 +38,22 @@ func (self SourceURL) MatchesURL(url *url.URL) bool {
 	if url.Scheme != self.Scheme || hostname != self.Hostname {
 		return false
 	}
-	return strings.HasPrefix(url.Path, self.Path)
+	
+	// Perform subdirectory matching.
+	if strings.HasSuffix(url.Path, "/") {
+		return strings.HasPrefix(url.Path, self.Path)
+	} else {
+		if url.Path == self.Path {
+			return true
+		} else {
+			return strings.HasPrefix(url.Path, self.Path + "/")
+		}
+	}
 }
 
 // SubpathForURL returns the subpath that a given URL contains that a SourceURL
 // does not.
+// The result need not begin with a "/".
 func (self SourceURL) SubpathForURL(url *url.URL) string {
 	return url.Path[len(self.Path):]
 }
@@ -57,6 +68,28 @@ func (self ForwardRule) Apply(url *url.URL) *url.URL {
 	result := *url
 	result.Scheme = self.To.Scheme
 	result.Host = self.To.Hostname + ":" + strconv.Itoa(self.To.Port)
-	result.Path = self.To.Path + self.From.SubpathForURL(url)
+	result.Path = joinPaths(self.To.Path, self.From.SubpathForURL(url))
 	return &result
+}
+
+func joinPaths(p1 string, p2 string) string {
+	// If one path is empty, the other path is the result.
+	// For example, joinPaths("/foo", "") => "/foo"
+	// And another, joinPaths("", "/foo") => "/foo"
+	if p1 == "" {
+		return p2
+	} else if p2 == "" {
+		return p1
+	}
+	
+	// Join path components
+	s1 := strings.HasSuffix(p1, "/")
+	s2 := strings.HasPrefix(p2, "/")
+	if s1 && s2 {
+		return p1 + p2[1:]
+	} else if !s1 && !s2 {
+		return p1 + "/" + p2
+	} else {
+		return p1 + p2
+	}
 }
