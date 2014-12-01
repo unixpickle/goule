@@ -217,6 +217,7 @@ class ForwardRules
     @configRules = config.admin.rules
     @listDiv.empty()
     @addRule rule for rule in @configRules
+    @inputChanged()
   
   save: ->
     @disable()

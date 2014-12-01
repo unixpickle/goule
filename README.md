@@ -14,7 +14,6 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Fix save-button bug in admin forward rules
  * Create tests for server
  * Create tests for websocket proxy
  * Beef up tests for HTTP reverse proxy
@@ -94,7 +93,8 @@ I'm moving things from my TODO list to this spot once I do them:
  * Simplify the code and use DRY as much as possible.
    * Use reflection for AJAX API calls
    * Make simpler API for hashing passwords
-* Create stubs for the shared locking/saving code in Overseer
+   * Create stubs for the shared locking/saving code in Overseer
+  * Fix save-button bug in admin forward rules
 
 ## Possible TODOs down the road
 

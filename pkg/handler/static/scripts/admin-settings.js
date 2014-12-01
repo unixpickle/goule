@@ -423,16 +423,15 @@
     };
 
     ForwardRules.prototype.update = function(config) {
-      var rule, _i, _len, _ref, _results;
+      var rule, _i, _len, _ref;
       this.configRules = config.admin.rules;
       this.listDiv.empty();
       _ref = this.configRules;
-      _results = [];
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         rule = _ref[_i];
-        _results.push(this.addRule(rule));
+        this.addRule(rule);
       }
-      return _results;
+      return this.inputChanged();
     };
 
     ForwardRules.prototype.save = function() {
