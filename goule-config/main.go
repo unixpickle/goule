@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"github.com/unixpickle/goule/pkg/config"
@@ -43,8 +41,7 @@ func readPasswordHash() string {
 	fmt.Scanln(&password)
 	setTTYEcho(true)
 	fmt.Println("")
-	hash := sha256.Sum256([]byte(password))
-	return hex.EncodeToString(hash[:])
+	return config.HashPassword(password)
 }
 
 func readPort() int {

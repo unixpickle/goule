@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"github.com/unixpickle/goule/pkg/config"
@@ -94,10 +92,8 @@ func RunAPICall(ctx *Context, api string, body []byte) bool {
 // AuthAPI authenticates the user by checking a submitted password.
 func (ctx *Context) AuthAPI(password string) error {
 	// Check the password
-	hash := sha256.Sum256([]byte(password))
-	hex := hex.EncodeToString(hash[:])
-	adminHash := ctx.Overseer.GetConfiguration().Admin.PasswordHash
-	if strings.ToLower(hex) != strings.ToLower(adminHash) {
+	admin := ctx.Overseer.GetConfiguration().Admin
+	if !admin.CheckPassword(password) {
 		return errors.New("The provided password was incorrect.")
 	}
 
@@ -120,9 +116,7 @@ func (ctx *Context) ListServicesAPI() interface{} {
 // ChangePasswordAPI changes the admin password.
 func (ctx *Context) ChangePasswordAPI(password string) {
 	// Hash the password and save it
-	hash := sha256.Sum256([]byte(password))
-	hex := hex.EncodeToString(hash[:])
-	ctx.Overseer.SetPasswordHash(strings.ToLower(hex))
+	ctx.Overseer.SetPasswordHash(config.HashPassword(password))
 }
 
 // SetHTTPAPI sets the HTTP server settings.
