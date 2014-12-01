@@ -77,17 +77,17 @@ func (self *Overseer) Stop() {
 // IsRunning returns true if any servers are running.
 // This is thread-safe.
 func (self *Overseer) IsRunning() bool {
-	self.mutex.RLock()
-	defer self.mutex.RUnlock()
-	return self.httpServer.IsRunning() || self.httpsServer.IsRunning()
+	return self.Get(func() interface{} {
+		return self.httpServer.IsRunning() || self.httpsServer.IsRunning()
+	}).(bool)
 }
 
 // GetConfiguration returns a copy of the overseer's configuration.
 // This is thread-safe.
 func (self *Overseer) GetConfiguration() config.Config {
-	self.mutex.RLock()
-	defer self.mutex.RUnlock()
-	return self.configuration.Copy()
+	return self.Get(func() interface{} {
+		return self.configuration.Copy()
+	}).(config.Config)
 }
 
 // GetSessions returns the overseer's session manager.
@@ -95,6 +95,32 @@ func (self *Overseer) GetConfiguration() config.Config {
 func (self *Overseer) GetSessions() *sessions.Manager {
 	// No need to lock anything; the variable never changes.
 	return self.sessions
+}
+
+// Get performs a read-only operation on the overseer.
+func (self *Overseer) Get(f func() interface{}) interface{} {
+	self.mutex.RLock()
+	defer self.mutex.RUnlock()
+	return f()
+}
+
+// Write performs a write-only operation on the overseer.
+// This will automatically save the configuration once the function has run.
+func (self *Overseer) Set(f func()) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	f()
+	self.configuration.Save()
+}
+
+// ReadWrite performs a read-write operation on the overseer.
+// This will automatically save the configuration once the function has run.
+func (self *Overseer) GetSet(f func() interface{}) interface{} {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	res := f()
+	self.configuration.Save()
+	return res
 }
 
 type schemeRouter struct {
