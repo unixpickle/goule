@@ -35,39 +35,39 @@
   };
 
   window.goule.api.auth = function(password, callback) {
-    return window.goule.api.runBool('auth', password, callback);
+    return window.goule.api.runBool('Auth', password, callback);
   };
 
   window.goule.api.listServices = function(callback) {
-    return window.goule.api.run('services', null, callback);
+    return window.goule.api.run('ListServices', null, callback);
   };
 
   window.goule.api.changePassword = function(newPassword, callback) {
-    return window.goule.api.runBool('change_password', newPassword, callback);
+    return window.goule.api.runBool('ChangePassword', newPassword, callback);
   };
 
   window.goule.api.setHttp = function(settings, callback) {
-    return window.goule.api.runBool('set_http', settings, callback);
+    return window.goule.api.runBool('SetHTTP', settings, callback);
   };
 
   window.goule.api.setHttps = function(settings, callback) {
-    return window.goule.api.runBool('set_https', settings, callback);
+    return window.goule.api.runBool('SetHTTPS', settings, callback);
   };
 
   window.goule.api.getConfig = function(callback) {
-    return window.goule.api.run('get_configuration', null, callback);
+    return window.goule.api.run('GetConfiguration', null, callback);
   };
 
   window.goule.api.setProxy = function(settings, callback) {
-    return window.goule.api.runBool('set_proxy', settings, callback);
+    return window.goule.api.runBool('SetProxy', settings, callback);
   };
 
   window.goule.api.setSessionTimeout = function(timeout, callback) {
-    return window.goule.api.runBool('set_admin_session_timeout', timeout, callback);
+    return window.goule.api.runBool('SetAdminSessionTimeout', timeout, callback);
   };
 
   window.goule.api.setAdminRules = function(rules, callback) {
-    return window.goule.api.runBool('set_admin_rules', rules, callback);
+    return window.goule.api.runBool('SetAdminRules', rules, callback);
   };
 
 }).call(this);

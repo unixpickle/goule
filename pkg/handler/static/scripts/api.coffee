@@ -19,28 +19,28 @@ window.goule.api.runBool = (name, object, callback) ->
   window.goule.api.run name, object, (err, obj) -> callback not err?
 
 window.goule.api.auth = (password, callback) ->
-  window.goule.api.runBool 'auth', password, callback
+  window.goule.api.runBool 'Auth', password, callback
 
 window.goule.api.listServices = (callback) ->
-  window.goule.api.run 'services', null, callback
+  window.goule.api.run 'ListServices', null, callback
 
 window.goule.api.changePassword = (newPassword, callback) ->
-  window.goule.api.runBool 'change_password', newPassword, callback
+  window.goule.api.runBool 'ChangePassword', newPassword, callback
 
 window.goule.api.setHttp = (settings, callback) ->
-  window.goule.api.runBool 'set_http', settings, callback
+  window.goule.api.runBool 'SetHTTP', settings, callback
 
 window.goule.api.setHttps = (settings, callback) ->
-  window.goule.api.runBool 'set_https', settings, callback
+  window.goule.api.runBool 'SetHTTPS', settings, callback
 
 window.goule.api.getConfig = (callback) ->
-  window.goule.api.run 'get_configuration', null, callback
+  window.goule.api.run 'GetConfiguration', null, callback
 
 window.goule.api.setProxy = (settings, callback) ->
-  window.goule.api.runBool 'set_proxy', settings, callback
+  window.goule.api.runBool 'SetProxy', settings, callback
 
 window.goule.api.setSessionTimeout = (timeout, callback) ->
-  window.goule.api.runBool 'set_admin_session_timeout', timeout, callback
+  window.goule.api.runBool 'SetAdminSessionTimeout', timeout, callback
 
 window.goule.api.setAdminRules = (rules, callback) ->
-  window.goule.api.runBool 'set_admin_rules', rules, callback
+  window.goule.api.runBool 'SetAdminRules', rules, callback

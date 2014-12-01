@@ -15,7 +15,6 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
  * Simplify the code and use DRY as much as possible.
-   * Use reflection for AJAX API calls
    * Make simpler API for hashing passwords
    * Create stubs for the shared locking/saving code in Overseer
    * Use io.LimitedReader for httputil.ReadRequest
@@ -95,6 +94,8 @@ I'm moving things from my TODO list to this spot once I do them:
      * Create list of forward rules
    * Write the rest of the AJAX API stubs
      * Set admin rules
+ * Simplify the code and use DRY as much as possible.
+   * Use reflection for AJAX API calls
 
 ## Possible TODOs down the road
 

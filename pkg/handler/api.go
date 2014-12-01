@@ -11,6 +11,7 @@ import (
 	"github.com/unixpickle/goule/pkg/proxy"
 	"github.com/unixpickle/goule/pkg/server"
 	"net/http"
+	"reflect"
 	"strings"
 )
 
@@ -38,61 +39,66 @@ func TryAPI(ctx *Context) bool {
 }
 
 // RunAPICall runs an API call.
-// Returns false if and only if an API error occurred.
-// If the API returns a value which cannot be marshaled to JSON, RunAPICall
-// returns true even though it responds with an error code.
-func RunAPICall(ctx *Context, api string, contents []byte) bool {
+// Returns false if and only if any sort of error occurred.
+func RunAPICall(ctx *Context, api string, body []byte) bool {
 	// Prevent unauthorized requests
-	if !ctx.Authorized && api != "auth" {
+	if !ctx.Authorized && api != "Auth" {
 		httputil.RespondJSON(ctx.Response, http.StatusUnauthorized,
 			"Permissions denied.")
 		return false
 	}
-	// Lookup the API and find the associated function
-	handlers := map[string]apiFunc{
-		"auth":                      AuthAPI,
-		"services":                  ListServicesAPI,
-		"change_password":           ChangePasswordAPI,
-		"set_http":                  SetHTTPAPI,
-		"set_https":                 SetHTTPSAPI,
-		"set_tls":                   SetTLSAPI,
-		"set_admin_rules":           SetAdminRulesAPI,
-		"rename":                    RenameServiceAPI,
-		"set_service_rules":         SetServiceRulesAPI,
-		"set_service_execs":         SetServiceExecsAPI,
-		"get_configuration":         GetConfigurationAPI,
-		"set_admin_session_timeout": SetAdminSessionTimeoutAPI,
-		"add_service":               AddServiceAPI,
-		"set_proxy":                 SetProxyAPI}
-	handler, ok := handlers[api]
-	if !ok {
+	// Find the method corresponding to the API call
+	ctxVal := reflect.ValueOf(ctx)
+	method := ctxVal.MethodByName(api + "API")
+	if !method.IsValid() {
 		httputil.RespondJSON(ctx.Response, http.StatusNotFound, "No API: "+api)
 		return false
 	}
-	// Run the API
-	reply, err := handler(ctx, contents)
-	if err != nil {
-		httputil.RespondJSON(ctx.Response, http.StatusBadRequest, err.Error())
-		return false
+	args := make([]reflect.Value, method.Type().NumIn())
+	if method.Type().NumIn() == 1 {
+		inputType := method.Type().In(0)
+		dec := reflect.New(inputType)
+		if err := json.Unmarshal(body, dec.Interface()); err != nil {
+			httputil.RespondJSON(ctx.Response, http.StatusBadRequest,
+				err.Error())
+			return false
+		}
+		args[0] = reflect.Indirect(dec)
+	}
+	res := method.Call(args)
+	if len(res) == 0 {
+		// Empty return value => send an empty JSON object "{}"
+		return httputil.RespondJSON(ctx.Response, http.StatusOK,
+			map[string]string{})
+	} else if len(res) == 1 {
+		// Single return value could be an error.
+		retVal := res[0].Interface()
+		if err, ok := retVal.(error); ok {
+			return httputil.RespondJSON(ctx.Response, http.StatusBadRequest,
+				err)
+		} else {
+			return httputil.RespondJSON(ctx.Response, http.StatusOK, retVal)
+		}
 	} else {
-		httputil.RespondJSON(ctx.Response, http.StatusOK, reply)
-		return true
+		if !res[1].IsNil() {
+			err := res[1].Interface().(error)
+			return httputil.RespondJSON(ctx.Response, http.StatusBadRequest,
+				err.Error())
+		} else {
+			return httputil.RespondJSON(ctx.Response, http.StatusOK,
+				res[0].Interface())
+		}
 	}
 }
 
-// AuthAPI is the interface for the "auth" API call.
-func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
-	var password string
-	if err := json.Unmarshal(body, &password); err != nil {
-		return nil, err
-	}
-
+// AuthAPI authenticates the user by checking a submitted password.
+func (ctx *Context) AuthAPI(password string) error {
 	// Check the password
 	hash := sha256.Sum256([]byte(password))
 	hex := hex.EncodeToString(hash[:])
 	adminHash := ctx.Overseer.GetConfiguration().Admin.PasswordHash
 	if strings.ToLower(hex) != strings.ToLower(adminHash) {
-		return nil, errors.New("The provided password was incorrect.")
+		return errors.New("The provided password was incorrect.")
 	}
 
 	// Create a new session
@@ -103,128 +109,85 @@ func AuthAPI(ctx *Context, body []byte) (interface{}, error) {
 		cookie.Domain = ""
 	}
 	http.SetCookie(ctx.Response, cookie)
-	return true, nil
+	return nil
 }
 
-// ListServicesAPI is the interface for the "services" API call.
-func ListServicesAPI(ctx *Context, body []byte) (interface{}, error) {
-	return ctx.Overseer.GetServiceInfos(), nil
+// ListServicesAPI returns a list of service infos.
+func (ctx *Context) ListServicesAPI() interface{} {
+	return ctx.Overseer.GetServiceInfos()
 }
 
-// ChangePasswordAPI is the interface for the "change_password" API call.
-func ChangePasswordAPI(ctx *Context, body []byte) (interface{}, error) {
-	var password string
-	if err := json.Unmarshal(body, &password); err != nil {
-		return nil, err
-	}
-
+// ChangePasswordAPI changes the admin password.
+func (ctx *Context) ChangePasswordAPI(password string) {
 	// Hash the password and save it
 	hash := sha256.Sum256([]byte(password))
 	hex := hex.EncodeToString(hash[:])
 	ctx.Overseer.SetPasswordHash(strings.ToLower(hex))
-	return true, nil
 }
 
-// SetHTTPAPI is the interface for the "set_http" API call.
-func SetHTTPAPI(ctx *Context, body []byte) (interface{}, error) {
-	var settings config.ServerSettings
-	if err := json.Unmarshal(body, &settings); err != nil {
-		return nil, err
-	}
+// SetHTTPAPI sets the HTTP server settings.
+func (ctx *Context) SetHTTPAPI(settings config.ServerSettings) {
 	ctx.Overseer.SetHTTPSettings(settings)
-	return true, nil
 }
 
 // SetHTTPSAPI is the interface for the "set_https" API call.
-func SetHTTPSAPI(ctx *Context, body []byte) (interface{}, error) {
-	var settings config.ServerSettings
-	if err := json.Unmarshal(body, &settings); err != nil {
-		return nil, err
-	}
+func (ctx *Context) SetHTTPSAPI(settings config.ServerSettings) {
 	ctx.Overseer.SetHTTPSSettings(settings)
-	return true, nil
 }
 
-func SetTLSAPI(ctx *Context, body []byte) (interface{}, error) {
-	var tls server.TLSInfo
-	if err := json.Unmarshal(body, &tls); err != nil {
-		return nil, err
-	}
+func (ctx *Context) SetTLSAPI(tls server.TLSInfo) {
 	ctx.Overseer.SetTLS(tls)
-	return true, nil
 }
 
-func SetAdminRulesAPI(ctx *Context, body []byte) (interface{}, error) {
-	var rules []config.SourceURL
-	if err := json.Unmarshal(body, &rules); err != nil {
-		return nil, err
-	}
+func (ctx *Context) SetAdminRulesAPI(rules []config.SourceURL) {
 	ctx.Overseer.SetAdminRules(rules)
-	return true, nil
 }
 
-func RenameServiceAPI(ctx *Context, body []byte) (interface{}, error) {
-	var oldNew []string
-	if err := json.Unmarshal(body, &oldNew); err != nil {
-		return nil, err
-	}
+func (ctx *Context) RenameServiceAPI(oldNew []string) error {
 	if len(oldNew) != 2 {
-		return nil, errors.New("Expecting two array items.")
+		return errors.New("Expecting two array items.")
 	}
-	res := ctx.Overseer.RenameService(oldNew[0], oldNew[1])
-	return res, nil
-}
-
-func SetServiceRulesAPI(ctx *Context, body []byte) (interface{}, error) {
-	var info setRulesCall
-	if err := json.Unmarshal(body, &info); err != nil {
-		return nil, err
-	}
-	res := ctx.Overseer.SetServiceRules(info.name, info.rules)
-	return res, nil
-}
-
-func SetServiceExecsAPI(ctx *Context, body []byte) (interface{}, error) {
-	var info setExecutablesCall
-	if err := json.Unmarshal(body, &info); err != nil {
-		return nil, err
-	}
-	res := ctx.Overseer.SetServiceExecutables(info.name, info.execs)
-	return res, nil
-}
-
-func GetConfigurationAPI(ctx *Context, body []byte) (interface{}, error) {
-	return ctx.Overseer.GetConfiguration(), nil
-}
-
-func SetAdminSessionTimeoutAPI(ctx *Context, body []byte) (interface{}, error) {
-	var num int
-	if err := json.Unmarshal(body, &num); err != nil {
-		return nil, err
-	}
-	ctx.Overseer.SetSessionTimeout(num)
-	return true, nil
-}
-
-func AddServiceAPI(ctx *Context, body []byte) (interface{}, error) {
-	var service config.Service
-	if err := json.Unmarshal(body, &service); err != nil {
-		return nil, err
-	}
-	if ctx.Overseer.AddService(&service) {
-		return true, nil
+	if ctx.Overseer.RenameService(oldNew[0], oldNew[1]) {
+		return nil
 	} else {
-		return nil, errors.New("Service name already taken.")
+		return errors.New("Named service does not exist.")
 	}
 }
 
-func SetProxyAPI(ctx *Context, body []byte) (interface{}, error) {
-	var settings proxy.Settings
-	if err := json.Unmarshal(body, &settings); err != nil {
-		return nil, err
+func (ctx *Context) SetServiceRulesAPI(info setRulesCall) error {
+	if ctx.Overseer.SetServiceRules(info.name, info.rules) {
+		return nil
+	} else {
+		return errors.New("Named service does not exist.")
 	}
+}
+
+func (ctx *Context) SetServiceExecutablesAPI(info setExecutablesCall) error {
+	if ctx.Overseer.SetServiceExecutables(info.name, info.execs) {
+		return nil
+	} else {
+		return errors.New("Named service does not exist.")
+	}
+}
+
+func (ctx *Context) GetConfigurationAPI() interface{} {
+	return ctx.Overseer.GetConfiguration()
+}
+
+func (ctx *Context) SetAdminSessionTimeoutAPI(num int) {
+	ctx.Overseer.SetSessionTimeout(num)
+}
+
+func (ctx *Context) AddServiceAPI(service config.Service) error {
+	if ctx.Overseer.AddService(&service) {
+		return nil
+	} else {
+		return errors.New("Named service already exists.")
+	}
+}
+
+func (ctx *Context) SetProxyAPI(settings proxy.Settings) {
 	ctx.Overseer.SetProxySettings(settings)
-	return true, nil
 }
 
 type setRulesCall struct {
