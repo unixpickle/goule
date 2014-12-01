@@ -94,7 +94,7 @@ I'm moving things from my TODO list to this spot once I do them:
    * Use reflection for AJAX API calls
    * Make simpler API for hashing passwords
    * Create stubs for the shared locking/saving code in Overseer
-  * Fix save-button bug in admin forward rules
+ * Fix save-button bug in admin forward rules
 
 ## Possible TODOs down the road
 
