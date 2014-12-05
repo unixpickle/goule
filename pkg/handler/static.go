@@ -7,7 +7,7 @@ import (
 	"runtime"
 )
 
-func TrySite(ctx *Context) bool {
+func TryStatic(ctx *Context) bool {
 	// The admin control URL should have a "/" after it.
 	if ctx.Path == "" {
 		http.Redirect(ctx.Response, ctx.Request, ctx.Rule.Path+"/",
@@ -18,7 +18,7 @@ func TrySite(ctx *Context) bool {
 	// Forward "/" to index page.
 	if ctx.Path == "/" {
 		ctx.Path = "/index.html"
-		return TrySite(ctx)
+		return TryStatic(ctx)
 	}
 
 	// Validate the path for a static file request

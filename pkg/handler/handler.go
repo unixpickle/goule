@@ -36,7 +36,7 @@ func TryAdmin(ctx *overseer.Context) bool {
 	for _, source := range ctx.Overseer.GetConfiguration().Admin.Rules {
 		if source.MatchesURL(&ctx.URL) {
 			adminContext := NewContext(ctx, source)
-			if !TrySite(adminContext) {
+			if !TryStatic(adminContext) {
 				TryAPI(adminContext)
 			}
 			return true
