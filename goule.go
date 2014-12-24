@@ -15,10 +15,12 @@ type Goule struct {
 	admin    *ezserver.HTTP
 	mutex    sync.RWMutex
 	services []Service
+	sessions *sessions
 }
 
 func NewGoule(config *Config) *Goule {
 	res := new(Goule)
+	res.sessions = newSessions(res)
 	res.config = config
 	res.http = ezserver.NewHTTP(res)
 	res.https = ezserver.NewHTTPS(res, &config.TLS)
