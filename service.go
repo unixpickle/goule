@@ -2,32 +2,64 @@ package goule
 
 import (
 	"github.com/unixpickle/executor"
-	"sync"
 	"time"
 )
 
-// Service is an interface for a service which can be started, stopped, etc.
-type Service interface {
-	Config() *ServiceConfig
-	SkipWait() error
-	Start() error
-	Status() executor.Status
-	Stop() error
+// Service is a wrapper around executor.Service which includes a ServiceConfig.
+type Service struct {
+	executor.Service
+	config *ServiceConfig
 }
 
+// NewService creates a new Service with a given ServiceConfig.
+// Even if Autolaunch is set, the returned Service will not be started.
 func NewService(config *ServiceConfig) Service {
+	job := config.ToCmd().ToJob()
 	if config.Relaunch {
-		return &relaunchService{sync.Mutex{}, nil, config.Clone(),
-			config.Clone()}
+		// Convert the interval to a time.Duration
+		dur := time.Duration(config.Interval * float64(time.Second))
+		excService := executor.RelaunchService(job, dur)
+		return Service{excService, config}
 	} else {
-		return &jobService{sync.Mutex{}, config.ToJob(), false, nil,
-			config.Clone()}
+		return Service{executor.JobService(job), config}
 	}
+}
+
+// Config returns the service's configuration object.
+// You should not modify this object, but if you do it will not affect the
+// running service.
+func (s Service) Config() *ServiceConfig {
+	return s.config
 }
 
 // ServiceConfig stores configuration for a service.
 type ServiceConfig struct {
-	*executor.Cmd
+	// Stdout stores the standard output configuration.
+	Stdout Log `json:"stdout"`
+
+	// Stderr stores the standard error configuration.
+	Stderr Log `json:"stderr"`
+
+	// Directory is the working directory for the command
+	Directory string `json:"directory"`
+
+	// SetUID specifies whether or not the UID field should be used.
+	SetUID bool `json:"set_uid"`
+
+	// UID is the UID to run the command under.
+	UID int `json:"uid"`
+
+	// SetGID specifies whether or not the GID field should be used.
+	SetGID bool `json:"set_gid"`
+
+	// GID is the GID to run the command under.
+	GID int `json:"gid"`
+
+	// Arguments is the command-line arguments for the command.
+	Arguments []string `json:"arguments"`
+
+	// Environment is a mapping of environment variables for the command.
+	Environment map[string]string `json:"environment"`
 
 	// Identifier is a unique identifier for a service.
 	Identifier string `json:"id"`
@@ -43,129 +75,8 @@ type ServiceConfig struct {
 	Interval float64 `json:"interval"`
 }
 
-// Clone returns a deep copy of a ServiceConfig.
-func (s *ServiceConfig) Clone() *ServiceConfig {
-	cpy := *s
-	res := &cpy
-	res.Cmd = res.Cmd.Clone()
-	return res
-}
-
-type jobService struct {
-	mutex   sync.Mutex
-	job     executor.Job
-	running bool
-	done    chan struct{}
-	config  *ServiceConfig
-}
-
-func (j *jobService) Config() *ServiceConfig {
-	return j.config
-}
-
-func (r *jobService) SkipWait() error {
-	return executor.ErrNotWaiting
-}
-
-func (j *jobService) Start() error {
-	j.mutex.Lock()
-	defer j.mutex.Unlock()
-	if j.running {
-		return executor.ErrAlreadyRunning
-	}
-	ch := make(chan struct{})
-	go func() {
-		runJob(j.job)
-		j.mutex.Lock()
-		j.running = false
-		j.done = nil
-		j.mutex.Unlock()
-		close(ch)
-	}()
-	j.running = true
-	j.done = ch
-	return nil
-}
-
-func (j *jobService) Status() executor.Status {
-	j.mutex.Lock()
-	defer j.mutex.Unlock()
-	if j.running {
-		return executor.STATUS_RUNNING
-	} else {
-		return executor.STATUS_STOPPED
-	}
-}
-
-func (j *jobService) Stop() error {
-	j.mutex.Lock()
-	if !j.running {
-		j.mutex.Unlock()
-		return executor.ErrNotRunning
-	}
-	if err := j.job.Stop(); err != nil {
-		j.mutex.Unlock()
-		return err
-	}
-	ch := j.done
-	j.mutex.Unlock()
-	<-ch
-	return nil
-}
-
-type relaunchService struct {
-	mutex      sync.Mutex
-	relauncher *executor.Relauncher
-	config     *ServiceConfig
-	configCopy *ServiceConfig
-}
-
-func (r *relaunchService) Config() *ServiceConfig {
-	return r.configCopy
-}
-
-func (r *relaunchService) SkipWait() error {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-	if r.relauncher == nil {
-		return executor.ErrNotRunning
-	}
-	return r.relauncher.SkipWait()
-}
-
-func (r *relaunchService) Start() error {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-	if r.relauncher != nil {
-		return executor.ErrAlreadyRunning
-	}
-	dur := time.Duration(r.config.Interval * float64(time.Second))
-	r.relauncher = executor.Relaunch(r.config.ToJob(), dur)
-	return nil
-}
-
-func (r *relaunchService) Status() executor.Status {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-	if r.relauncher == nil {
-		return executor.STATUS_STOPPED
-	}
-	return r.relauncher.Status()
-}
-
-func (r *relaunchService) Stop() error {
-	r.mutex.Lock()
-	defer r.mutex.Unlock()
-	if r.relauncher == nil {
-		return executor.ErrNotRunning
-	}
-	r.relauncher.Stop()
-	r.relauncher = nil
-	return nil
-}
-
-func runJob(j executor.Job) {
-	if err := j.Start(); err == nil {
-		j.Wait()
-	}
+// ToCmd creates an executor.Cmd from a ServiceConfig.
+func (s *ServiceConfig) ToCmd() *executor.Cmd {
+	return &executor.Cmd{&s.Stdout, &s.Stderr, s.Directory, s.SetUID, s.UID,
+		s.SetGID, s.GID, s.Arguments, s.Environment}
 }
