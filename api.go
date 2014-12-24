@@ -50,7 +50,8 @@ func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
 // APICall runs an API call on the Goule object.
 func (g *Goule) APICall(name string, body []byte) ([]interface{}, int, error) {
 	// Find the method for the given API.
-	method := reflect.ValueOf(g).MethodByName(name + "API")
+	ctx := &apiContext{g}
+	method := reflect.ValueOf(ctx).MethodByName(name + "API")
 	if !method.IsValid() {
 		return nil, http.StatusNotFound, errors.New("Unknown API: " + name)
 	}
@@ -93,13 +94,19 @@ func (g *Goule) APICall(name string, body []byte) ([]interface{}, int, error) {
 	return resList, 0, nil
 }
 
-func (g *Goule) authAPI(password string) bool {
-	return g.config.Admin.Try(password)
+type apiContext struct {
+	*Goule
 }
 
-func (g *Goule) setPasswordAPI(password string) {
-	g.config.Admin.Hash = Hash(password)
-	g.config.Save()
+// AuthAPI returns whether the given password is correct.
+func (a *apiContext) AuthAPI(password string) bool {
+	return a.config.Admin.Try(password)
+}
+
+// SetPasswordAPI sets the new administrative password.
+func (a *apiContext) SetPasswordAPI(password string) {
+	a.config.Admin.Hash = Hash(password)
+	a.config.Save()
 }
 
 func decodeArgs(method reflect.Value, raw []string) ([]reflect.Value, error) {

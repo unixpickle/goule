@@ -1,0 +1,23 @@
+{
+  "services": [],
+  "rules": [],
+  "admin": {
+    "Assets": "/Users/alex/Documents/Code/Go/src/github.com/unixpickle/goule/assets",
+    "Hash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+    "Port": 1337,
+    "Timeout": 3600
+  },
+  "serve_http": false,
+  "http_port": 0,
+  "serve_https": false,
+  "https_port": 0,
+  "websockets": false,
+  "tls": {
+    "named": null,
+    "root_ca": null,
+    "default": {
+      "key": "",
+      "certificate": ""
+    }
+  }
+}

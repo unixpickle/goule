@@ -1,6 +1,5 @@
 package goule
 
-import "fmt"
 import (
 	"github.com/unixpickle/ezserver"
 	"github.com/unixpickle/reverseproxy"
@@ -47,12 +46,9 @@ func NewGoule(config *Config) *Goule {
 func (g *Goule) AdminHTTP(w http.ResponseWriter, r *http.Request) {
 	// Set the session cookie if necessary
 	cookie, _ := r.Cookie(SessionIdCookie)
-	fmt.Println("request headers", r.Header)
 	if cookie != nil {
-		fmt.Println("got cookie", cookie)
 		g.mutex.Lock()
 		if g.sessions.validate(cookie.Value) {
-			fmt.Println("value")
 			http.SetCookie(w, cookie)
 		}
 		g.mutex.Unlock()
