@@ -4,24 +4,18 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"strings"
-	"time"
 )
 
-// Auth stores the basic administration info for a Goule server.
-type Auth struct {
-	Hash    string
-	Port    int
-	Timeout time.Duration
-}
-
-// Clone clones an Auth object.
-func (a *Auth) Clone() *Auth {
-	c := *a
-	return &c
+// Admin stores the basic administration info for a Goule server.
+type Admin struct {
+	Assets  string `assets`
+	Hash    string `hash`
+	Port    int    `port`
+	Timeout int    `timeout`
 }
 
 // Try checks if a password is correct.
-func (a *Auth) Try(password string) bool {
+func (a *Admin) Try(password string) bool {
 	return Hash(password) == a.Hash
 }
 
