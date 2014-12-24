@@ -37,7 +37,9 @@ func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
 
 	// The "Auth" call is special--it creates a new cookie.
 	if api == "Auth" && values[0].(bool) {
+		g.mutex.Lock()
 		id := g.sessions.login()
+		g.mutex.Unlock()
 		cookie := &http.Cookie{Name: SessionIdCookie, Value: id}
 		http.SetCookie(w, cookie)
 	}
@@ -67,7 +69,7 @@ func (g *Goule) APICall(name string, body []byte) ([]interface{}, int, error) {
 
 	// Run the call
 	var res []reflect.Value
-	if strings.HasPrefix(name, "Set") || name == "Auth" {
+	if strings.HasPrefix(name, "Set") {
 		g.mutex.Lock()
 		res = method.Call(args)
 		g.mutex.Unlock()
@@ -91,13 +93,11 @@ func (g *Goule) APICall(name string, body []byte) ([]interface{}, int, error) {
 	return resList, 0, nil
 }
 
-// AuthAPI returns whether the given password is correct.
-func (g *Goule) AuthAPI(password string) bool {
+func (g *Goule) authAPI(password string) bool {
 	return g.config.Admin.Try(password)
 }
 
-// SetPasswordAPI sets the new administrative password.
-func (g *Goule) SetPasswordAPI(password string) {
+func (g *Goule) setPasswordAPI(password string) {
 	g.config.Admin.Hash = Hash(password)
 	g.config.Save()
 }
