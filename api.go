@@ -17,8 +17,7 @@ func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
 	// Make sure they are authorized to make this request.
 	authed := w.Header().Get("Set-Cookie") != ""
 	if !authed && api != "Auth" {
-		gohttputil.RespondJSON(w, http.StatusForbidden,
-			errors.New("You must authenticate."))
+		gohttputil.RespondJSON(w, http.StatusForbidden, "Permissions denied.")
 		return
 	}
 
@@ -32,7 +31,7 @@ func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
 	// Run the call
 	values, code, err := g.APICall(api, contents)
 	if err != nil {
-		gohttputil.RespondJSON(w, code, err)
+		gohttputil.RespondJSON(w, code, err.Error())
 		return
 	}
 

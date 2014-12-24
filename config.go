@@ -34,10 +34,8 @@ func NewConfig() *Config {
 	res.Admin.Timeout = 60 * 60
 
 	// Get the "assets" path.
-	func() {
-		_, curPath, _, _ := runtime.Caller(1)
-		res.Admin.Assets = pathlib.Join(pathlib.Dir(curPath), "assets")
-	}()
+	_, curPath, _, _ := runtime.Caller(0)
+	res.Admin.Assets = pathlib.Join(pathlib.Dir(curPath), "assets")
 	return res
 }
 
