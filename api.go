@@ -9,16 +9,13 @@ import (
 	"strings"
 )
 
-// SessionIdCookie is the cookie name for the Goule session ID.
-const SessionIdCookie = "goule_id"
-
 // APIHandler handles an API HTTP request.
 func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
 	// The path is "/api/APINAME"
 	api := r.URL.Path[5:]
 
 	// Make sure they are authorized to make this request.
-	authed := g.checkAuth(w, r)
+	authed := w.Header().Get("Set-Cookie") != ""
 	if !authed && api != "Auth" {
 		gohttputil.RespondJSON(w, http.StatusForbidden,
 			errors.New("You must authenticate."))
@@ -104,20 +101,6 @@ func (g *Goule) AuthAPI(password string) bool {
 func (g *Goule) SetPasswordAPI(password string) {
 	g.config.Admin.Hash = Hash(password)
 	g.config.Save()
-}
-
-func (g *Goule) checkAuth(w http.ResponseWriter, r *http.Request) bool {
-	cookie, _ := r.Cookie(SessionIdCookie)
-	if cookie == nil {
-		return false
-	}
-	g.mutex.Lock()
-	defer g.mutex.Unlock()
-	if g.sessions.validate(cookie.Value) {
-		http.SetCookie(w, cookie)
-		return true
-	}
-	return false
 }
 
 func decodeArgs(method reflect.Value, raw []string) ([]reflect.Value, error) {
