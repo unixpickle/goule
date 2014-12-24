@@ -14,7 +14,9 @@ Last time I wrote a project like this, I chose to use CoffeeScript and Node.js. 
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Create configuration structures
+ * Create Service type
+ * Create configuration structure
+ * Create default configuration generator
  * Create HTTP endpoints
  * Create API handler mechanism
  * Create service routers
