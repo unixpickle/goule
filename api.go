@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// APIHandler handles an API HTTP request.
+// APIHandler handles an API request and writes a response.
 func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
 	// The path is "/api/APINAME"
 	api := r.URL.Path[5:]
@@ -42,12 +42,18 @@ func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
 		g.mutex.Unlock()
 		cookie := &http.Cookie{Name: SessionIdCookie, Value: id}
 		http.SetCookie(w, cookie)
+	} else if api == "Deauth" {
+		w.Header()["Set-Cookie"] = []string{SessionIdCookie +
+			"=deleted; path=/; " + "expires=Thu, 01 Jan 1970 00:00:00 GMT"}
 	}
 
 	gohttputil.RespondJSON(w, http.StatusOK, values)
 }
 
-// APICall runs an API call on the Goule object.
+// APICall runs a raw API call on the Goule object.
+// Note that certain calls like "Auth" have some effects that involve an HTTP
+// response. These calls will have very little use through APICall() since their
+// main functionality comes from APIHandler().
 func (g *Goule) APICall(name string, body []byte) ([]interface{}, int, error) {
 	// Find the method for the given API.
 	ctx := &apiContext{g}
@@ -101,6 +107,10 @@ type apiContext struct {
 // AuthAPI returns whether the given password is correct.
 func (a *apiContext) AuthAPI(password string) bool {
 	return a.config.Admin.Try(password)
+}
+
+// DeauthAPI does nothing.
+func (a *apiContext) DeauthAPI() {
 }
 
 // SetPasswordAPI sets the new administrative password.
