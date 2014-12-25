@@ -9,15 +9,73 @@ import (
 	"strings"
 )
 
-func (g *Goule) apiCall(name string, body []byte) ([]interface{}, int, error) {
+func (g *Goule) apiHandler(w http.ResponseWriter, r *http.Request) {
+	// The path is "/api/APINAME"
+	name := r.URL.Path[5:]
+	
+	// Make sure they are authorized to make this request.
+	authed := w.Header().Get("Set-Cookie") != ""
+	if !authed && name != "Auth" {
+		gohttputil.RespondJSON(w, http.StatusForbidden, "Permissions denied.")
+		return
+	}
+
+	// Read the contents of the request
+	contents, err := gohttputil.ReadRequest(r, 0x10000)
+	if err != nil {
+		gohttputil.RespondJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Run the call
+	ctx := &api{g, r, w}
+	values, code, err := ctx.Do(name, contents)
+	if err != nil {
+		gohttputil.RespondJSON(w, code, err.Error())
+		return
+	}
+	gohttputil.RespondJSON(w, http.StatusOK, values)
+}
+
+type api struct {
+	*Goule
+	r *http.Request
+	w http.ResponseWriter
+}
+
+// AuthAPI returns whether the given password is correct.
+func (a *api) AuthAPI(password string) bool {
+	if !a.config.Admin.Try(password) {
+		return false
+	}
+	// Create a new cookie and set it.
+	id := a.sessions.login()
+	cookie := &http.Cookie{Name: SessionIdCookie, Value: id}
+	http.SetCookie(a.w, cookie)
+	return true
+}
+
+// DeauthAPI does nothing.
+func (a *api) DeauthAPI() {
+	// Invalidate the current session
+	cookie, _ := a.r.Cookie(SessionIdCookie)
+	a.sessions.logout(cookie.Value)
+	
+	// Delete the cookie on the client-side
+	content := SessionIdCookie + "=deleted; " +
+		"expires=Thu, 01 Jan 1970 00:00:00 GMT"
+	a.w.Header()["Set-Cookie"] = []string{content}
+}
+
+// Do performs an API.
+func (a *api) Do(name string, body []byte) ([]interface{}, int, error) {
 	// Find the method for the given API.
-	ctx := &apiContext{g}
-	method := reflect.ValueOf(ctx).MethodByName(name + "API")
+	method := reflect.ValueOf(a).MethodByName(name + "API")
 	if !method.IsValid() {
 		return nil, http.StatusNotFound, errors.New("Unknown API: " + name)
 	}
 
-	// Decode the raw arguments.
+	// Decode the array of JSON-encoded arguments.
 	var rawArgs []string
 	if err := json.Unmarshal(body, &rawArgs); err != nil {
 		return nil, http.StatusBadRequest, err
@@ -31,14 +89,14 @@ func (g *Goule) apiCall(name string, body []byte) ([]interface{}, int, error) {
 
 	// Run the call
 	var res []reflect.Value
-	if strings.HasPrefix(name, "Set") {
-		g.mutex.Lock()
+	if name == "Auth" || name == "Deauth" || strings.HasPrefix(name, "Set") {
+		a.mutex.Lock()
 		res = method.Call(args)
-		g.mutex.Unlock()
+		a.mutex.Unlock()
 	} else {
-		g.mutex.RLock()
+		a.mutex.RLock()
 		res = method.Call(args)
-		g.mutex.RUnlock()
+		a.mutex.RUnlock()
 	}
 
 	// Convert the return value to an array of serializable objects.
@@ -55,61 +113,8 @@ func (g *Goule) apiCall(name string, body []byte) ([]interface{}, int, error) {
 	return resList, 0, nil
 }
 
-func (g *Goule) apiHandler(w http.ResponseWriter, r *http.Request) {
-	// The path is "/api/APINAME"
-	api := r.URL.Path[5:]
-
-	// Make sure they are authorized to make this request.
-	authed := w.Header().Get("Set-Cookie") != ""
-	if !authed && api != "Auth" {
-		gohttputil.RespondJSON(w, http.StatusForbidden, "Permissions denied.")
-		return
-	}
-
-	// Read the contents of the request
-	contents, err := gohttputil.ReadRequest(r, 0x10000)
-	if err != nil {
-		gohttputil.RespondJSON(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	// Run the call
-	values, code, err := g.apiCall(api, contents)
-	if err != nil {
-		gohttputil.RespondJSON(w, code, err.Error())
-		return
-	}
-
-	// The "Auth" call is special--it creates a new cookie.
-	if api == "Auth" && values[0].(bool) {
-		g.mutex.Lock()
-		id := g.sessions.login()
-		g.mutex.Unlock()
-		cookie := &http.Cookie{Name: SessionIdCookie, Value: id}
-		http.SetCookie(w, cookie)
-	} else if api == "Deauth" {
-		w.Header()["Set-Cookie"] = []string{SessionIdCookie +
-			"=deleted; path=/; " + "expires=Thu, 01 Jan 1970 00:00:00 GMT"}
-	}
-
-	gohttputil.RespondJSON(w, http.StatusOK, values)
-}
-
-type apiContext struct {
-	*Goule
-}
-
-// AuthAPI returns whether the given password is correct.
-func (a *apiContext) AuthAPI(password string) bool {
-	return a.config.Admin.Try(password)
-}
-
-// DeauthAPI does nothing.
-func (a *apiContext) DeauthAPI() {
-}
-
 // SetPasswordAPI sets the new administrative password.
-func (a *apiContext) SetPasswordAPI(password string) {
+func (a *api) SetPasswordAPI(password string) {
 	a.config.Admin.Hash = Hash(password)
 	a.config.Save()
 }

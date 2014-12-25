@@ -99,8 +99,7 @@ func (g *Goule) Stop() {
 
 func (g *Goule) adminHTTP(w http.ResponseWriter, r *http.Request) {
 	// Set the session cookie if necessary
-	cookie, _ := r.Cookie(SessionIdCookie)
-	if cookie != nil {
+	if cookie, err := r.Cookie(SessionIdCookie); err == nil {
 		g.mutex.Lock()
 		if g.sessions.validate(cookie.Value) {
 			http.SetCookie(w, cookie)
