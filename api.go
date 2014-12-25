@@ -9,46 +9,6 @@ import (
 	"strings"
 )
 
-func (g *Goule) apiHandler(w http.ResponseWriter, r *http.Request) {
-	// The path is "/api/APINAME"
-	api := r.URL.Path[5:]
-
-	// Make sure they are authorized to make this request.
-	authed := w.Header().Get("Set-Cookie") != ""
-	if !authed && api != "Auth" {
-		gohttputil.RespondJSON(w, http.StatusForbidden, "Permissions denied.")
-		return
-	}
-
-	// Read the contents of the request
-	contents, err := gohttputil.ReadRequest(r, 0x10000)
-	if err != nil {
-		gohttputil.RespondJSON(w, http.StatusBadRequest, err.Error())
-		return
-	}
-
-	// Run the call
-	values, code, err := g.apiCall(api, contents)
-	if err != nil {
-		gohttputil.RespondJSON(w, code, err.Error())
-		return
-	}
-
-	// The "Auth" call is special--it creates a new cookie.
-	if api == "Auth" && values[0].(bool) {
-		g.mutex.Lock()
-		id := g.sessions.login()
-		g.mutex.Unlock()
-		cookie := &http.Cookie{Name: SessionIdCookie, Value: id}
-		http.SetCookie(w, cookie)
-	} else if api == "Deauth" {
-		w.Header()["Set-Cookie"] = []string{SessionIdCookie +
-			"=deleted; path=/; " + "expires=Thu, 01 Jan 1970 00:00:00 GMT"}
-	}
-
-	gohttputil.RespondJSON(w, http.StatusOK, values)
-}
-
 func (g *Goule) apiCall(name string, body []byte) ([]interface{}, int, error) {
 	// Find the method for the given API.
 	ctx := &apiContext{g}
@@ -93,6 +53,46 @@ func (g *Goule) apiCall(name string, body []byte) ([]interface{}, int, error) {
 	}
 
 	return resList, 0, nil
+}
+
+func (g *Goule) apiHandler(w http.ResponseWriter, r *http.Request) {
+	// The path is "/api/APINAME"
+	api := r.URL.Path[5:]
+
+	// Make sure they are authorized to make this request.
+	authed := w.Header().Get("Set-Cookie") != ""
+	if !authed && api != "Auth" {
+		gohttputil.RespondJSON(w, http.StatusForbidden, "Permissions denied.")
+		return
+	}
+
+	// Read the contents of the request
+	contents, err := gohttputil.ReadRequest(r, 0x10000)
+	if err != nil {
+		gohttputil.RespondJSON(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Run the call
+	values, code, err := g.apiCall(api, contents)
+	if err != nil {
+		gohttputil.RespondJSON(w, code, err.Error())
+		return
+	}
+
+	// The "Auth" call is special--it creates a new cookie.
+	if api == "Auth" && values[0].(bool) {
+		g.mutex.Lock()
+		id := g.sessions.login()
+		g.mutex.Unlock()
+		cookie := &http.Cookie{Name: SessionIdCookie, Value: id}
+		http.SetCookie(w, cookie)
+	} else if api == "Deauth" {
+		w.Header()["Set-Cookie"] = []string{SessionIdCookie +
+			"=deleted; path=/; " + "expires=Thu, 01 Jan 1970 00:00:00 GMT"}
+	}
+
+	gohttputil.RespondJSON(w, http.StatusOK, values)
 }
 
 type apiContext struct {
