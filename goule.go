@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Goule struct {
@@ -16,13 +17,13 @@ type Goule struct {
 	admin    *ezserver.HTTP
 	mutex    sync.RWMutex
 	services map[string]executor.Service
-	sessions *sessions
+	sessions map[string]time.Time
 }
 
 func NewGoule(config *Config) *Goule {
 	res := new(Goule)
-	res.sessions = newSessions(res)
 	res.config = config
+	res.sessions = map[string]time.Time{}
 
 	// Create the two regular servers
 	handlerFunc := func(w http.ResponseWriter, r *http.Request) {

@@ -6,8 +6,11 @@ import (
 	"github.com/unixpickle/ezserver"
 	"github.com/unixpickle/gohttputil"
 	"github.com/unixpickle/reverseproxy"
+	"math/rand"
 	"net/http"
 	"reflect"
+	"strconv"
+	"time"
 )
 
 type api struct {
@@ -48,7 +51,7 @@ func (a *api) AuthAPI(password string) string {
 		return ""
 	}
 	// Create a new cookie for JavaScript to set
-	return a.sessions.login()
+	return a.createSession()
 }
 
 // Call performs an API.
@@ -104,8 +107,7 @@ func (a *api) ConfigAPI() *Config {
 
 // DeauthAPI does nothing.
 func (a *api) DeauthAPI() {
-	// Invalidate the current session
-	a.sessions.logout(a.Session)
+	delete(a.sessions, a.Session)
 }
 
 // DeleteRuleAPI deletes a rule by value
@@ -141,9 +143,9 @@ func (a *api) Handle() {
 	name := a.Request.URL.Path[5:]
 
 	// Make sure they are authorized to make this request.
-	a.mutex.Lock()
-	authed := a.sessions.validate(a.Session)
-	a.mutex.Unlock()
+	a.mutex.RLock()
+	authed := a.checkSession(a.Session)
+	a.mutex.RUnlock()
 	if !authed && name != "Auth" {
 		gohttputil.RespondJSON(a.Response, http.StatusForbidden,
 			ErrPermissionsDenied.Error())
@@ -267,6 +269,37 @@ func (a *api) UpdateServiceAPI(name string, service Service) error {
 	a.config.Services[name] = service
 	a.config.Save()
 	return nil
+}
+
+// checkSession checks if a session exists and is still valid.
+// The mutex must be locked for reading or writing.
+func (a *api) checkSession(id string) bool {
+	timeout := time.Second * time.Duration(a.config.Admin.Timeout)
+	val, ok := a.sessions[id]
+	if !ok {
+		return false
+	}
+	return time.Since(val) < timeout
+}
+
+// cleanupSessions cleans up expired sessions.
+// The mutex must be locked for writing.
+func (a *api) cleanupSessions() {
+	timeout := time.Second * time.Duration(a.config.Admin.Timeout)
+	for key, val := range a.sessions {
+		if time.Since(val) >= timeout {
+			delete(a.sessions, key)
+		}
+	}
+}
+
+// createSession creates a new session.
+// The mutex must be locked for writing.
+func (a *api) createSession() string {
+	str := strconv.Itoa(rand.Int()) + a.config.Admin.Hash
+	hash := Hash(str)
+	a.sessions[hash] = time.Now()
+	return hash
 }
 
 // setServer sets settings on a given server.
