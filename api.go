@@ -3,6 +3,7 @@ package goule
 import (
 	"encoding/json"
 	"errors"
+	"github.com/unixpickle/executor"
 	"github.com/unixpickle/ezserver"
 	"github.com/unixpickle/gohttputil"
 	"github.com/unixpickle/reverseproxy"
@@ -27,14 +28,14 @@ func (a *api) AddServiceAPI(name string, cfg Service) error {
 	if _, ok := a.services[name]; ok {
 		return errors.New("Service name already taken.")
 	}
-	
+
 	// Create the executor.Service and possibly start it
 	excService := cfg.ToExecutorService()
 	a.services[name] = excService
 	if cfg.Autolaunch {
 		excService.Start()
 	}
-	
+
 	// Update configuration
 	a.config.Services[name] = cfg
 	a.config.Save()
@@ -93,12 +94,13 @@ func (a *api) Call(name string, body []byte) (int, error) {
 		}
 		resList[i] = rawValue
 	}
-	
+
 	// Encode the result
 	gohttputil.RespondJSON(a.w, http.StatusOK, resList)
 	return 0, nil
 }
 
+// ConfigAPI returns the full server configuration.
 func (a *api) ConfigAPI() *Config {
 	return a.config
 }
@@ -108,7 +110,7 @@ func (a *api) DeauthAPI() {
 	// Invalidate the current session
 	cookie, _ := a.r.Cookie(SessionIdCookie)
 	a.sessions.logout(cookie.Value)
-	
+
 	// Delete the cookie on the client-side
 	content := SessionIdCookie + "=deleted; " +
 		"expires=Thu, 01 Jan 1970 00:00:00 GMT"
@@ -146,7 +148,7 @@ func (a *api) DeleteServiceAPI(name string) error {
 func (a *api) Handle() {
 	// The path is "/api/APINAME"
 	name := a.r.URL.Path[5:]
-	
+
 	// Make sure they are authorized to make this request.
 	authed := a.w.Header().Get("Set-Cookie") != ""
 	if !authed && name != "Auth" {
@@ -168,6 +170,19 @@ func (a *api) Handle() {
 	}
 }
 
+// ServicesAPI returns an array of serviceDesc objects.
+func (a *api) ServicesAPI() map[string]serviceDesc {
+	res := map[string]serviceDesc{}
+	for name, es := range a.services {
+		s := a.config.Services[name]
+		history, status := es.HistoryStatus()
+		res[name] = serviceDesc{s, float64(history.LastStart.Unix()),
+			float64(history.LastStop.Unix()), float64(history.LastError.Unix()),
+			history.Error.Error(), status}
+	}
+	return res
+}
+
 // SetAdminPortAPI updates the admin port.
 func (a *api) SetAdminPortAPI(port int) error {
 	a.admin.Stop()
@@ -186,6 +201,18 @@ func (a *api) SetAdminPortAPI(port int) error {
 func (a *api) SetAssetsAPI(path string) {
 	a.config.Admin.Assets = path
 	a.config.Save()
+}
+
+// SetHTTP sets the HTTP port and enables/disables it.
+func (a *api) SetHTTP(enable bool, port int) error {
+	return a.setServer(a.http, &a.config.ServeHTTP, &a.config.HTTPPort, enable,
+		port)
+}
+
+// SetHTTPS sets the HTTPS port and enables/disables it.
+func (a *api) SetHTTPS(enable bool, port int) error {
+	return a.setServer(a.https, &a.config.ServeHTTPS, &a.config.HTTPSPort,
+		enable, port)
 }
 
 // SetPasswordAPI sets the new administrative password.
@@ -247,6 +274,40 @@ func (a *api) UpdateServiceAPI(name string, service Service) error {
 	a.config.Services[name] = service
 	a.config.Save()
 	return nil
+}
+
+// setServer sets settings on a given server.
+// This exists to prevent repetition for HTTP and HTTPS server settings.
+func (a *api) setServer(s ezserver.Server, enable *bool, port *int,
+	newEnable bool, newPort int) error {
+	s.Stop()
+	// If disabled, we're done.
+	if !newEnable {
+		*enable = false
+		a.config.Save()
+		return nil
+	}
+	// Attempt to start the server on the new port
+	if err := s.Start(newPort); err != nil {
+		if *enable {
+			s.Start(*port)
+		}
+		return err
+	}
+	// Save the configuration
+	*enable = true
+	*port = newPort
+	a.config.Save()
+	return nil
+}
+
+type serviceDesc struct {
+	Service   Service         `json:"service"`
+	LastStart float64         `json:"last_start"`
+	LastStop  float64         `json:"last_stop"`
+	LastError float64         `json:"last_error"`
+	Error     string          `json:"error"`
+	Status    executor.Status `json:"status"`
 }
 
 func decodeArgs(method reflect.Value, raw []string) ([]reflect.Value, error) {
