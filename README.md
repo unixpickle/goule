@@ -43,17 +43,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
- * Move Service type to executor library
- * Create configuration structure
- * Create default configuration generator
- * Create HTTP endpoints
- * Create API handler mechanism
- * Create service routers
  * Implement APIs
+   * Edit TLS info
+   * Set admin port
+   * Set admin session timeout
+   * Set admin assets path
+   * Delete rule
+   * Replace rule
+   * Add rule
+   * Delete service
+   * Modify service
+   * Add service
+   * Start service
+   * Stop service
  * Implement web interface
+   * Simple AJAX/JavaScript API
+   * Login page
+   * Server settings page
+   * Rules page
+   * Services page
 
 ## Done
 
 I'm moving things from my TODO list to this spot once I do them:
 
  * Start over using external APIs for all functionality.
+ * Move Service type to executor library
+ * Create configuration structure
+ * Create default configuration generator
+ * Create HTTP endpoints
+ * Create API handler mechanism
+ * Create service routers
