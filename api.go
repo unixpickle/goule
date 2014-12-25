@@ -2,7 +2,6 @@ package goule
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/unixpickle/executor"
 	"github.com/unixpickle/ezserver"
 	"github.com/unixpickle/gohttputil"
@@ -26,7 +25,7 @@ func (a *api) AddRuleAPI(rule reverseproxy.Rule) {
 // AddServiceAPI adds a new service and possibly starts it.
 func (a *api) AddServiceAPI(name string, cfg Service) error {
 	if _, ok := a.services[name]; ok {
-		return errors.New("Service name already taken.")
+		return ErrNameTaken
 	}
 
 	// Create the executor.Service and possibly start it
@@ -59,7 +58,7 @@ func (a *api) Call(name string, body []byte) (int, error) {
 	// Find the method for the given API.
 	method := reflect.ValueOf(a).MethodByName(name + "API")
 	if !method.IsValid() {
-		return http.StatusNotFound, errors.New("Unknown API: " + name)
+		return http.StatusNotFound, ErrUnknownAPI
 	}
 
 	// Decode the array of JSON-encoded arguments.
@@ -128,14 +127,14 @@ func (a *api) DeleteRuleAPI(rule reverseproxy.Rule) error {
 			return nil
 		}
 	}
-	return errors.New("Rule not found.")
+	return ErrRuleNotFound
 }
 
 // DeleteServiceAPI deletes a service by name.
 func (a *api) DeleteServiceAPI(name string) error {
 	service, ok := a.services[name]
 	if !ok {
-		return errors.New("Service not found.")
+		return ErrServiceNotFound
 	}
 	service.Stop()
 	delete(a.services, name)
@@ -152,7 +151,7 @@ func (a *api) Handle() {
 	// Make sure they are authorized to make this request.
 	authed := a.w.Header().Get("Set-Cookie") != ""
 	if !authed && name != "Auth" {
-		gohttputil.RespondJSON(a.w, http.StatusForbidden, "Permissions denied.")
+		gohttputil.RespondJSON(a.w, http.StatusForbidden, ErrPermissionsDenied)
 		return
 	}
 
@@ -249,7 +248,7 @@ func (a *api) SetTLSAPI(tls ezserver.TLSConfig) {
 func (a *api) StartAPI(name string) error {
 	service, ok := a.services[name]
 	if !ok {
-		return errors.New("Service not found.")
+		return ErrServiceNotFound
 	}
 	return service.Start()
 }
@@ -258,7 +257,7 @@ func (a *api) StartAPI(name string) error {
 func (a *api) StopAPI(name string) error {
 	service, ok := a.services[name]
 	if !ok {
-		return errors.New("Service not found.")
+		return ErrServiceNotFound
 	}
 	return service.Stop()
 }
@@ -267,7 +266,7 @@ func (a *api) StopAPI(name string) error {
 func (a *api) UpdateServiceAPI(name string, service Service) error {
 	oldServ, ok := a.services[name]
 	if !ok {
-		return errors.New("Service not found.")
+		return ErrServiceNotFound
 	}
 	oldServ.Stop()
 	a.services[name] = service.ToExecutorService()
@@ -313,7 +312,7 @@ type serviceDesc struct {
 func decodeArgs(method reflect.Value, raw []string) ([]reflect.Value, error) {
 	// Make sure they passed the right number of arguments
 	if method.Type().NumIn() != len(raw) {
-		return nil, errors.New("Invalid number of arguments.")
+		return nil, ErrArgumentCount
 	}
 
 	// Decode each argument separately.
