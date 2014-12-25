@@ -25,12 +25,18 @@ func NewGoule(config *Config) *Goule {
 	res := new(Goule)
 	res.sessions = newSessions(res)
 	res.config = config
-	res.http = ezserver.NewHTTP(res)
-	res.https = ezserver.NewHTTPS(res, &config.TLS)
+
+	// Create the two regular servers
+	handlerFunc := func(w http.ResponseWriter, r *http.Request) {
+		res.serviceHTTP(w, r)
+	}
+	handler := http.HandlerFunc(handlerFunc)
+	res.http = ezserver.NewHTTP(handler)
+	res.https = ezserver.NewHTTPS(handler, &config.TLS)
 
 	// Create admin server
 	admin := func(w http.ResponseWriter, r *http.Request) {
-		res.AdminHTTP(w, r)
+		res.adminHTTP(w, r)
 	}
 	res.admin = ezserver.NewHTTP(http.HandlerFunc(admin))
 
@@ -41,40 +47,6 @@ func NewGoule(config *Config) *Goule {
 	}
 
 	return res
-}
-
-func (g *Goule) AdminHTTP(w http.ResponseWriter, r *http.Request) {
-	// Set the session cookie if necessary
-	cookie, _ := r.Cookie(SessionIdCookie)
-	if cookie != nil {
-		g.mutex.Lock()
-		if g.sessions.validate(cookie.Value) {
-			http.SetCookie(w, cookie)
-		}
-		g.mutex.Unlock()
-	}
-
-	// If the path begins with "/api/", it's an AJAX API call.
-	if strings.HasPrefix(r.URL.Path, "/api/") {
-		g.APIHandler(w, r)
-	} else {
-		g.StaticHandler(w, r)
-	}
-}
-
-func (g *Goule) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	g.mutex.RLock()
-	for _, rule := range g.config.Rules {
-		if rule.MatchesRequest(r) {
-			ws := g.config.Websockets
-			g.mutex.RUnlock()
-			reverseproxy.Proxy(w, r, &rule, ws)
-			return
-		}
-	}
-	g.mutex.RUnlock()
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte("<html><body>No forward rule found.</body></html>"))
 }
 
 func (g *Goule) Start() error {
@@ -123,6 +95,40 @@ func (g *Goule) Stop() {
 	g.admin.Stop()
 	g.http.Stop()
 	g.https.Stop()
+}
+
+func (g *Goule) adminHTTP(w http.ResponseWriter, r *http.Request) {
+	// Set the session cookie if necessary
+	cookie, _ := r.Cookie(SessionIdCookie)
+	if cookie != nil {
+		g.mutex.Lock()
+		if g.sessions.validate(cookie.Value) {
+			http.SetCookie(w, cookie)
+		}
+		g.mutex.Unlock()
+	}
+
+	// If the path begins with "/api/", it's an AJAX API call.
+	if strings.HasPrefix(r.URL.Path, "/api/") {
+		g.apiHandler(w, r)
+	} else {
+		g.staticHandler(w, r)
+	}
+}
+
+func (g *Goule) serviceHTTP(w http.ResponseWriter, r *http.Request) {
+	g.mutex.RLock()
+	for _, rule := range g.config.Rules {
+		if rule.MatchesRequest(r) {
+			ws := g.config.Websockets
+			g.mutex.RUnlock()
+			reverseproxy.Proxy(w, r, &rule, ws)
+			return
+		}
+	}
+	g.mutex.RUnlock()
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte("<html><body>No forward rule found.</body></html>"))
 }
 
 func (g *Goule) stopServices() {

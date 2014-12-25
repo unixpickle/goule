@@ -9,8 +9,7 @@ import (
 	"strings"
 )
 
-// APIHandler handles an API request and writes a response.
-func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
+func (g *Goule) apiHandler(w http.ResponseWriter, r *http.Request) {
 	// The path is "/api/APINAME"
 	api := r.URL.Path[5:]
 
@@ -29,7 +28,7 @@ func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Run the call
-	values, code, err := g.APICall(api, contents)
+	values, code, err := g.apiCall(api, contents)
 	if err != nil {
 		gohttputil.RespondJSON(w, code, err.Error())
 		return
@@ -50,11 +49,7 @@ func (g *Goule) APIHandler(w http.ResponseWriter, r *http.Request) {
 	gohttputil.RespondJSON(w, http.StatusOK, values)
 }
 
-// APICall runs a raw API call on the Goule object.
-// Note that certain calls like "Auth" have some effects that involve an HTTP
-// response. These calls will have very little use through APICall() since their
-// main functionality comes from APIHandler().
-func (g *Goule) APICall(name string, body []byte) ([]interface{}, int, error) {
+func (g *Goule) apiCall(name string, body []byte) ([]interface{}, int, error) {
 	// Find the method for the given API.
 	ctx := &apiContext{g}
 	method := reflect.ValueOf(ctx).MethodByName(name + "API")

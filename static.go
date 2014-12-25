@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-func (g *Goule) StaticHandler(w http.ResponseWriter, r *http.Request) {
+func (g *Goule) staticHandler(w http.ResponseWriter, r *http.Request) {
 	// The empty path redirects to /.
 	if r.URL.Path == "" {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
