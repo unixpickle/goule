@@ -28,7 +28,7 @@ func Asset(assets string, w http.ResponseWriter, r *http.Request) {
 }
 
 func internalRedirect(r *http.Request) string {
-	redirects := map[string]string{"/": "/index.html"}
+	redirects := map[string]string{"/": "/index.html", "/login": "/login.html"}
 	if newPath, ok := redirects[r.URL.Path]; ok {
 		return newPath
 	}

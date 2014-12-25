@@ -3,12 +3,18 @@ PRODUCTS=$(SOURCES:%.coffee=%.js)
 
 .PHONY: all clean
 
-all: output.js
+all: common.js home.js login.js
 
-output.js:
-	coffee -c *.coffee
-	cat *.js >output.js
-	rm $(PRODUCTS)
+common.js:
+	coffee -c api.coffee
+	cat api.js >common.js
+	rm api.js
+
+home.js:
+	coffee -c home.coffee
+
+login.js:
+	coffee -c login.coffee
 
 clean:
-	rm -f $(PRODUCTS) output.js
+	$(RM) common.js home.js login.js
