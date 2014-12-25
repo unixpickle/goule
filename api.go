@@ -112,11 +112,24 @@ func (a *api) DeauthAPI() {
 	a.w.Header()["Set-Cookie"] = []string{content}
 }
 
+// DeleteRuleAPI deletes a rule by value
+func (a *api) DeleteRuleAPI(rule reverseproxy.Rule) error {
+	for i, r := range a.config.Rules {
+		if rulesEqual(r, rule) {
+			// Remove the rule
+			a.config = append(a.config[0:i], a.config[i+1:])
+			a.config.Save()
+			return nil
+		}
+	}
+	return errors.New("Rule not found.")
+}
+
 // DeleteServiceAPI deletes a service by name.
 func (a *api) DeleteServiceAPI(name string) error {
 	service, ok := a.services[name]
 	if !ok {
-		return errors.New("No such service found: " + name)
+		return errors.New("Service not found.")
 	}
 	service.Stop()
 	delete(a.services, name)
@@ -179,6 +192,17 @@ func (a *api) SetPasswordAPI(password string) {
 	a.config.Save()
 }
 
+// SetRuleAPI replaces an old rule with a new rule
+func (a *api) SetRuleAPI(old, rule reverseproxy.Rule) {
+	for i, r := range a.config.Rules {
+		if rulesEqual(r, old) {
+			a.config.Rules[i] = rule
+			a.config.Save()
+			return
+		}
+	}
+}
+
 // SetSessionTimeout sets the session timeout in seconds.
 func (a *api) SetSessionTimeout(timeout int) {
 	a.config.Admin.Timeout = timeout
@@ -216,4 +240,8 @@ func isWriteAPI(name string) bool {
 	return name == "Auth" || name == "Deauth" ||
 		strings.HasPrefix(name, "Set") || strings.HasPrefix(name, "Delete") ||
 		strings.HasPrefix(name, "Add")
+}
+
+func rulesEqual(r1 reverseproxy.Rule, r2 reverseproxy.Rule) {
+	return reflect.DeepEqual(r1, r2)
 }

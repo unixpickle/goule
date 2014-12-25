@@ -44,8 +44,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
  * Implement APIs
-   * Replace rule
-   * Delete rule
    * Modify service
    * Start service
    * Stop service
@@ -76,3 +74,6 @@ I'm moving things from my TODO list to this spot once I do them:
    * Delete service
    * Add service
    * Add rule
+   * Replace rule
+   * Delete rule
+
