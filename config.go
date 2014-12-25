@@ -27,7 +27,7 @@ type Config struct {
 // NewConfig creates a new configuration with reasonable defaults.
 func NewConfig() *Config {
 	res := new(Config)
-	res.Services = []ServiceConfig{}
+	res.Services = map[string]Service{}
 	res.Rules = []reverseproxy.Rule{}
 	res.Admin.Hash = Hash("password")
 	res.Admin.Port = 8080

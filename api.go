@@ -8,7 +8,6 @@ import (
 	"github.com/unixpickle/reverseproxy"
 	"net/http"
 	"reflect"
-	"strings"
 )
 
 type api struct {
@@ -55,7 +54,7 @@ func (a *api) AuthAPI(password string) bool {
 }
 
 // Call performs an API.
-func (a *api) Call(name string, body []byte) ([]interface{}, int, error) {
+func (a *api) Call(name string, body []byte) ([]byte, int, error) {
 	// Find the method for the given API.
 	method := reflect.ValueOf(a).MethodByName(name + "API")
 	if !method.IsValid() {
@@ -74,19 +73,17 @@ func (a *api) Call(name string, body []byte) ([]interface{}, int, error) {
 		return nil, http.StatusBadRequest, err
 	}
 
-	// Run the call
-	var res []reflect.Value
+	// Lock the mutex in the appropriate way
 	if isWriteAPI(name) {
 		a.mutex.Lock()
-		res = method.Call(args)
-		a.mutex.Unlock()
+		defer a.mutex.Unlock()
 	} else {
 		a.mutex.RLock()
-		res = method.Call(args)
-		a.mutex.RUnlock()
+		defer a.mutex.RUnlock()
 	}
 
 	// Convert the return value to an array of serializable objects.
+	res := method.Call(args)
 	resList := make([]interface{}, len(res))
 	for i, val := range res {
 		rawValue := val.Interface()
@@ -96,8 +93,17 @@ func (a *api) Call(name string, body []byte) ([]interface{}, int, error) {
 		}
 		resList[i] = rawValue
 	}
+	
+	// Encode the result
+	if encoded, err := json.Marshal(resList); err != nil {
+		return nil, http.StatusInternalServerError, err
+	} else {
+		return encoded, 0, nil
+	}
+}
 
-	return resList, 0, nil
+func (a *api) ConfigAPI() *Config {
+	return a.config
 }
 
 // DeauthAPI does nothing.
@@ -117,7 +123,8 @@ func (a *api) DeleteRuleAPI(rule reverseproxy.Rule) error {
 	for i, r := range a.config.Rules {
 		if rulesEqual(r, rule) {
 			// Remove the rule
-			a.config = append(a.config[0:i], a.config[i+1:])
+			a.config.Rules = append(a.config.Rules[0:i],
+				a.config.Rules[i+1:]...)
 			a.config.Save()
 			return nil
 		}
@@ -158,16 +165,16 @@ func (a *api) Handle() {
 	}
 
 	// Run the call
-	values, code, err := a.Call(name, contents)
+	response, code, err := a.Call(name, contents)
 	if err != nil {
 		gohttputil.RespondJSON(a.w, code, err.Error())
 		return
 	}
-	gohttputil.RespondJSON(a.w, http.StatusOK, values)
+	a.w.Write(response)
 }
 
-// SetAdminPort updates the admin port.
-func (a *api) SetAdminPort(port int) error {
+// SetAdminPortAPI updates the admin port.
+func (a *api) SetAdminPortAPI(port int) error {
 	a.admin.Stop()
 	if err := a.admin.Start(port); err != nil {
 		// Attempt to restart it on the old port.
@@ -180,8 +187,8 @@ func (a *api) SetAdminPort(port int) error {
 	return nil
 }
 
-// SetAssets sets the admin assets path.
-func (a *api) SetAssets(path string) {
+// SetAssetsAPI sets the admin assets path.
+func (a *api) SetAssetsAPI(path string) {
 	a.config.Admin.Assets = path
 	a.config.Save()
 }
@@ -203,17 +210,48 @@ func (a *api) SetRuleAPI(old, rule reverseproxy.Rule) {
 	}
 }
 
-// SetSessionTimeout sets the session timeout in seconds.
-func (a *api) SetSessionTimeout(timeout int) {
+// SetSessionTimeoutAPI sets the session timeout in seconds.
+func (a *api) SetSessionTimeoutAPI(timeout int) {
 	a.config.Admin.Timeout = timeout
 	a.config.Save()
 }
 
-// SetTLS sets the TLS configuration for HTTPS.
-func (a *api) SetTLS(tls ezserver.TLSConfig) {
-	a.https.SetTLSConfig(tls)
+// SetTLSAPI sets the TLS configuration for HTTPS.
+func (a *api) SetTLSAPI(tls ezserver.TLSConfig) {
+	a.https.SetTLSConfig(&tls)
 	a.config.TLS = tls
 	a.config.Save()
+}
+
+// StartAPI starts a service by name
+func (a *api) StartAPI(name string) error {
+	service, ok := a.services[name]
+	if !ok {
+		return errors.New("Service not found.")
+	}
+	return service.Start()
+}
+
+// StopAPI stops a service by name
+func (a *api) StopAPI(name string) error {
+	service, ok := a.services[name]
+	if !ok {
+		return errors.New("Service not found.")
+	}
+	return service.Stop()
+}
+
+// UpdateServiceAPI updates a service by name.
+func (a *api) UpdateServiceAPI(name string, service Service) error {
+	oldServ, ok := a.services[name]
+	if !ok {
+		return errors.New("Service not found.")
+	}
+	oldServ.Stop()
+	a.services[name] = service.ToExecutorService()
+	a.config.Services[name] = service
+	a.config.Save()
+	return nil
 }
 
 func decodeArgs(method reflect.Value, raw []string) ([]reflect.Value, error) {
@@ -237,11 +275,9 @@ func decodeArgs(method reflect.Value, raw []string) ([]reflect.Value, error) {
 }
 
 func isWriteAPI(name string) bool {
-	return name == "Auth" || name == "Deauth" ||
-		strings.HasPrefix(name, "Set") || strings.HasPrefix(name, "Delete") ||
-		strings.HasPrefix(name, "Add")
+	return name != "Config" && name != "Services"
 }
 
-func rulesEqual(r1 reverseproxy.Rule, r2 reverseproxy.Rule) {
+func rulesEqual(r1 reverseproxy.Rule, r2 reverseproxy.Rule) bool {
 	return reflect.DeepEqual(r1, r2)
 }
