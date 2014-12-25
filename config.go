@@ -13,7 +13,7 @@ import (
 // Config stores the global configuration for a Goule instance
 type Config struct {
 	Path       string              `json:"-"`
-	Services   []ServiceConfig     `json:"services"`
+	Services   map[string]Service  `json:"services"`
 	Rules      []reverseproxy.Rule `json:"rules"`
 	Admin      Admin               `json:"admin"`
 	ServeHTTP  bool                `json:"serve_http"`

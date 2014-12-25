@@ -6,7 +6,8 @@ import (
 	"regexp"
 )
 
-func (g *Goule) staticHandler(w http.ResponseWriter, r *http.Request) {
+// Asset serves a static admin asset from an assets directory.
+func Asset(assets string, w http.ResponseWriter, r *http.Request) {
 	// The empty path redirects to /.
 	if r.URL.Path == "" {
 		http.Redirect(w, r, "/", http.StatusMovedPermanently)
@@ -22,9 +23,7 @@ func (g *Goule) staticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get the local path and send it
-	g.mutex.RLock()
-	localPath := pathlib.Join(g.config.Admin.Assets, path)
-	g.mutex.RUnlock()
+	localPath := pathlib.Join(assets, path)
 	http.ServeFile(w, r, localPath)
 }
 

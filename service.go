@@ -5,35 +5,8 @@ import (
 	"time"
 )
 
-// Service is a wrapper around executor.Service which includes a ServiceConfig.
+// Service stores configuration for a service.
 type Service struct {
-	executor.Service
-	config *ServiceConfig
-}
-
-// NewService creates a new Service with a given ServiceConfig.
-// Even if Autolaunch is set, the returned Service will not be started.
-func NewService(config *ServiceConfig) Service {
-	job := config.ToCmd().ToJob()
-	if config.Relaunch {
-		// Convert the interval to a time.Duration
-		dur := time.Duration(config.Interval * float64(time.Second))
-		excService := executor.RelaunchService(job, dur)
-		return Service{excService, config}
-	} else {
-		return Service{executor.JobService(job), config}
-	}
-}
-
-// Config returns the service's configuration object.
-// You should not modify this object, but if you do it will not affect the
-// running service.
-func (s Service) Config() *ServiceConfig {
-	return s.config
-}
-
-// ServiceConfig stores configuration for a service.
-type ServiceConfig struct {
 	// Stdout stores the standard output configuration.
 	Stdout Log `json:"stdout"`
 
@@ -61,9 +34,6 @@ type ServiceConfig struct {
 	// Environment is a mapping of environment variables for the command.
 	Environment map[string]string `json:"environment"`
 
-	// Identifier is a unique identifier for a service.
-	Identifier string `json:"id"`
-
 	// Relaunch specifiecs whether the service should automatically be restarted
 	// at the given interval.
 	Relaunch bool `json:"relaunch"`
@@ -75,8 +45,15 @@ type ServiceConfig struct {
 	Interval float64 `json:"interval"`
 }
 
-// ToCmd creates an executor.Cmd from a ServiceConfig.
-func (s *ServiceConfig) ToCmd() *executor.Cmd {
-	return &executor.Cmd{&s.Stdout, &s.Stderr, s.Directory, s.SetUID, s.UID,
+func (s *Service) ToExecutorService() executor.Service {
+	cmd := &executor.Cmd{&s.Stdout, &s.Stderr, s.Directory, s.SetUID, s.UID,
 		s.SetGID, s.GID, s.Arguments, s.Environment}
+	job := cmd.ToJob()
+	if s.Relaunch {
+		// Convert the interval to a time.Duration
+		dur := time.Duration(s.Interval * float64(time.Second))
+		return executor.RelaunchService(job, dur)
+	} else {
+		return executor.JobService(job)
+	}
 }

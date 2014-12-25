@@ -1,6 +1,7 @@
 package goule
 
 import (
+	"github.com/unixpickle/executor"
 	"github.com/unixpickle/ezserver"
 	"github.com/unixpickle/reverseproxy"
 	"net/http"
@@ -17,7 +18,7 @@ type Goule struct {
 	https    *ezserver.HTTPS
 	admin    *ezserver.HTTP
 	mutex    sync.RWMutex
-	services []Service
+	services map[string]executor.Service
 	sessions *sessions
 }
 
@@ -41,9 +42,9 @@ func NewGoule(config *Config) *Goule {
 	res.admin = ezserver.NewHTTP(http.HandlerFunc(admin))
 
 	// Create services (but don't start them)
-	res.services = make([]Service, len(config.Services))
-	for i, cfg := range config.Services {
-		res.services[i] = NewService(&cfg)
+	res.services = map[string]executor.Service{}
+	for name, config := range config.Services {
+		res.services[name] = config.ToExecutorService()
 	}
 
 	return res
@@ -54,8 +55,8 @@ func (g *Goule) Start() error {
 	defer g.mutex.Unlock()
 
 	// Start all the autolaunch services
-	for _, service := range g.services {
-		if service.Config().Autolaunch {
+	for name, service := range g.services {
+		if g.config.Services[name].Autolaunch {
 			service.Start()
 		}
 	}
@@ -109,9 +110,13 @@ func (g *Goule) adminHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// If the path begins with "/api/", it's an AJAX API call.
 	if strings.HasPrefix(r.URL.Path, "/api/") {
-		g.apiHandler(w, r)
+		a := &api{g, w, r}
+		a.Handle()
 	} else {
-		g.staticHandler(w, r)
+		g.mutex.RLock()
+		path := g.config.Admin.Assets
+		g.mutex.RUnlock()
+		Asset(path, w, r)
 	}
 }
 
