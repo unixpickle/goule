@@ -54,23 +54,23 @@ func (a *api) AuthAPI(password string) bool {
 }
 
 // Call performs an API.
-func (a *api) Call(name string, body []byte) ([]byte, int, error) {
+func (a *api) Call(name string, body []byte) (int, error) {
 	// Find the method for the given API.
 	method := reflect.ValueOf(a).MethodByName(name + "API")
 	if !method.IsValid() {
-		return nil, http.StatusNotFound, errors.New("Unknown API: " + name)
+		return http.StatusNotFound, errors.New("Unknown API: " + name)
 	}
 
 	// Decode the array of JSON-encoded arguments.
 	var rawArgs []string
 	if err := json.Unmarshal(body, &rawArgs); err != nil {
-		return nil, http.StatusBadRequest, err
+		return http.StatusBadRequest, err
 	}
 
 	// Decode the exact arguments.
 	args, err := decodeArgs(method, rawArgs)
 	if err != nil {
-		return nil, http.StatusBadRequest, err
+		return http.StatusBadRequest, err
 	}
 
 	// Lock the mutex in the appropriate way
@@ -95,11 +95,8 @@ func (a *api) Call(name string, body []byte) ([]byte, int, error) {
 	}
 	
 	// Encode the result
-	if encoded, err := json.Marshal(resList); err != nil {
-		return nil, http.StatusInternalServerError, err
-	} else {
-		return encoded, 0, nil
-	}
+	gohttputil.RespondJSON(a.w, http.StatusOK, resList)
+	return 0, nil
 }
 
 func (a *api) ConfigAPI() *Config {
@@ -165,12 +162,10 @@ func (a *api) Handle() {
 	}
 
 	// Run the call
-	response, code, err := a.Call(name, contents)
-	if err != nil {
+	if code, err := a.Call(name, contents); err != nil {
 		gohttputil.RespondJSON(a.w, code, err.Error())
 		return
 	}
-	a.w.Write(response)
 }
 
 // SetAdminPortAPI updates the admin port.
