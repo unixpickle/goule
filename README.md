@@ -43,6 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Here is a general TODO list which outlines everything that must be done before Goule will be usable.
 
+ * Re-organize session management
  * Implement web interface
    * Simple AJAX/JavaScript API
    * Login page
@@ -77,3 +78,5 @@ I'm moving things from my TODO list to this spot once I do them:
    * Getters for config and services
    * Set HTTP and HTTPS configuration
    * Unify API errors
+ * Implement web interface
+   * AJAX session management

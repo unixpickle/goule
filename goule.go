@@ -9,9 +9,6 @@ import (
 	"sync"
 )
 
-// SessionIdCookie is the cookie name for the Goule session ID.
-const SessionIdCookie = "goule_id"
-
 type Goule struct {
 	config   *Config
 	http     *ezserver.HTTP
@@ -99,18 +96,9 @@ func (g *Goule) Stop() {
 }
 
 func (g *Goule) adminHTTP(w http.ResponseWriter, r *http.Request) {
-	// Set the session cookie if necessary
-	if cookie, err := r.Cookie(SessionIdCookie); err == nil {
-		g.mutex.Lock()
-		if g.sessions.validate(cookie.Value) {
-			http.SetCookie(w, cookie)
-		}
-		g.mutex.Unlock()
-	}
-
 	// If the path begins with "/api/", it's an AJAX API call.
 	if strings.HasPrefix(r.URL.Path, "/api/") {
-		a := &api{g, w, r}
+		a := &api{g, w, r, r.URL.Query().Get("id")}
 		a.Handle()
 	} else {
 		g.mutex.RLock()

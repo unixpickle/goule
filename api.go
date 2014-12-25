@@ -12,8 +12,9 @@ import (
 
 type api struct {
 	*Goule
-	w http.ResponseWriter
-	r *http.Request
+	Response http.ResponseWriter
+	Request  *http.Request
+	Session  string
 }
 
 // AddRuleAPI adds a new proxy rule.
@@ -42,15 +43,12 @@ func (a *api) AddServiceAPI(name string, cfg Service) error {
 }
 
 // AuthAPI returns whether the given password is correct.
-func (a *api) AuthAPI(password string) bool {
+func (a *api) AuthAPI(password string) string {
 	if !a.config.Admin.Try(password) {
-		return false
+		return ""
 	}
-	// Create a new cookie and set it.
-	id := a.sessions.login()
-	cookie := &http.Cookie{Name: SessionIdCookie, Value: id}
-	http.SetCookie(a.w, cookie)
-	return true
+	// Create a new cookie for JavaScript to set
+	return a.sessions.login()
 }
 
 // Call performs an API.
@@ -95,7 +93,7 @@ func (a *api) Call(name string, body []byte) (int, error) {
 	}
 
 	// Encode the result
-	gohttputil.RespondJSON(a.w, http.StatusOK, resList)
+	gohttputil.RespondJSON(a.Response, http.StatusOK, resList)
 	return 0, nil
 }
 
@@ -107,13 +105,7 @@ func (a *api) ConfigAPI() *Config {
 // DeauthAPI does nothing.
 func (a *api) DeauthAPI() {
 	// Invalidate the current session
-	cookie, _ := a.r.Cookie(SessionIdCookie)
-	a.sessions.logout(cookie.Value)
-
-	// Delete the cookie on the client-side
-	content := SessionIdCookie + "=deleted; " +
-		"expires=Thu, 01 Jan 1970 00:00:00 GMT"
-	a.w.Header()["Set-Cookie"] = []string{content}
+	a.sessions.logout(a.Session)
 }
 
 // DeleteRuleAPI deletes a rule by value
@@ -146,26 +138,28 @@ func (a *api) DeleteServiceAPI(name string) error {
 // Handle handles the API call and writes a JSON response.
 func (a *api) Handle() {
 	// The path is "/api/APINAME"
-	name := a.r.URL.Path[5:]
+	name := a.Request.URL.Path[5:]
 
 	// Make sure they are authorized to make this request.
-	authed := a.w.Header().Get("Set-Cookie") != ""
+	a.mutex.Lock()
+	authed := a.sessions.validate(a.Session)
+	a.mutex.Unlock()
 	if !authed && name != "Auth" {
-		gohttputil.RespondJSON(a.w, http.StatusForbidden, ErrPermissionsDenied)
+		gohttputil.RespondJSON(a.Response, http.StatusForbidden,
+			ErrPermissionsDenied.Error())
 		return
 	}
 
 	// Read the contents of the request
-	contents, err := gohttputil.ReadRequest(a.r, 0x10000)
+	contents, err := gohttputil.ReadRequest(a.Request, 0x10000)
 	if err != nil {
-		gohttputil.RespondJSON(a.w, http.StatusBadRequest, err.Error())
+		gohttputil.RespondJSON(a.Response, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Run the call
 	if code, err := a.Call(name, contents); err != nil {
-		gohttputil.RespondJSON(a.w, code, err.Error())
-		return
+		gohttputil.RespondJSON(a.Response, code, err.Error())
 	}
 }
 
@@ -202,14 +196,14 @@ func (a *api) SetAssetsAPI(path string) {
 	a.config.Save()
 }
 
-// SetHTTP sets the HTTP port and enables/disables it.
-func (a *api) SetHTTP(enable bool, port int) error {
+// SetHTTPAPI sets the HTTP port and enables/disables it.
+func (a *api) SetHTTPAPI(enable bool, port int) error {
 	return a.setServer(a.http, &a.config.ServeHTTP, &a.config.HTTPPort, enable,
 		port)
 }
 
-// SetHTTPS sets the HTTPS port and enables/disables it.
-func (a *api) SetHTTPS(enable bool, port int) error {
+// SetHTTPSAPI sets the HTTPS port and enables/disables it.
+func (a *api) SetHTTPSAPI(enable bool, port int) error {
 	return a.setServer(a.https, &a.config.ServeHTTPS, &a.config.HTTPSPort,
 		enable, port)
 }
