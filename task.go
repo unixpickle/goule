@@ -6,14 +6,14 @@ import (
 )
 
 const (
-	taskActionStart = iota
-	taskActionStop = iota
+	taskActionStart  = iota
+	taskActionStop   = iota
 	taskActionStatus = iota
 )
 
 const (
-	TaskStatusStopped = iota
-	TaskStatusRunning = iota
+	TaskStatusStopped    = iota
+	TaskStatusRunning    = iota
 	TaskStatusRestarting = iota
 )
 
@@ -31,8 +31,16 @@ type Task struct {
 	actions chan<- taskAction
 }
 
+// Start begins executing a command for the task. If the task is executing, this
+// has no effect.
+func (t *Task) Start() {
+	resp := make(chan interface{})
+	t.actions <- taskAction{taskActionStart, resp}
+	<-resp
+}
+
 // StartLoop starts the task's background Goroutine. You must call this before
-// using the Task.
+// using the Start(), Stop(), and Status() methods.
 func (t *Task) StartLoop() {
 	if t.actions != nil {
 		panic("task's loop is already running")
@@ -42,12 +50,32 @@ func (t *Task) StartLoop() {
 	go t.loop(ch)
 }
 
+// Status returns the task's current state. Possible values are
+// TaskStatusStopped, TaskStatusRunning, and TaskStatusRestarting.
+func (t *Task) Status() int {
+	resp := make(chan interface{})
+	t.actions <- taskAction{taskActionStatus, resp}
+	return (<-resp).(int)
+}
+
+// Stop terminates the task's command. If the task is not executing, this has no
+// effect. This blocks to wait for the task to stop executing.
+func (t *Task) Stop() {
+	resp := make(chan interface{})
+	t.actions <- taskAction{taskActionStop, resp}
+	<-resp
+}
+
 // StopLoop stops a task's background Goroutine. You must call this after you
 // are done using a task.
+//
+// If the task is executing, this will terminate the process and block until it
+// has stopped.
 func (t *Task) StopLoop() {
 	if t.actions == nil {
 		panic("task's loop is not running")
 	}
+	t.Stop()
 	close(t.actions)
 	t.actions = nil
 }
@@ -103,8 +131,11 @@ func (t *Task) runOnce(actions <-chan taskAction) {
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
 				cmd.Process.Kill()
+				// Wait for the task to die before closing the response channel.
 				<-doneChan
-				close(val.resp)
+				if ok {
+					close(val.resp)
+				}
 				return
 			} else if val.action == taskActionStatus {
 				val.resp <- TaskStatusRunning
@@ -145,7 +176,12 @@ func (t *Task) runRestart(actions <-chan taskAction) {
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
 				cmd.Process.Kill()
-				close(val.resp)
+				// Wait for the task to die before closing the response channel.
+				<-doneChan
+				if ok {
+					close(val.resp)
+				}
+				return
 			} else if val.action == taskActionStatus {
 				val.resp <- TaskStatusRunning
 			} else {
@@ -162,7 +198,9 @@ func (t *Task) waitTimeout(actions <-chan taskAction) bool {
 			return true
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
-				close(val.resp)
+				if ok {
+					close(val.resp)
+				}
 				return false
 			} else if val.action == taskActionStatus {
 				val.resp <- TaskStatusRestarting
@@ -178,4 +216,3 @@ type taskAction struct {
 	action int
 	resp   chan<- interface{}
 }
-
