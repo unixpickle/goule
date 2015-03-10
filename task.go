@@ -1,4 +1,4 @@
-package goule
+package main
 
 import (
 	"os/exec"
@@ -17,6 +17,9 @@ const (
 	TaskStatusRestarting = iota
 )
 
+// A Task runs an executable in the background. Tasks each have their own
+// background loop. While a task's background loop is running, its fields
+// should not be modified.
 type Task struct {
 	Args     []string
 	Dir      string
@@ -27,8 +30,14 @@ type Task struct {
 	Relaunch bool
 	SetGID   bool
 	SetUID   bool
-
+	
 	actions chan<- taskAction
+}
+
+// NewTask creates an empty task. The task's background loop will not be running
+// until StartLoop() is called.
+func NewTask() *Task {
+	return &Task{}
 }
 
 // Start begins executing a command for the task. If the task is executing, this
