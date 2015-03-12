@@ -2,6 +2,14 @@
 
 This project will replace [nodules](https://github.com/unixpickle/nodules). I will use it on my VPS to host my domains and their various worker tasks.
 
+# Dependencies
+
+This depends on the [Go programming language](https://golang.org/doc/install).
+
+    go get github.com/unixpickle/ezserver
+    go get github.com/unixpickle/reverseproxy
+	go get github.com/jteeuwen/go-bindata
+
 # License
 
 **goule** is licensed under the BSD 2-clause license. See [LICENSE](LICENSE).
