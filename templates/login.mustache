@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Goule Login</title>
+  </head>
+  <body>
+    <form method="POST" action="/login">
+      {{#error}}
+      <label id="error">{{.}}</label>
+      {{/error}}
+      <input id="password" type="password" name="password"
+        placeholder="password" />
+      <input type="submit" />
+    </form>
+  </body>
+</html>

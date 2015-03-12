@@ -31,7 +31,7 @@ type Task struct {
 	Relaunch bool
 	SetGID   bool
 	SetUID   bool
-	
+
 	actions chan<- taskAction
 }
 

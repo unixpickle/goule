@@ -21,18 +21,18 @@ type Server struct {
 func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	cfg.RLock()
 	defer cfg.RUnlock()
-	
+
 	// Create server-related objects.
 	ctrl := ezserver.NewHTTP(Control{cfg})
 	proxy := reverseproxy.NewProxy(cfg.Rules)
 	http := ezserver.NewHTTP(proxy)
 	https := ezserver.NewHTTPS(proxy, cfg.TLS)
-	
+
 	// Start admin server.
 	if err := ctrl.Start(adminPort); err != nil {
 		return nil, err
 	}
-	
+
 	// Start HTTP server.
 	if cfg.StartHTTP {
 		if err := http.Start(cfg.HTTPPort); err != nil {
@@ -40,7 +40,7 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 			return nil, err
 		}
 	}
-	
+
 	// Start HTTPS server.
 	if cfg.StartHTTPS {
 		if err := https.Start(cfg.HTTPSPort); err != nil {
@@ -51,6 +51,6 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 			return nil, err
 		}
 	}
-	
+
 	return &Server{ctrl, http, https, proxy}, nil
 }
