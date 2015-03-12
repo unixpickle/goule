@@ -18,7 +18,7 @@ type Server struct {
 // The configuration musn't be locked; this will lock it read-only.
 // This will start the server(s) which are marked to run at startup.
 // If a server cannot be started, this returns an error.
-func NewServer(cfg *Config) (*Server, error) {
+func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	cfg.RLock()
 	defer cfg.RUnlock()
 	
@@ -29,7 +29,7 @@ func NewServer(cfg *Config) (*Server, error) {
 	https := ezserver.NewHTTPS(proxy, cfg.TLS)
 	
 	// Start admin server.
-	if err := ctrl.Start(cfg.AdminPort); err != nil {
+	if err := ctrl.Start(adminPort); err != nil {
 		return nil, err
 	}
 	

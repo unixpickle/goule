@@ -22,6 +22,7 @@ const (
 // should not be modified.
 type Task struct {
 	Args     []string
+	AutoRun  bool
 	Dir      string
 	Env      map[string]string
 	GID      int
