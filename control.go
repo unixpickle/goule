@@ -38,7 +38,17 @@ func (c Control) ServeAsset(w http.ResponseWriter, r *http.Request) {
 // ServeGeneral serves requests for the general settings page.
 func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 	template := map[string]interface{}{}
-	// TODO: fill template
+	
+	// Put server settings in template.
+	c.Config.RLock()
+	template["http"] = c.Config.HTTPPort
+	template["https"] = c.Config.HTTPSPort
+	template["startHTTP"] = c.Config.StartHTTP
+	template["startHTTPS"] = c.Config.StartHTTPS
+	c.Config.RUnlock()
+	
+	// TODO: current server statuses + start/stop buttons.
+	
 	serveTemplate(w, r, "general", template)
 }
 
@@ -70,7 +80,7 @@ func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		// Get their submitted hash and the real hash.
 		password := r.PostFormValue("password")
-		hash := hashPassword(password)
+		hash := HashPassword(password)
 		GlobalConfig.RLock()
 		realHash := GlobalConfig.AdminHash
 		GlobalConfig.RUnlock()
@@ -128,8 +138,8 @@ func (c Control) ServeTLS(w http.ResponseWriter, r *http.Request) {
 	serveTemplate(w, r, "tls", template)
 }
 
-// hashPassword returns the SHA-256 hash of a string.
-func hashPassword(password string) string {
+// HashPassword returns the SHA-256 hash of a string.
+func HashPassword(password string) string {
 	hash := sha256.Sum256([]byte(password))
 	return strings.ToLower(hex.EncodeToString(hash[:]))
 }

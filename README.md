@@ -15,7 +15,7 @@ This depends on the [Go programming language](https://golang.org/doc/install). I
 In addition, you must install `go-bindata` and use it to generate bindata.go:
 
     go get -u github.com/jteeuwen/go-bindata
-	go install github.com/jteeuwen/go-bindata
+	go install github.com/jteeuwen/go-bindata/go-bindata
     go-bindata assets/... templates/
 
 # License

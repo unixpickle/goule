@@ -16,5 +16,23 @@
         <li class="current">General</li>
       </ul>
     </div>
+    
+    <div id="general">
+      
+      <form action="/general" method="POST">
+        HTTP Port: <input name="http" value="{{http}}">
+        <br>
+        HTTPS Port: <input name="https" value="{{https}}">
+        <br>
+        Start HTTP: <input name="starthttp" type="checkbox"
+          {{#startHTTP}}checked{{/startHTTP}}>
+        <br>
+        Start HTTPS: <input name="starthttps" type="checkbox"
+          {{#startHTTPS}}checked{{/startHTTPS}}>
+        <br>
+        <input type="Submit">
+      </form>
+      
+    </div>
 	</body>
 </html>

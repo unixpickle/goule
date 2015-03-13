@@ -29,15 +29,7 @@ func LoadConfig(path string) (*Config, error) {
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			tls := ezserver.TLSConfig{
-				map[string]ezserver.KeyCert{}, []string{}, ezserver.KeyCert{},
-			}
-			// Hash of "password"
-			hash := "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62" +
-				"a11ef721d1542d8"
-			// Create the default configuration.
-			return &Config{Rules: reverseproxy.RuleTable{}, Tasks: []*Task{},
-				AdminHash: hash, TLS: &tls}, nil
+			return defaultConfig(), nil
 		}
 		return nil, err
 	}
@@ -57,4 +49,17 @@ func (c *Config) Save(path string) error {
 		return err
 	}
 	return ioutil.WriteFile(path, encoded, os.FileMode(0600))
+}
+
+// defaultConfig creates the default configuration. The password for this
+// configuration is "password".
+func defaultConfig() *Config {
+	tls := ezserver.TLSConfig{
+		map[string]ezserver.KeyCert{}, []string{}, ezserver.KeyCert{},
+	}
+	
+	hash := HashPassword("password")
+	
+	return &Config{Rules: reverseproxy.RuleTable{}, Tasks: []*Task{},
+		AdminHash: hash, TLS: &tls}
 }
