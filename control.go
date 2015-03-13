@@ -45,6 +45,8 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c.ServeAsset(w, r)
 	} else if !IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+	} else if urlPath == "/" {
+		c.ServeRoot(w, r)
 	} else {
 		http.NotFound(w, r)
 	}
@@ -79,6 +81,11 @@ func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 	content := mustache.Render(string(data), template)
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(content))
+}
+
+// ServeRoot serves the homepage.
+func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("nothing here..."))
 }
 
 // HashPassword returns the SHA-256 hash of a string.
