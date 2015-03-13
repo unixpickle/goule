@@ -2,16 +2,15 @@
 <html>
   <head>
     <title>Goule Login</title>
+    <link rel="stylesheet" type="text/css" href="assets/styles/login.css">
   </head>
   <body>
     <form method="POST" action="/login">
-      {{#error}}
-      <label id="error">Authentication failed.</label>
-      <br>
-      {{/error}}
       <input id="password" type="password" name="password"
         placeholder="password">
-      <input type="submit">
+      {{#error}}
+      <label id="error">Authentication failed.</label>
+      {{/error}}
     </form>
   </body>
 </html>

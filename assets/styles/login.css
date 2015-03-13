@@ -1,0 +1,27 @@
+body {
+  background-color: #f0f0f0;
+  text-align: center;
+}
+
+#error {
+  font-family: sans-serif;
+  display: block;
+  margin-top: 20px;
+}
+
+#password {
+  margin-top: 100px;
+  font-family: sans-serif;
+  width: 200px;
+  height: 24px;
+  border-radius: 22px;
+  border: none;
+  padding: 10px 10px 10px 10px;
+  text-align: center;
+  font-size: 20px;
+}
+
+#password:focus {
+  outline: 0;
+}
+

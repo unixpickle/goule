@@ -45,7 +45,6 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		c.ServeAsset(w, r)
 	} else if !IsAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-		return
 	} else {
 		http.NotFound(w, r)
 	}
