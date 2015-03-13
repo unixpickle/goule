@@ -2,14 +2,21 @@
 
 This project will replace [nodules](https://github.com/unixpickle/nodules). I will use it on my VPS to host my domains and their various worker tasks.
 
-# Dependencies
+# Dependencies & Setup
 
 This depends on the [Go programming language](https://golang.org/doc/install). In addition, you must download the following dependencies:
 
     go get github.com/unixpickle/ezserver
     go get github.com/unixpickle/reverseproxy
-    go get github.com/jteeuwen/go-bindata
     go get github.com/hoisie/mustache
+    go get github.com/gorilla/securecookie
+    go get github.com/gorilla/sessions
+
+In addition, you must install `go-bindata` and use it to generate bindata.go:
+
+    go get -u github.com/jteeuwen/go-bindata
+	go install github.com/jteeuwen/go-bindata
+    go-bindata assets/ templates/
 
 # License
 
