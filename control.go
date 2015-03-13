@@ -35,16 +35,28 @@ func (c Control) ServeAsset(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeGeneral serves requests for the general settings page.
+func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
+	template := map[string]interface{}{}
+	// TODO: fill template
+	serveTemplate(w, r, "general", template)
+}
+
 // ServeHTTP serves the web control panel.
 func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// TODO: serve pages here
 	urlPath := path.Clean(r.URL.Path)
 	if urlPath == "/login" {
 		c.ServeLogin(w, r)
 	} else if strings.HasPrefix(urlPath, "/assets/") {
 		c.ServeAsset(w, r)
-	} else if !IsAuthenticated(r) {
+	} else if !isAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+	} else if urlPath == "/general" {
+		c.ServeGeneral(w, r)
+	} else if urlPath == "/rules" {
+		c.ServeRules(w, r)
+	} else if urlPath == "/tls" {
+		c.ServeTLS(w, r)
 	} else if urlPath == "/" {
 		c.ServeRoot(w, r)
 	} else {
@@ -58,7 +70,7 @@ func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		// Get their submitted hash and the real hash.
 		password := r.PostFormValue("password")
-		hash := HashPassword(password)
+		hash := hashPassword(password)
 		GlobalConfig.RLock()
 		realHash := GlobalConfig.AdminHash
 		GlobalConfig.RUnlock()
@@ -83,7 +95,7 @@ func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(content))
 }
 
-// ServeRoot serves the homepage.
+// ServeRoot serves the homepage (task list).
 func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
 	template := map[string]interface{}{}
 	GlobalConfig.RLock()
@@ -99,25 +111,44 @@ func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
 	template["tasks"] = objects
 	GlobalConfig.RUnlock()
 
-	// Serve homepage with no template.
-	data, err := Asset("templates/tasks.mustache")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-	content := mustache.Render(string(data), template)
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(content))
+	serveTemplate(w, r, "tasks", template)
 }
 
-// HashPassword returns the SHA-256 hash of a string.
-func HashPassword(password string) string {
+// ServeRules serves requests for the rules page.
+func (c Control) ServeRules(w http.ResponseWriter, r *http.Request) {
+	template := map[string]interface{}{}
+	// TODO: fill template
+	serveTemplate(w, r, "rules", template)
+}
+
+// ServeTLS serves requests for the TLS settings page.
+func (c Control) ServeTLS(w http.ResponseWriter, r *http.Request) {
+	template := map[string]interface{}{}
+	// TODO: fill template
+	serveTemplate(w, r, "tls", template)
+}
+
+// hashPassword returns the SHA-256 hash of a string.
+func hashPassword(password string) string {
 	hash := sha256.Sum256([]byte(password))
 	return strings.ToLower(hex.EncodeToString(hash[:]))
 }
 
-// IsAuthenticated returns whether or not a request was authenticated.
-func IsAuthenticated(r *http.Request) bool {
+// isAuthenticated returns whether or not a request was authenticated.
+func isAuthenticated(r *http.Request) bool {
 	s, _ := Store.Get(r, "sessid")
 	val, ok := s.Values["authenticated"].(bool)
 	return ok && val
+}
+
+// serveTemplate serves a mustache template asset.
+func serveTemplate(w http.ResponseWriter, r *http.Request, name string,
+	info interface{}) {
+	data, err := Asset("templates/" + name + ".mustache")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	content := mustache.Render(string(data), info)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(content))
 }
