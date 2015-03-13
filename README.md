@@ -16,7 +16,7 @@ In addition, you must install `go-bindata` and use it to generate bindata.go:
 
     go get -u github.com/jteeuwen/go-bindata
 	go install github.com/jteeuwen/go-bindata
-    go-bindata assets/styles templates/
+    go-bindata assets/... templates/
 
 # License
 

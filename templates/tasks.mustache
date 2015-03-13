@@ -2,8 +2,21 @@
 <html>
 	<head>
 		<title>Goule Tasks</title>
+    <link rel="stylesheet" type="text/css" href="assets/styles/shared.css">
+    <link rel="stylesheet" type="text/css" href="assets/styles/tasks.css">
 	</head>
 	<body>
+    <div id="header">
+      <img src="assets/images/icon.png">
+      <h1>Goule</h1>
+      <ul>
+        <li class="current">Tasks</li>
+        <li class="other"><a href="/rules">Proxy Rules</a></li>
+        <li class="other"><a href="/tls">TLS</a></li>
+        <li class="other"><a href="/admin">Admin</a></li>
+      </ul>
+    </div>
+    
 		<div id="tasks">
 		{{#tasks}}
 			<div class="task">
