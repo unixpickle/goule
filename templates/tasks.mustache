@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Goule Tasks</title>
+	</head>
+	<body>
+		<div id="tasks">
+		{{#tasks}}
+			<div class="task">
+				<label class="args">{{args}}</label>
+				<button class="action">{{action}}</button>
+			</div>
+		{{/tasks}}
+		{{^tasks}}
+			<label class="no-tasks">No tasks</label>
+		{{/tasks}}
+		</div>
+	</body>
+</html>

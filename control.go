@@ -85,7 +85,28 @@ func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 
 // ServeRoot serves the homepage.
 func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("nothing here..."))
+	template := map[string]interface{}{}
+	GlobalConfig.RLock()
+	objects := make([]map[string]string, len(GlobalConfig.Tasks))
+	for i, task := range GlobalConfig.Tasks {
+		status := task.Status()
+		statusStr := []string{"stopped", "running", "restarting"}[status]
+		action := []string{"Start", "Stop", "Restarting"}[status]
+		args := strings.Join(task.Args, " ")
+		objects[i] = map[string]string{"action": action, "status": statusStr,
+			"args": args}
+	}
+	template["tasks"] = objects
+	GlobalConfig.RUnlock()
+
+	// Serve homepage with no template.
+	data, err := Asset("templates/tasks.mustache")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	content := mustache.Render(string(data), template)
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(content))
 }
 
 // HashPassword returns the SHA-256 hash of a string.
