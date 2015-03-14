@@ -22,35 +22,38 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	cfg.RLock()
 	defer cfg.RUnlock()
 
+	res := &Server{}
+
 	// Create server-related objects.
-	ctrl := ezserver.NewHTTP(Control{cfg})
-	proxy := reverseproxy.NewProxy(cfg.Rules)
-	http := ezserver.NewHTTP(proxy)
-	https := ezserver.NewHTTPS(proxy, cfg.TLS)
+	res.Control = ezserver.NewHTTP(Control{cfg, res})
+	res.Proxy = reverseproxy.NewProxy(cfg.Rules)
+	res.HTTP = ezserver.NewHTTP(res.Proxy)
+	res.HTTPS = ezserver.NewHTTPS(res.Proxy, cfg.TLS)
 
 	// Start admin server.
-	if err := ctrl.Start(adminPort); err != nil {
+	if err := res.Control.Start(adminPort); err != nil {
 		return nil, err
 	}
 
 	// Start HTTP server.
 	if cfg.StartHTTP {
-		if err := http.Start(cfg.HTTPPort); err != nil {
-			ctrl.Stop()
+		if err := res.HTTP.Start(cfg.HTTPPort); err != nil {
+			res.Control.Stop()
 			return nil, err
 		}
 	}
 
 	// Start HTTPS server.
 	if cfg.StartHTTPS {
-		if err := https.Start(cfg.HTTPSPort); err != nil {
-			if cfg.StartHTTP {
-				http.Stop()
-			}
-			ctrl.Stop()
+		if err := res.HTTPS.Start(cfg.HTTPSPort); err != nil {
+			// NOTE: res.HTTP could be running even if StartHTTP was false
+			// because the control server is running and someone (theoretically)
+			// could have used it to start the server by hand.
+			res.HTTP.Stop()
+			res.Control.Stop()
 			return nil, err
 		}
 	}
-
-	return &Server{ctrl, http, https, proxy}, nil
+	
+	return res, nil
 }

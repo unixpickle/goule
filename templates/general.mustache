@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
 		<title>Goule General</title>
     <link rel="stylesheet" type="text/css" href="assets/styles/shared.css">
+    <link rel="stylesheet" type="text/css" href="assets/styles/general.css">
 	</head>
 	<body>
     <div id="header">
@@ -24,14 +25,34 @@
         <br>
         HTTPS Port: <input name="https" value="{{https}}">
         <br>
-        Start HTTP: <input name="starthttp" type="checkbox"
+        Start HTTP: <input name="starthttp" type="checkbox" value="On"
           {{#startHTTP}}checked{{/startHTTP}}>
         <br>
-        Start HTTPS: <input name="starthttps" type="checkbox"
+        Start HTTPS: <input name="starthttps" type="checkbox" value="On"
           {{#startHTTPS}}checked{{/startHTTPS}}>
         <br>
         <input type="Submit">
       </form>
+      
+      <br><br>
+      
+      {{#httpRunning}}
+      HTTP server is running on port {{httpPort}}.
+      <a href="/http?action=stop">Stop</a>
+      {{/httpRunning}}
+      {{^httpRunning}}
+      HTTP server is stopped. <a href="/http?action=start">Start</a>
+      {{/httpRunning}}
+      
+      <br>
+      
+      {{#httpsRunning}}
+      HTTPS server is running on port {{httpsPort}}.
+      <a href="/https?action=stop">Stop</a>
+      {{/httpsRunning}}
+      {{^httpsRunning}}
+      HTTPS server is stopped. <a href="/https?action=start">Start</a>
+      {{/httpsRunning}}
       
     </div>
 	</body>

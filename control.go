@@ -9,6 +9,7 @@ import (
 	"mime"
 	"net/http"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -18,6 +19,7 @@ var Store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
 // Control is an http.Handler which serves the web control panel.
 type Control struct {
 	Config *Config
+	Server *Server
 }
 
 // ServeAsset serves a static asset.
@@ -37,6 +39,20 @@ func (c Control) ServeAsset(w http.ResponseWriter, r *http.Request) {
 
 // ServeGeneral serves requests for the general settings page.
 func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		// Use posted form data to update configuration.
+		httpPort := r.PostFormValue("http")
+		httpsPort := r.PostFormValue("https")
+		startHTTP := r.PostFormValue("starthttp")
+		startHTTPS := r.PostFormValue("starthttps")
+		c.Config.Lock()
+		c.Config.HTTPPort, _ = strconv.Atoi(httpPort)
+		c.Config.HTTPSPort, _ = strconv.Atoi(httpsPort)
+		c.Config.StartHTTP = (startHTTP == "On")
+		c.Config.StartHTTPS = (startHTTPS == "On")
+		c.Config.Unlock()
+	}
+	
 	template := map[string]interface{}{}
 	
 	// Put server settings in template.
@@ -47,7 +63,8 @@ func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 	template["startHTTPS"] = c.Config.StartHTTPS
 	c.Config.RUnlock()
 	
-	// TODO: current server statuses + start/stop buttons.
+	template["httpRunning"], template["httpPort"] = c.Server.HTTP.Status()
+	template["httpsRunning"], template["httpsPort"] = c.Server.HTTPS.Status()
 	
 	serveTemplate(w, r, "general", template)
 }
@@ -57,21 +74,63 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	urlPath := path.Clean(r.URL.Path)
 	if urlPath == "/login" {
 		c.ServeLogin(w, r)
+		return
 	} else if strings.HasPrefix(urlPath, "/assets/") {
 		c.ServeAsset(w, r)
+		return
 	} else if !isAuthenticated(r) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
-	} else if urlPath == "/general" {
-		c.ServeGeneral(w, r)
-	} else if urlPath == "/rules" {
-		c.ServeRules(w, r)
-	} else if urlPath == "/tls" {
-		c.ServeTLS(w, r)
-	} else if urlPath == "/" {
-		c.ServeRoot(w, r)
-	} else {
-		http.NotFound(w, r)
+		return
 	}
+	
+	// Page routing for authenticated clients.
+	pages := map[string]func(http.ResponseWriter, *http.Request){
+		"/general": c.ServeGeneral, "/rules": c.ServeRules, "/tls": c.ServeTLS,
+		"/http": c.ServeHTTPConfig, "/https": c.ServeHTTPSConfig,
+		"/": c.ServeRoot}
+	handler, ok := pages[urlPath]
+	if !ok {
+		handler = http.NotFound
+	}
+	handler(w, r)
+}
+
+// ServeHTTPConfig provides a basic link-driven API for controlling the HTTP
+// server.
+func (c Control) ServeHTTPConfig(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	switch query.Get("action") {
+	case "start":
+		c.Config.RLock()
+		port := c.Config.HTTPPort
+		c.Config.RUnlock()
+		c.Server.HTTP.Start(port)
+	case "stop":
+		c.Server.HTTP.Stop()
+	default:
+		http.Error(w, "Invalid action.", http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/general", http.StatusTemporaryRedirect)
+}
+
+// ServeHTTPSConfig provides a basic link-driven API for controlling the HTTPS
+// server.
+func (c Control) ServeHTTPSConfig(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	switch query.Get("action") {
+	case "start":
+		c.Config.RLock()
+		port := c.Config.HTTPSPort
+		c.Config.RUnlock()
+		c.Server.HTTPS.Start(port)
+	case "stop":
+		c.Server.HTTPS.Stop()
+	default:
+		http.Error(w, "Invalid action.", http.StatusBadRequest)
+		return
+	}
+	http.Redirect(w, r, "/general", http.StatusTemporaryRedirect)
 }
 
 // ServeLogin serves the login page.

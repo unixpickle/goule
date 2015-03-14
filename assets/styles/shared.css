@@ -8,6 +8,10 @@ body, html {
 }
 
 #header {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
   height: 60px;
   border-bottom: 3px solid #d6d6d6;
   background-color: white;
