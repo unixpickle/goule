@@ -21,38 +21,61 @@
     <div id="general">
       
       <form action="/general" method="POST">
-        HTTP Port: <input name="http" value="{{http}}">
+        <label>HTTP Port:</label><input name="http" value="{{http}}">
         <br>
-        HTTPS Port: <input name="https" value="{{https}}">
+        <label>HTTPS Port:</label><input name="https" value="{{https}}">
         <br>
-        Start HTTP: <input name="starthttp" type="checkbox" value="On"
-          {{#startHTTP}}checked{{/startHTTP}}>
+        <label>Start HTTP:</label><input name="starthttp" type="checkbox"
+          value="On" {{#startHTTP}}checked{{/startHTTP}}>
         <br>
-        Start HTTPS: <input name="starthttps" type="checkbox" value="On"
-          {{#startHTTPS}}checked{{/startHTTPS}}>
+        <label>Start HTTPS:</label><input name="starthttps" type="checkbox"
+          value="On" {{#startHTTPS}}checked{{/startHTTPS}}>
         <br>
         <input type="Submit">
       </form>
       
-      <br><br>
+      <br>
       
       {{#httpRunning}}
-      HTTP server is running on port {{httpPort}}.
+      <label>HTTP server is running on port {{httpPort}}.</label>
       <a href="/http?action=stop">Stop</a>
       {{/httpRunning}}
       {{^httpRunning}}
-      HTTP server is stopped. <a href="/http?action=start">Start</a>
+      <label>HTTP server is stopped.</label>
+      <a href="/http?action=start">Start</a>
       {{/httpRunning}}
       
       <br>
       
       {{#httpsRunning}}
-      HTTPS server is running on port {{httpsPort}}.
+      <label>HTTPS server is running on port {{httpsPort}}.</label>
       <a href="/https?action=stop">Stop</a>
       {{/httpsRunning}}
       {{^httpsRunning}}
-      HTTPS server is stopped. <a href="/https?action=start">Start</a>
+      <label>HTTPS server is stopped.</label>
+      <a href="/https?action=start">Start</a>
       {{/httpsRunning}}
+      
+      <br><br>
+      
+      <form action="/chpass" method="POST">
+        <label>Old:</label><input name="old" type="password"
+          autocomplete="off">
+        <br>
+        <label>New:</label><input name="new" type="password"
+          autocomplete="off">
+        <br>
+        <label>Confirm:</label><input name="confirm" type="password"
+          autocomplete="off">
+        <br>
+        {{#chpassError}}
+        <div class="chpass-error">{{chpassError}}</div>
+        {{/chpassError}}
+        {{#chpassSuccess}}
+        <div class="chpass-success">{{chpassSuccess}}</div>
+        {{/chpassSuccess}}
+        <input type="submit" value="Change Password">
+      </form>
       
     </div>
 	</body>

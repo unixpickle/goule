@@ -37,6 +37,33 @@ func (c Control) ServeAsset(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeChpass serves the change password POST target.
+func (c Control) ServeChpass(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		http.Error(w, "You must POST to this API", http.StatusMethodNotAllowed)
+		return
+	}
+	old := r.PostFormValue("old")
+	newPass := r.PostFormValue("new")
+	confirm := r.PostFormValue("confirm")
+	c.Config.Lock()
+	defer c.Config.Unlock()
+	if HashPassword(old) != c.Config.AdminHash {
+		http.Redirect(w, r, "/general?error=Password%20incorrect",
+			http.StatusTemporaryRedirect)
+		return
+	}
+	if newPass != confirm {
+		http.Redirect(w, r, "/general?error=Passwords%20did%20not%20match",
+			http.StatusTemporaryRedirect)
+		return
+	}
+	c.Config.AdminHash = HashPassword(newPass)
+	c.Config.Save(ConfigPath)
+	http.Redirect(w, r, "/general?success=Password%20changed",
+		http.StatusTemporaryRedirect)
+}
+
 // ServeGeneral serves requests for the general settings page.
 func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
@@ -67,6 +94,13 @@ func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 	template["httpRunning"], template["httpPort"] = c.Server.HTTP.Status()
 	template["httpsRunning"], template["httpsPort"] = c.Server.HTTPS.Status()
 	
+	query := r.URL.Query()
+	if errMsg := query.Get("error"); errMsg != "" {
+		template["chpassError"] = errMsg
+	} else if msg := query.Get("success"); msg != "" {
+		template["chpassSuccess"] = msg
+	}
+	
 	serveTemplate(w, r, "general", template)
 }
 
@@ -88,7 +122,7 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	pages := map[string]func(http.ResponseWriter, *http.Request){
 		"/general": c.ServeGeneral, "/rules": c.ServeRules, "/tls": c.ServeTLS,
 		"/http": c.ServeHTTPConfig, "/https": c.ServeHTTPSConfig,
-		"/": c.ServeRoot}
+		"/chpass": c.ServeChpass, "/": c.ServeRoot}
 	handler, ok := pages[urlPath]
 	if !ok {
 		handler = http.NotFound

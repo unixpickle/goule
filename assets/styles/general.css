@@ -7,3 +7,24 @@
   padding: 10px 10px 10px 10px;
   background-color: white;
 }
+
+label {
+  display: inline-block;
+  width: 300px;
+  padding-right: 5px;
+  text-align: right;
+}
+
+input[type="submit"], .chpass-error, .chpass-success {
+  margin-left: 305px;
+}
+
+.chpass-error {
+  display: inline-block;
+  color: red;
+}
+
+.chpass-success {
+  display: inline-block;
+  color: green;
+}

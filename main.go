@@ -23,7 +23,7 @@ func main() {
 		fmt.Fprintln(os.Stderr, "Invalid port number:", os.Args[1])
 		os.Exit(1)
 	}
-	ConfigPath := os.Args[2]
+	ConfigPath = os.Args[2]
 
 	// Load the configuration.
 	GlobalConfig, err = LoadConfig(ConfigPath)
