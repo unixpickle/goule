@@ -50,6 +50,7 @@ func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 		c.Config.HTTPSPort, _ = strconv.Atoi(httpsPort)
 		c.Config.StartHTTP = (startHTTP == "On")
 		c.Config.StartHTTPS = (startHTTPS == "On")
+		c.Config.Save(ConfigPath)
 		c.Config.Unlock()
 	}
 	
