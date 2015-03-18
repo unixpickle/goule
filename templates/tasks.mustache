@@ -1,12 +1,12 @@
 <!doctype html>
 <html>
-	<head>
+  <head>
     <meta charset="UTF-8">
-		<title>Goule Tasks</title>
+    <title>Goule Tasks</title>
     <link rel="stylesheet" type="text/css" href="assets/styles/shared.css">
     <link rel="stylesheet" type="text/css" href="assets/styles/tasks.css">
-	</head>
-	<body>
+  </head>
+  <body>
     <div id="header">
       <img src="assets/images/icon.png">
       <h1>Goule</h1>
@@ -18,16 +18,16 @@
       </ul>
     </div>
     
-		<div id="tasks">
-		{{#tasks}}
-			<div class="task">
-				<label class="args">{{args}}</label>
-				<button class="action">{{action}}</button>
-			</div>
-		{{/tasks}}
-		{{^tasks}}
-			<label class="no-tasks">No tasks</label>
-		{{/tasks}}
-		</div>
-	</body>
+    <div id="tasks">
+    {{#tasks}}
+      <div class="task">
+        <label class="args">{{args}}</label>
+        <button class="action">{{action}}</button>
+      </div>
+    {{/tasks}}
+    {{^tasks}}
+      <label class="no-tasks">No tasks</label>
+    {{/tasks}}
+    </div>
+  </body>
 </html>
