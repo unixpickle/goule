@@ -9,7 +9,8 @@
     var element = $('<div />', {class: 'rule'});
     var input = $('<input />', {
       value: host,
-      placeholder: 'Host'
+      placeholder: 'Host',
+      class: 'host-name'
     });
     var remove = $('<button>Remove</button>');
     var add = $('<button>Add Target</button>');
@@ -32,7 +33,8 @@
     var element = $('<div />', {class: 'target'});
     var input = $('<input />', {
       value: hostname,
-      placeholder: 'Target'
+      placeholder: 'Target',
+      class: 'target-name'
     });
     var remove = $('<button>Remove</button>');
     element.append(input);
@@ -59,11 +61,32 @@
       var key = hosts[i];
       var targets = rules[key];
       var element = createRuleElement(key, targets);
-      container.push(element);
+      container.append(element);
     }
+  }
+  
+  function save() {
+    // Generate a rules object.
+    var result = {};
+    var rules = $('.rule');
+    for (var i = 0, len = rules.length; i < len; ++i) {
+      var rule = $(rules[i]);
+      var name = rule.find('input.host-name').val();
+      var targets = rule.find('input.target-name');
+      var targetNames = [];
+      for (var j = 0, len1 = targets.length; j < len1; ++j) {
+        targetNames[j] = $(targets[j]).val();
+      }
+      result[name] = targetNames;
+    }
+    
+    // Send the rules object to the server.
+    var encoded = encodeURIComponent(JSON.stringify(result));
+    window.location = '/setrules?rules=' + encoded;
   }
 
   window.app.addRule = addRule;
   window.app.loadRules = loadRules;
+  window.app.save = save;
 
 })();

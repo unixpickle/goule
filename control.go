@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/hoisie/mustache"
@@ -122,7 +123,8 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	pages := map[string]func(http.ResponseWriter, *http.Request){
 		"/general": c.ServeGeneral, "/rules": c.ServeRules, "/tls": c.ServeTLS,
 		"/http": c.ServeHTTPConfig, "/https": c.ServeHTTPSConfig,
-		"/chpass": c.ServeChpass, "/": c.ServeRoot}
+		"/chpass": c.ServeChpass, "/": c.ServeRoot,
+		"/setrules": c.ServeSetRules}
 	handler, ok := pages[urlPath]
 	if !ok {
 		handler = http.NotFound
@@ -221,8 +223,34 @@ func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
 // ServeRules serves requests for the rules page.
 func (c Control) ServeRules(w http.ResponseWriter, r *http.Request) {
 	template := map[string]interface{}{}
-	// TODO: fill template
+	
+	// Encode the rules as JSON and put them in the template.
+	GlobalConfig.RLock()
+	encoded, _ := json.Marshal(GlobalConfig.Rules)
+	GlobalConfig.RUnlock()
+	template["rules"] = string(encoded)
+	
 	serveTemplate(w, r, "rules", template)
+}
+
+// ServeSetRules serves requests for the page that sets the rules.
+func (c Control) ServeSetRules(w http.ResponseWriter, r *http.Request) {
+	// Get rules from the request.
+	rulesData := r.URL.Query().Get("rules")
+	var decoded map[string][]string
+	if err := json.Unmarshal([]byte(rulesData), &decoded); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	
+	// Set rules in the configuration and server.
+	GlobalConfig.Lock()
+	GlobalConfig.Rules = decoded
+	GlobalServer.Proxy.SetRuleTable(decoded)
+	c.Config.Save(ConfigPath)
+	GlobalConfig.Unlock()
+	
+	http.Redirect(w, r, "/rules", http.StatusTemporaryRedirect)
 }
 
 // ServeTLS serves requests for the TLS settings page.

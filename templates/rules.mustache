@@ -11,6 +11,11 @@
     window.app = {};
     </script>
     <script src="assets/scripts/rules.js" type="text/javascript"></script>
+    <script type="text/javascript">
+    window.addEventListener('load', function() {
+      window.app.loadRules({{{rules}}});
+    });
+    </script>
   </head>
   <body>
     <div id="header">
@@ -25,6 +30,7 @@
     </div>
     <div id="rules">
       <button onClick="window.app.addRule()">Add Rule</button>
+      <button onClick="window.app.save()">Save</button>
       <br>
     </div>
   </body>
