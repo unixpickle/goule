@@ -4,7 +4,7 @@ This project will replace [nodules](https://github.com/unixpickle/nodules). I wi
 
 # Dependencies & Setup
 
-This depends on the [Go programming language](https://golang.org/doc/install). In addition, you must download the following dependencies:
+This depends on the [Go programming language](https://golang.org/doc/install). In addition, it depends on several dependencies which you can install manually like so:
 
     go get github.com/unixpickle/ezserver
     go get github.com/unixpickle/reverseproxy
