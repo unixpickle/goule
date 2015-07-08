@@ -32,8 +32,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Run the tasks before we start the servers so the configuration page isn't
-	// accessible until the tasks are started.
+	// Run the tasks before we start the servers so the configuration page isn't accessible until
+	// the tasks are started.
 	GlobalConfig.Lock()
 	for _, t := range GlobalConfig.Tasks {
 		t.StartLoop()

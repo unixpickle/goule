@@ -23,8 +23,8 @@ type Config struct {
 }
 
 // LoadConfig reads a configuration from a JSON file and returns the result.
-// The resulting Config will have zero or more Tasks. None of these tasks will
-// have a running loop.
+// The resulting Config will have zero or more Tasks.
+// None of these tasks will have a running loop.
 func LoadConfig(path string) (*Config, error) {
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -41,8 +41,8 @@ func LoadConfig(path string) (*Config, error) {
 	return &res, nil
 }
 
-// Save writes the configuration to a JSON file. The Config should be
-// locked (a read-only lock is sufficient).
+// Save writes the configuration to a JSON file.
+// The Config should be locked (a read-only lock is sufficient).
 func (c *Config) Save(path string) error {
 	encoded, err := json.Marshal(c)
 	if err != nil {
@@ -51,15 +51,15 @@ func (c *Config) Save(path string) error {
 	return ioutil.WriteFile(path, encoded, os.FileMode(0600))
 }
 
-// defaultConfig creates the default configuration. The password for this
-// configuration is "password".
+// defaultConfig creates the default configuration.
+// The password for this configuration is "password".
 func defaultConfig() *Config {
 	tls := ezserver.TLSConfig{
 		map[string]ezserver.KeyCert{}, []string{}, ezserver.KeyCert{},
 	}
-	
+
 	hash := HashPassword("password")
-	
+
 	return &Config{Rules: reverseproxy.RuleTable{}, Tasks: []*Task{},
 		AdminHash: hash, TLS: &tls}
 }

@@ -17,9 +17,8 @@ const (
 	TaskStatusRestarting = iota
 )
 
-// A Task runs an executable in the background. Tasks each have their own
-// background loop. While a task's background loop is running, its fields
-// should not be modified.
+// A Task runs an executable in the background. Tasks each have their own background loop.
+// While a task's background loop is running, its fields should not be modified.
 type Task struct {
 	Args     []string
 	AutoRun  bool

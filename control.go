@@ -81,9 +81,9 @@ func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 		c.Config.Save(ConfigPath)
 		c.Config.Unlock()
 	}
-	
+
 	template := map[string]interface{}{}
-	
+
 	// Put server settings in template.
 	c.Config.RLock()
 	template["http"] = c.Config.HTTPPort
@@ -91,17 +91,17 @@ func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 	template["startHTTP"] = c.Config.StartHTTP
 	template["startHTTPS"] = c.Config.StartHTTPS
 	c.Config.RUnlock()
-	
+
 	template["httpRunning"], template["httpPort"] = c.Server.HTTP.Status()
 	template["httpsRunning"], template["httpsPort"] = c.Server.HTTPS.Status()
-	
+
 	query := r.URL.Query()
 	if errMsg := query.Get("error"); errMsg != "" {
 		template["chpassError"] = errMsg
 	} else if msg := query.Get("success"); msg != "" {
 		template["chpassSuccess"] = msg
 	}
-	
+
 	serveTemplate(w, r, "general", template)
 }
 
@@ -118,7 +118,7 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 		return
 	}
-	
+
 	// Page routing for authenticated clients.
 	pages := map[string]func(http.ResponseWriter, *http.Request){
 		"/general": c.ServeGeneral, "/rules": c.ServeRules, "/tls": c.ServeTLS,
@@ -132,8 +132,7 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	handler(w, r)
 }
 
-// ServeHTTPConfig provides a basic link-driven API for controlling the HTTP
-// server.
+// ServeHTTPConfig provides a basic link-driven API for controlling the HTTP server.
 func (c Control) ServeHTTPConfig(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	switch query.Get("action") {
@@ -151,8 +150,7 @@ func (c Control) ServeHTTPConfig(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/general", http.StatusTemporaryRedirect)
 }
 
-// ServeHTTPSConfig provides a basic link-driven API for controlling the HTTPS
-// server.
+// ServeHTTPSConfig provides a basic link-driven API for controlling the HTTPS server.
 func (c Control) ServeHTTPSConfig(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	switch query.Get("action") {
@@ -177,9 +175,9 @@ func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 		// Get their submitted hash and the real hash.
 		password := r.PostFormValue("password")
 		hash := HashPassword(password)
-		GlobalConfig.RLock()
-		realHash := GlobalConfig.AdminHash
-		GlobalConfig.RUnlock()
+		c.Config.RLock()
+		realHash := c.Config.AdminHash
+		c.Config.RUnlock()
 		// Check if they got the password correct.
 		if hash == realHash {
 			s, _ := Store.Get(r, "sessid")
@@ -204,9 +202,9 @@ func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 // ServeRoot serves the homepage (task list).
 func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
 	template := map[string]interface{}{}
-	GlobalConfig.RLock()
-	objects := make([]map[string]string, len(GlobalConfig.Tasks))
-	for i, task := range GlobalConfig.Tasks {
+	c.Config.RLock()
+	objects := make([]map[string]string, len(c.Config.Tasks))
+	for i, task := range c.Config.Tasks {
 		status := task.Status()
 		statusStr := []string{"stopped", "running", "restarting"}[status]
 		action := []string{"Start", "Stop", "Restarting"}[status]
@@ -215,7 +213,7 @@ func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
 			"args": args}
 	}
 	template["tasks"] = objects
-	GlobalConfig.RUnlock()
+	c.Config.RUnlock()
 
 	serveTemplate(w, r, "tasks", template)
 }
@@ -223,13 +221,13 @@ func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
 // ServeRules serves requests for the rules page.
 func (c Control) ServeRules(w http.ResponseWriter, r *http.Request) {
 	template := map[string]interface{}{}
-	
+
 	// Encode the rules as JSON and put them in the template.
-	GlobalConfig.RLock()
-	encoded, _ := json.Marshal(GlobalConfig.Rules)
-	GlobalConfig.RUnlock()
+	c.Config.RLock()
+	encoded, _ := json.Marshal(c.Config.Rules)
+	c.Config.RUnlock()
 	template["rules"] = string(encoded)
-	
+
 	serveTemplate(w, r, "rules", template)
 }
 
@@ -242,14 +240,14 @@ func (c Control) ServeSetRules(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	
+
 	// Set rules in the configuration and server.
-	GlobalConfig.Lock()
-	GlobalConfig.Rules = decoded
-	GlobalServer.Proxy.SetRuleTable(decoded)
+	c.Config.Lock()
+	c.Config.Rules = decoded
+	c.Server.Proxy.SetRuleTable(decoded)
 	c.Config.Save(ConfigPath)
-	GlobalConfig.Unlock()
-	
+	c.Config.Unlock()
+
 	http.Redirect(w, r, "/rules", http.StatusTemporaryRedirect)
 }
 

@@ -5,8 +5,7 @@ import (
 	"github.com/unixpickle/reverseproxy"
 )
 
-// A Server contains all the HTTP servers and the proxy object for a Goule
-// instance.
+// A Server contains all the HTTP servers and the proxy object for a Goule instance.
 type Server struct {
 	Control *ezserver.HTTP
 	HTTP    *ezserver.HTTP
@@ -46,14 +45,14 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	// Start HTTPS server.
 	if cfg.StartHTTPS {
 		if err := res.HTTPS.Start(cfg.HTTPSPort); err != nil {
-			// NOTE: res.HTTP could be running even if StartHTTP was false
-			// because the control server is running and someone (theoretically)
-			// could have used it to start the server by hand.
+			// NOTE: res.HTTP could be running even if StartHTTP was false because the control
+			// server is running and someone (theoretically) could have used it to start the server
+			// by hand.
 			res.HTTP.Stop()
 			res.Control.Stop()
 			return nil, err
 		}
 	}
-	
+
 	return res, nil
 }
