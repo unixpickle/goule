@@ -4,20 +4,21 @@ body {
 }
 
 #error {
-  font-family: sans-serif;
+  font-family: Roboto, sans-serif !important;
   display: block;
   margin-top: 20px;
 }
 
 #password {
   margin-top: 100px;
-  font-family: sans-serif;
   width: 200px;
   height: 24px;
   border-radius: 22px;
   border: none;
   padding: 10px 10px 10px 10px;
   text-align: center;
+  
+  font-family: Roboto, sans-serif !important;
   font-size: 20px;
 }
 

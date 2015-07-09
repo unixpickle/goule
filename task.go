@@ -19,7 +19,7 @@ const (
 	TaskStatusRestarting = iota
 )
 
-const MaxBacklogSize = 50000
+const MaxBacklogSize = 1000
 
 const (
 	BacklogLineStdout = iota
