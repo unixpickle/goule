@@ -15,6 +15,7 @@ body, html {
   height: 60px;
   border-bottom: 3px solid #d6d6d6;
   background-color: white;
+  z-index: 1;
 
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -97,7 +98,12 @@ body, html {
   border-bottom: 3px solid #64bcd4;
 }
 
+input, button {
+  font-family: inherit;
+}
+
 .main-content {
+  z-index: 0;
   position: absolute;
   left: calc(50% - 350px);
   top: 70px;

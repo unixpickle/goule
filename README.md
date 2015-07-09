@@ -27,6 +27,7 @@ Here is what needs to get done:
  * Create a script that renders the backlog of a task
  * Implement the edit_task page
  * Implement a start_task, stop_task and restart_task page
+ * Implement TLS settings page
 
 # License
 

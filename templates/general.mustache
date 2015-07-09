@@ -5,6 +5,7 @@
     <title>Goule General</title>
     <link href='assets/fonts/roboto/imports.css' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="assets/styles/shared.css">
+    <link rel="stylesheet" type="text/css" href="assets/styles/fields.css">
     <link rel="stylesheet" type="text/css" href="assets/styles/general.css">
   </head>
   <body>
@@ -21,60 +22,60 @@
     <div class="main-content">
 
       <form action="/general" method="POST">
-        <label>HTTP Port:</label><input name="http" value="{{http}}">
+        <label class="field-label">HTTP Port:</label><input name="http" value="{{http}}">
         <br>
-        <label>HTTPS Port:</label><input name="https" value="{{https}}">
+        <label class="field-label">HTTPS Port:</label><input name="https" value="{{https}}">
         <br>
-        <label>Start HTTP:</label><input name="starthttp" type="checkbox"
+        <label class="field-label">Start HTTP:</label><input name="starthttp" type="checkbox"
           value="On" {{#startHTTP}}checked{{/startHTTP}}>
         <br>
-        <label>Start HTTPS:</label><input name="starthttps" type="checkbox"
+        <label class="field-label">Start HTTPS:</label><input name="starthttps" type="checkbox"
           value="On" {{#startHTTPS}}checked{{/startHTTPS}}>
         <br>
-        <input type="Submit">
+        <input type="submit" class="unlabeled-field">
       </form>
 
       <br>
 
       {{#httpRunning}}
-      <label>HTTP server is running on port {{httpPort}}.</label>
+      <label class="field-label">HTTP server is running on port {{httpPort}}.</label>
       <a href="/http?action=stop">Stop</a>
       {{/httpRunning}}
       {{^httpRunning}}
-      <label>HTTP server is stopped.</label>
+      <label class="field-label">HTTP server is stopped.</label>
       <a href="/http?action=start">Start</a>
       {{/httpRunning}}
 
       <br>
 
       {{#httpsRunning}}
-      <label>HTTPS server is running on port {{httpsPort}}.</label>
+      <label class="field-label">HTTPS server is running on port {{httpsPort}}.</label>
       <a href="/https?action=stop">Stop</a>
       {{/httpsRunning}}
       {{^httpsRunning}}
-      <label>HTTPS server is stopped.</label>
+      <label class="field-label">HTTPS server is stopped.</label>
       <a href="/https?action=start">Start</a>
       {{/httpsRunning}}
 
       <br><br>
 
       <form action="/chpass" method="POST">
-        <label>Old:</label><input name="old" type="password"
+        <label class="field-label">Old:</label><input name="old" type="password"
           autocomplete="off">
         <br>
-        <label>New:</label><input name="new" type="password"
+        <label class="field-label">New:</label><input name="new" type="password"
           autocomplete="off">
         <br>
-        <label>Confirm:</label><input name="confirm" type="password"
+        <label class="field-label">Confirm:</label><input name="confirm" type="password"
           autocomplete="off">
         <br>
         {{#chpassError}}
-        <div class="chpass-error">{{chpassError}}</div>
+        <div class="chpass-error unlabeled-field">{{chpassError}}</div>
         {{/chpassError}}
         {{#chpassSuccess}}
-        <div class="chpass-success">{{chpassSuccess}}</div>
+        <div class="chpass-success unlabeled-field">{{chpassSuccess}}</div>
         {{/chpassSuccess}}
-        <input type="submit" value="Change Password">
+        <input type="submit" value="Change Password" class="unlabeled-field">
       </form>
 
     </div>

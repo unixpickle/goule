@@ -1,0 +1,46 @@
+.arguments-heading {
+  position: relative;
+  left: calc(50% - 70px);
+  width: 140px;
+  height: 40px;
+}
+
+.arguments-title {
+  display: inline-block;
+  float: left;
+  padding: 0;
+  margin: 0;
+
+  height: 40px;
+
+  font-size: 20px;
+  line-height: 40px;
+}
+
+.add-argument-button {
+  float: right;
+  height: 30px;
+  width: 30px;
+
+  margin: 5px 0 0 0;
+  padding: 0;
+  color: transparent;
+  border: none;
+
+  cursor: pointer;
+
+  border-radius: 15px;
+  background-color: red;
+  background-image: url('../images/plus.svg');
+  background-size: 14px 14px;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.add-argument-button:focus {
+  outline: 0;
+}
+
+.task-argument {
+  text-align: center;
+}

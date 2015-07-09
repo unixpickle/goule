@@ -5,9 +5,12 @@
     <title>Goule Add Task</title>
     <link href='assets/fonts/roboto/imports.css' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="assets/styles/shared.css">
-    <link rel="stylesheet" type="text/css" href="assets/styles/add_task.css">
+    <link rel="stylesheet" type="text/css" href="assets/styles/fields.css">
+    <link rel="stylesheet" type="text/css" href="assets/styles/task_editor.css">
+    <script type="text/javascript" src="assets/scripts/jquery.js"></script>
+    <script type="text/javascript" src="assets/scripts/task_editor.js"></script>
   </head>
-  <body>
+  <body onload="window.createTaskEditor($('#add-task-fields'))">
     <div id="header">
       <h1>Goule</h1>
       <ul>
@@ -19,6 +22,8 @@
     </div>
 
     <div class="main-content">
+      <div id="add-task-fields"></div>
+      <button class="unlabeled-field">Submit</button>
     </div>
   </body>
 </html>

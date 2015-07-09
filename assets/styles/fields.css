@@ -1,0 +1,11 @@
+.field-label {
+  display: inline-block;
+  width: 300px;
+  padding-right: 5px;
+  text-align: right;
+}
+
+.unlabeled-field {
+  margin-left: 305px;
+  display: inline-block;
+}
