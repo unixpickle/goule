@@ -2,7 +2,7 @@ body, html {
   width: 100%;
   margin: 0;
   padding: 0;
-  
+
   font-family: Roboto, sans-serif !important;
   background-color: #f0f0f0;
 }
@@ -15,7 +15,7 @@ body, html {
   height: 60px;
   border-bottom: 3px solid #d6d6d6;
   background-color: white;
-  
+
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -khtml-user-select: none;
@@ -35,13 +35,13 @@ body, html {
 #header h1::before {
   content: '.';
   color: transparent;
-  
+
   position: fixed;
   top: 10px;
   left: 10px;
   width: 40px;
   height: 40px;
-  
+
   display: block;
   background-image: url('../images/icon.svg');
   background-repeat: none;
@@ -55,10 +55,10 @@ body, html {
   height: 60px;
   left: 60px;
   line-height: 60px;
-  
+
   font-size: 40px;
   font-weight: bold;
-  
+
   margin: 0;
   padding: 0;
 }

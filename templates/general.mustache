@@ -17,9 +17,9 @@
         <li class="current">General</li>
       </ul>
     </div>
-    
+
     <div id="general">
-      
+
       <form action="/general" method="POST">
         <label>HTTP Port:</label><input name="http" value="{{http}}">
         <br>
@@ -33,9 +33,9 @@
         <br>
         <input type="Submit">
       </form>
-      
+
       <br>
-      
+
       {{#httpRunning}}
       <label>HTTP server is running on port {{httpPort}}.</label>
       <a href="/http?action=stop">Stop</a>
@@ -44,9 +44,9 @@
       <label>HTTP server is stopped.</label>
       <a href="/http?action=start">Start</a>
       {{/httpRunning}}
-      
+
       <br>
-      
+
       {{#httpsRunning}}
       <label>HTTPS server is running on port {{httpsPort}}.</label>
       <a href="/https?action=stop">Stop</a>
@@ -55,9 +55,9 @@
       <label>HTTPS server is stopped.</label>
       <a href="/https?action=start">Start</a>
       {{/httpsRunning}}
-      
+
       <br><br>
-      
+
       <form action="/chpass" method="POST">
         <label>Old:</label><input name="old" type="password"
           autocomplete="off">
@@ -76,7 +76,7 @@
         {{/chpassSuccess}}
         <input type="submit" value="Change Password">
       </form>
-      
+
     </div>
   </body>
 </html>
