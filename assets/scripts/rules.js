@@ -6,7 +6,7 @@
   }
 
   function createRuleElement(host, targets) {
-    var element = $('<div />', {class: 'rule'});
+    var element = $('<div></div>', {class: 'rule'});
     var input = $('<input />', {
       value: host,
       placeholder: 'Host',
@@ -30,8 +30,8 @@
   }
 
   function createTargetElement(hostname) {
-    var element = $('<div />', {class: 'target'});
-    var input = $('<input />', {
+    var element = $('<div></div>', {class: 'target'});
+    var input = $('<input></input>', {
       value: hostname,
       placeholder: 'Target',
       class: 'target-name'
