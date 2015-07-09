@@ -15,3 +15,35 @@
   color: #777;
   text-align: center;
 }
+
+#add-button {
+  color: transparent;
+  background-color: #db4437;
+  border-radius: 28px;
+  width: 56px;
+  height: 56px;
+  border: none;
+  position: fixed;
+  bottom: 23px;
+  right: 23px;
+  cursor: pointer;
+
+  background-image: url('../images/plus.svg');
+  background-size: 14px 14px;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  box-shadow: 0px 1px 10px rgba(0, 0, 0, 0.4);
+
+  transition: box-shadow 0.25s ease, background-color 0.25s ease;
+  -webkit-transition: box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+#add-button:hover {
+  background-color: #e06055;
+  box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.4);
+}
+
+#add-button:focus {
+  outline: none;
+}
