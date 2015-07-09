@@ -96,3 +96,13 @@ body, html {
 #header li.current {
   border-bottom: 3px solid #64bcd4;
 }
+
+.main-content {
+  position: absolute;
+  left: calc(50% - 350px);
+  top: 70px;
+  width: 680px;
+  min-height: calc(100% - 90px);
+  padding: 10px 10px 10px 10px;
+  background-color: white;
+}

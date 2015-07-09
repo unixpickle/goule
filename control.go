@@ -23,6 +23,11 @@ type Control struct {
 	Server *Server
 }
 
+// ServeAddTask serves the add-task page.
+func (c Control) ServeAddTask(w http.ResponseWriter, r *http.Request) {
+	serveTemplate(w, r, "add_task", map[string]interface{}{})
+}
+
 // ServeAsset serves a static asset.
 func (c Control) ServeAsset(w http.ResponseWriter, r *http.Request) {
 	urlPath := path.Clean(r.URL.Path)
@@ -124,7 +129,7 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"/general": c.ServeGeneral, "/rules": c.ServeRules, "/tls": c.ServeTLS,
 		"/http": c.ServeHTTPConfig, "/https": c.ServeHTTPSConfig,
 		"/chpass": c.ServeChpass, "/": c.ServeRoot,
-		"/setrules": c.ServeSetRules}
+		"/setrules": c.ServeSetRules, "/add_task": c.ServeAddTask}
 	handler, ok := pages[urlPath]
 	if !ok {
 		handler = http.NotFound

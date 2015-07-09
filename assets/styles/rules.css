@@ -1,13 +1,3 @@
-#rules {
-  position: absolute;
-  left: calc(50% - 350px);
-  top: 70px;
-  width: 680px;
-  min-height: calc(100% - 90px);
-  padding: 10px 10px 10px 10px;
-  background-color: white;
-}
-
 .rule {
   margin-top: 20px;
 }
