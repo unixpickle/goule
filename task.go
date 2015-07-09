@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"os/exec"
+	"sync"
 	"time"
 )
 
@@ -17,6 +19,27 @@ const (
 	TaskStatusRestarting = iota
 )
 
+const MaxBacklogSize = 50000
+
+const (
+	BacklogLineStdout = iota
+	BacklogLineStderr = iota
+	BacklogLineStatus = iota
+)
+
+// A BacklogLine represents a line of output from a task. A line can be a normal line of output, a
+// status message, or an error from stdout.
+type BacklogLine struct {
+	// Type is either BacklogLineStdout, BacklogLineStatus, or BacklogLineStderr.
+	Type int
+
+	// Data is the actual message that was output by the task.
+	Data string
+
+	// Time is the UNIX timestamp in milliseconds when the message was logged.
+	Time int64
+}
+
 // A Task runs an executable in the background. Tasks each have their own background loop.
 // While a task's background loop is running, its fields should not be modified.
 type Task struct {
@@ -31,6 +54,9 @@ type Task struct {
 	SetGID   bool
 	SetUID   bool
 
+	backlogLock sync.RWMutex
+	backlog     []BacklogLine
+
 	actions chan<- taskAction
 }
 
@@ -38,6 +64,17 @@ type Task struct {
 // until StartLoop() is called.
 func NewTask() *Task {
 	return &Task{}
+}
+
+// Backlog returns a copy of the command's backlog.
+func (t *Task) Backlog() []BacklogLine {
+	t.backlogLock.RLock()
+	defer t.backlogLock.RUnlock()
+	backlog := make([]BacklogLine, len(t.backlog))
+	for i, x := range t.backlog {
+		backlog[i] = x
+	}
+	return backlog
 }
 
 // Start begins executing a command for the task. If the task is executing, this
@@ -101,6 +138,41 @@ func (t *Task) cmd() *exec.Cmd {
 	return task
 }
 
+func (t *Task) generateStreams(cmd *exec.Cmd, doneChan <-chan struct{}) {
+	stdoutStream := make(chan string)
+	stderrStream := make(chan string)
+	stdout := &lineForwarder{sendTo: stdoutStream}
+	stderr := &lineForwarder{sendTo: stderrStream}
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	go func() {
+	Loop:
+		for {
+			select {
+			case line := <-stdoutStream:
+				t.pushBacklog(BacklogLineStdout, line)
+			case line := <-stderrStream:
+				t.pushBacklog(BacklogLineStderr, line)
+			case <-doneChan:
+				break Loop
+			}
+		}
+		stdout.FlushIfNotEmpty()
+		stderr.FlushIfNotEmpty()
+	MissedItemLoop:
+		for {
+			select {
+			case line := <-stdoutStream:
+				t.pushBacklog(BacklogLineStdout, line)
+			case line := <-stderrStream:
+				t.pushBacklog(BacklogLineStderr, line)
+			default:
+				break MissedItemLoop
+			}
+		}
+	}()
+}
+
 func (t *Task) loop(actions <-chan taskAction) {
 	for {
 		if val, ok := <-actions; !ok {
@@ -120,25 +192,45 @@ func (t *Task) loop(actions <-chan taskAction) {
 	}
 }
 
+func (t *Task) pushBacklog(typeNum int, data string) {
+	line := BacklogLine{typeNum, data, time.Now().UnixNano() / 1000000}
+	t.backlogLock.Lock()
+	if len(t.backlog) < MaxBacklogSize {
+		t.backlog = append(t.backlog, line)
+	} else {
+		for i := 1; i < len(t.backlog); i++ {
+			t.backlog[i-1] = t.backlog[i]
+		}
+		t.backlog[MaxBacklogSize-1] = line
+	}
+	t.backlogLock.Unlock()
+}
+
 func (t *Task) runOnce(actions <-chan taskAction) {
+	doneChan := make(chan struct{})
 	cmd := t.cmd()
+	t.generateStreams(cmd, doneChan)
+
 	if err := cmd.Start(); err != nil {
+		t.pushBacklog(BacklogLineStatus, "error starting: "+err.Error())
 		return
 	}
 
-	doneChan := make(chan struct{})
+	t.pushBacklog(BacklogLineStatus, "started task")
+
 	go func() {
 		cmd.Wait()
 		close(doneChan)
 	}()
 
-	// Wait for commands or termination.
 	for {
 		select {
 		case <-doneChan:
+			t.pushBacklog(BacklogLineStatus, "task exited")
 			return
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
+				t.pushBacklog(BacklogLineStatus, "task stopped")
 				cmd.Process.Kill()
 				// Wait for the task to die before closing the response channel.
 				<-doneChan
@@ -156,34 +248,44 @@ func (t *Task) runOnce(actions <-chan taskAction) {
 }
 
 func (t *Task) runRestart(actions <-chan taskAction) {
+	doneChan := make(chan struct{})
 	cmd := t.cmd()
+	t.generateStreams(cmd, doneChan)
+
 	if err := cmd.Start(); err != nil {
+		t.pushBacklog(BacklogLineStatus, "error starting: "+err.Error())
 		return
 	}
 
-	// Wait for termination in the background
-	doneChan := make(chan struct{})
+	t.pushBacklog(BacklogLineStatus, "started task")
+
 	go func() {
 		cmd.Wait()
-		doneChan <- struct{}{}
+		close(doneChan)
 	}()
 
-	// Wait for commands and restart the task if it stops.
 	for {
 		select {
 		case <-doneChan:
-			// Wait for the timeout and then start again.
+			t.pushBacklog(BacklogLineStatus, "task exited; waiting to restart")
+
 			if !t.waitTimeout(actions) {
 				return
 			}
-			// TODO: see if I need to re-create cmd every time.
+
+			t.pushBacklog(BacklogLineStatus, "restarting...")
 			cmd = t.cmd()
+			doneChan = make(chan struct{})
+			t.generateStreams(cmd, doneChan)
 			go func() {
-				cmd.Run()
-				doneChan <- struct{}{}
+				if err := cmd.Run(); err != nil {
+					t.pushBacklog(BacklogLineStatus, "error restarting: "+err.Error())
+				}
+				close(doneChan)
 			}()
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
+				t.pushBacklog(BacklogLineStatus, "task stopped")
 				cmd.Process.Kill()
 				// Wait for the task to die before closing the response channel.
 				<-doneChan
@@ -207,6 +309,7 @@ func (t *Task) waitTimeout(actions <-chan taskAction) bool {
 			return true
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
+				t.pushBacklog(BacklogLineStatus, "stopped during relaunch")
 				if ok {
 					close(val.resp)
 				}
@@ -214,6 +317,7 @@ func (t *Task) waitTimeout(actions <-chan taskAction) bool {
 			} else if val.action == taskActionStatus {
 				val.resp <- TaskStatusRestarting
 			} else if val.action == taskActionStart {
+				t.pushBacklog(BacklogLineStatus, "relaunch wait bypassed")
 				close(val.resp)
 				return true
 			}
@@ -224,4 +328,32 @@ func (t *Task) waitTimeout(actions <-chan taskAction) bool {
 type taskAction struct {
 	action int
 	resp   chan<- interface{}
+}
+
+// A lineForwarder is an io.Writer which buffers lines and sends them over a channel.
+type lineForwarder struct {
+	sendTo chan<- string
+	buffer bytes.Buffer
+}
+
+func (l *lineForwarder) FlushIfNotEmpty() {
+	if l.buffer.Len() > 0 {
+		l.FlushLine()
+	}
+}
+
+func (l *lineForwarder) FlushLine() {
+	l.sendTo <- l.buffer.String()
+	l.buffer.Reset()
+}
+
+func (l *lineForwarder) Write(p []byte) (n int, err error) {
+	for _, ch := range p {
+		if ch == '\n' {
+			l.FlushLine()
+		} else {
+			l.buffer.WriteByte(ch)
+		}
+	}
+	return len(p), nil
 }
