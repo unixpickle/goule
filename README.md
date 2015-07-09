@@ -18,6 +18,16 @@ In addition, you must install `go-bindata` and use it to generate bindata.go:
 	go install github.com/jteeuwen/go-bindata/go-bindata
     go-bindata assets/... templates/
 
+# TODO
+
+Here is what needs to get done:
+
+ * Create a script that handles the editing of a task's fields
+ * Implement the add_task page
+ * Create a script that renders the backlog of a task
+ * Implement the edit_task page
+ * Implement a start_task, stop_task and restart_task page
+
 # License
 
 **goule** is licensed under the BSD 2-clause license. See [LICENSE](LICENSE).
