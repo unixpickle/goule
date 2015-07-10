@@ -1,11 +1,11 @@
-.arguments-heading {
+.task-editor-arguments-heading {
   position: relative;
   left: calc(50% - 70px);
   width: 140px;
   height: 40px;
 }
 
-.arguments-title {
+.task-editor-arguments-title {
   display: inline-block;
   float: left;
   padding: 0;
@@ -17,7 +17,7 @@
   line-height: 40px;
 }
 
-.add-argument-button {
+.task-editor-add-argument-button {
   float: right;
   height: 30px;
   width: 30px;
@@ -37,10 +37,18 @@
   background-repeat: no-repeat;
 }
 
-.add-argument-button:focus {
+.task-editor-add-argument-button:focus {
   outline: 0;
 }
 
-.task-argument {
+.task-editor-argument {
   text-align: center;
+}
+
+.task-editor-fields {
+  margin: 10px 0;
+}
+
+.task-editor-directory {
+  width: 200px;
 }
