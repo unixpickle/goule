@@ -1,11 +1,11 @@
-.task-editor-arguments-heading {
+.task-editor-heading {
   position: relative;
-  left: calc(50% - 70px);
-  width: 140px;
+  left: calc(50% - 75px);
+  width: 150px;
   height: 40px;
 }
 
-.task-editor-arguments-title {
+.task-editor-title {
   display: inline-block;
   float: left;
   padding: 0;
@@ -17,7 +17,7 @@
   line-height: 40px;
 }
 
-.task-editor-add-argument-button {
+.task-editor-add-button {
   float: right;
   height: 30px;
   width: 30px;
@@ -51,4 +51,11 @@
 
 .task-editor-directory {
   width: 200px;
+}
+
+.task-editor-env-key {
+  width: 80px;
+  margin-left: 218px;
+  margin-right: 5px;
+  box-sizing: border-box;
 }

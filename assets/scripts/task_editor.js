@@ -17,6 +17,7 @@
     this._$container = $container;
 
     this._initializeArguments(task);
+    this._initializeEnvironment(task);
     this._initializeFields(task);
   }
 
@@ -24,26 +25,43 @@
     this._$arguments.append(createArgumentElement(''));
   };
 
+  TaskEditor.prototype._addEnv = function() {
+    this._$env.append(createEnvironmentElement('', ''));
+  };
+
   TaskEditor.prototype._getField = function(name) {
     return this._$fields.find('.task-editor-' + name);
   };
 
   TaskEditor.prototype._initializeArguments = function(task) {
-    var $argumentsTitle = $('<div class="task-editor-arguments-heading">' +
-      '<h1 class="task-editor-arguments-title">Arguments</h1>' +
-      '<button class="task-editor-add-argument-button">Add</button></div>');
-    $argumentsTitle.find('.task-editor-add-argument-button').click(
-      this._addArgument.bind(this)
-    );
+    var $argumentsTitle = $('<div class="task-editor-heading">' +
+      '<h1 class="task-editor-title">Arguments</h1>' +
+      '<button class="task-editor-add-argument-button task-editor-add-button">Add</button></div>');
+    $argumentsTitle.find('.task-editor-add-argument-button').click(this._addArgument.bind(this));
 
     this._$arguments = $('<div></div>');
     for (var i = 0, len = task.Args.length; i < len; ++i) {
       this._$arguments.append(createArgumentElement(task.Args[i]));
     }
-    
+
     this._$container.append($argumentsTitle, this._$arguments);
   };
-  
+
+  TaskEditor.prototype._initializeEnvironment = function(task) {
+    var $envTitle = $('<div class="task-editor-heading">' +
+      '<h1 class="task-editor-title">Environment</h1>' +
+      '<button class="task-editor-add-env-button task-editor-add-button">Add</button></div>');
+    $envTitle.find('.task-editor-add-env-button').click(this._addEnv.bind(this));
+
+    this._$env = $('<div></div>');
+    var keys = Object.keys(task.Env).sort();
+    for (var i = 0; i < keys.length; ++i) {
+      this._$env.append(createEnvironmentElement(keys[i], task.Env[i]));
+    }
+
+    this._$container.append($envTitle, this._$env);
+  };
+
   TaskEditor.prototype._initializeFields = function(task) {
     this._$fields = $('<div class="task-editor-fields">' +
 
@@ -80,14 +98,14 @@
     this._updateFieldsFromTask(task);
     this._$container.append(this._$fields);
   };
-  
+
   TaskEditor.prototype._registerFieldEvents = function() {
     var checkFields = ['auto-launch', 'auto-relaunch', 'set-gid', 'set-uid'];
     for (var i = 0; i < checkFields.length; ++i) {
       this._getField(checkFields[i]).change(this._updateFieldVisibility.bind(this));
     }
   };
-  
+
   TaskEditor.prototype._updateFieldVisibility = function() {
     var fields = {
       'auto-relaunch': 'relaunch-interval',
@@ -104,7 +122,7 @@
       this._getField(fields[checkField] + '-field').css({display: display});
     }
   };
-  
+
   TaskEditor.prototype._updateFieldsFromTask = function(task) {
     this._getField('auto-launch').attr('checked', task.AutoRun);
     this._getField('auto-relaunch').attr('checked', task.Relaunch);
@@ -120,6 +138,18 @@
   function createArgumentElement(arg) {
     var $res = $('<div class="task-editor-argument"><input placeholder="Argument">' +
       '<button>Remove</button></div>');
+    $res.find('input').val(arg);
+    $res.find('button').click(function() {
+      $res.remove();
+    });
+    return $res;
+  }
+
+  function createEnvironmentElement(name, value) {
+    var $res = $('<div><input class="task-editor-env-key"><input class="task-editor-env-value">' +
+      '<button>Remove</button></div>');
+    $res.find('task-editor-env-key').val(name);
+    $res.find('task-editor-env-value').val(value);
     $res.find('button').click(function() {
       $res.remove();
     });
