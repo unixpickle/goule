@@ -4,14 +4,15 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
-	"github.com/hoisie/mustache"
 	"mime"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
+	"github.com/hoisie/mustache"
 )
 
 var Store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
@@ -149,7 +150,8 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"/general": c.ServeGeneral, "/rules": c.ServeRules, "/tls": c.ServeTLS,
 		"/http": c.ServeHTTPConfig, "/https": c.ServeHTTPSConfig,
 		"/chpass": c.ServeChpass, "/": c.ServeRoot,
-		"/setrules": c.ServeSetRules, "/add_task": c.ServeAddTask}
+		"/setrules": c.ServeSetRules, "/add_task": c.ServeAddTask,
+		"/start_task": c.ServeStartTask, "/stop_task": c.ServeStopTask}
 	handler, ok := pages[urlPath]
 	if !ok {
 		handler = http.NotFound
@@ -232,10 +234,11 @@ func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
 	for i, task := range c.Config.Tasks {
 		status := task.Status()
 		statusStr := []string{"stopped", "running", "restarting"}[status]
-		action := []string{"Start", "Stop", "Restarting"}[status]
+		action := []string{"start", "stop", "stop"}[status]
+		actionName := []string{"Start", "Stop", "Restarting"}[status]
 		args := strings.Join(task.Args, " ")
-		objects[i] = map[string]string{"action": action, "status": statusStr,
-			"args": args}
+		objects[i] = map[string]string{"action": action, "status": statusStr, "args": args,
+			"actionName": actionName, "index": strconv.Itoa(i)}
 	}
 	template["tasks"] = objects
 	c.Config.RUnlock()
@@ -276,11 +279,45 @@ func (c Control) ServeSetRules(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/rules", http.StatusTemporaryRedirect)
 }
 
+// ServeStartTask starts a task given its index.
+func (c Control) ServeStartTask(w http.ResponseWriter, r *http.Request) {
+	c.ServeTaskAction(w, r, true)
+}
+
+// ServeStopTask starts a task given its index.
+func (c Control) ServeStopTask(w http.ResponseWriter, r *http.Request) {
+	c.ServeTaskAction(w, r, false)
+}
+
 // ServeTLS serves requests for the TLS settings page.
 func (c Control) ServeTLS(w http.ResponseWriter, r *http.Request) {
 	template := map[string]interface{}{}
 	// TODO: fill template
 	serveTemplate(w, r, "tls", template)
+}
+
+// ServeTaskAction serves the start_task and stop_task pages.
+func (c Control) ServeTaskAction(w http.ResponseWriter, r *http.Request, start bool) {
+	index, err := strconv.Atoi(r.URL.Query().Get("index"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	c.Config.Lock()
+	defer c.Config.Unlock()
+	if index < 0 || index >= len(c.Config.Tasks) {
+		http.Error(w, "Invalid task index", http.StatusBadRequest)
+		return
+	}
+
+	if start {
+		c.Config.Tasks[index].Start()
+	} else {
+		c.Config.Tasks[index].Stop()
+	}
+
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
 // HashPassword returns the SHA-256 hash of a string.

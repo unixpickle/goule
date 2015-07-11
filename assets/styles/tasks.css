@@ -46,11 +46,11 @@
   padding: 15px 15px 15px 15px;
   background: white;
   text-align: left;
-  border-radius: 5px;
   line-height: 32px;
   box-sizing: border-box;
   height: 62px;
   box-shadow: 2px 2px 5px rgba(144, 144, 144, 0.5);
+  margin-bottom: 20px;
 }
 
 .args {
@@ -61,7 +61,6 @@
   color: black;
   text-decoration: none;
 
-  /* Dot out names that are too long. */
   max-width: calc(100% - 250px);
   overflow: hidden;
   white-space: nowrap;
@@ -80,6 +79,17 @@
   color: white;
 
   border: none;
-  background-color: #71e586;
   cursor: pointer;
+}
+
+.action-stopped {
+  background-color: #71e586;
+}
+
+.action-running {
+  background-color: #cd0000;
+}
+
+.action-restarting {
+  background-color: #fcb514;
 }

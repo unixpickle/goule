@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/unixpickle/ezserver"
-	"github.com/unixpickle/reverseproxy"
 	"io/ioutil"
 	"os"
 	"sync"
+
+	"github.com/unixpickle/ezserver"
+	"github.com/unixpickle/reverseproxy"
 )
 
 // Config encompasses the collective configuration of a Goule server.

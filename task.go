@@ -303,9 +303,10 @@ func (t *Task) runRestart(actions <-chan taskAction) {
 }
 
 func (t *Task) waitTimeout(actions <-chan taskAction) bool {
+	timeoutChannel := time.After(time.Second * time.Duration(t.Interval))
 	for {
 		select {
-		case <-time.After(time.Second * time.Duration(t.Interval)):
+		case <-timeoutChannel:
 			return true
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {

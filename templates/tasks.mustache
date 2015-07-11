@@ -22,7 +22,8 @@
     {{#tasks}}
       <div class="task">
         <label class="args">{{args}}</label>
-        <a class="action">{{action}}</a>
+        <a class="action action-{{status}}"
+           href="/{{action}}_task?index={{index}}">{{actionName}}</a>
       </div>
     {{/tasks}}
     {{^tasks}}
