@@ -25,7 +25,27 @@ type Control struct {
 
 // ServeAddTask serves the add-task page.
 func (c Control) ServeAddTask(w http.ResponseWriter, r *http.Request) {
-	serveTemplate(w, r, "add_task", map[string]interface{}{})
+	if r.Method != "POST" {
+		serveTemplate(w, r, "add_task", map[string]interface{}{})
+		return
+	}
+	taskJSON := r.PostFormValue("task")
+	task := &Task{}
+	if err := json.Unmarshal([]byte(taskJSON), task); err != nil {
+		serveTemplate(w, r, "add_task", map[string]interface{}{"error": err.Error()})
+		return
+	}
+
+	c.Config.Lock()
+	c.Config.Tasks = append([]*Task{task}, c.Config.Tasks...)
+	task.StartLoop()
+	if task.AutoRun {
+		task.Start()
+	}
+	c.Config.Save()
+	c.Config.Unlock()
+
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
 // ServeAsset serves a static asset.
@@ -65,7 +85,7 @@ func (c Control) ServeChpass(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	c.Config.AdminHash = HashPassword(newPass)
-	c.Config.Save(ConfigPath)
+	c.Config.Save()
 	http.Redirect(w, r, "/general?success=Password%20changed",
 		http.StatusTemporaryRedirect)
 }
@@ -83,7 +103,7 @@ func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 		c.Config.HTTPSPort, _ = strconv.Atoi(httpsPort)
 		c.Config.StartHTTP = (startHTTP == "On")
 		c.Config.StartHTTPS = (startHTTPS == "On")
-		c.Config.Save(ConfigPath)
+		c.Config.Save()
 		c.Config.Unlock()
 	}
 
@@ -250,7 +270,7 @@ func (c Control) ServeSetRules(w http.ResponseWriter, r *http.Request) {
 	c.Config.Lock()
 	c.Config.Rules = decoded
 	c.Server.Proxy.SetRuleTable(decoded)
-	c.Config.Save(ConfigPath)
+	c.Config.Save()
 	c.Config.Unlock()
 
 	http.Redirect(w, r, "/rules", http.StatusTemporaryRedirect)

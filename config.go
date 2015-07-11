@@ -20,6 +20,7 @@ type Config struct {
 	StartHTTPS bool
 	Tasks      []*Task
 	TLS        *ezserver.TLSConfig
+	path       string
 }
 
 // LoadConfig reads a configuration from a JSON file and returns the result.
@@ -38,17 +39,18 @@ func LoadConfig(path string) (*Config, error) {
 	if err := json.Unmarshal(contents, &res); err != nil {
 		return nil, err
 	}
+	res.path = path
 	return &res, nil
 }
 
-// Save writes the configuration to a JSON file.
+// Save writes the configuration to its file.
 // The Config should be locked (a read-only lock is sufficient).
-func (c *Config) Save(path string) error {
+func (c *Config) Save() error {
 	encoded, err := json.Marshal(c)
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(path, encoded, os.FileMode(0600))
+	return ioutil.WriteFile(c.path, encoded, os.FileMode(0600))
 }
 
 // defaultConfig creates the default configuration.
