@@ -1,3 +1,7 @@
+.main-content {
+  background-color: transparent;
+}
+
 .no-tasks {
   display: block;
   margin-top: 30px;
@@ -36,4 +40,46 @@
 
 #add-button:focus {
   outline: none;
+}
+
+.task {
+  padding: 15px 15px 15px 15px;
+  background: white;
+  text-align: left;
+  border-radius: 5px;
+  line-height: 32px;
+  box-sizing: border-box;
+  height: 62px;
+  box-shadow: 2px 2px 5px rgba(144, 144, 144, 0.5);
+}
+
+.args {
+  float: left;
+  display: inline-block;
+  font-weight: bold;
+
+  color: black;
+  text-decoration: none;
+
+  /* Dot out names that are too long. */
+  max-width: calc(100% - 250px);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.action {
+  height: 32px;
+  width: 120px;
+  float: right;
+
+  text-decoration: none;
+  text-align: center;
+  font-family: inherit;
+  font-size: 16px;
+  color: white;
+
+  border: none;
+  background-color: #71e586;
+  cursor: pointer;
 }
