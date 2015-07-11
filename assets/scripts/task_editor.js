@@ -14,12 +14,39 @@
   };
 
   function TaskEditor($container, task) {
+    task = (task || DEFAULT_TASK);
     this._$container = $container;
 
     this._initializeArguments(task);
     this._initializeEnvironment(task);
     this._initializeFields(task);
   }
+
+  TaskEditor.prototype.getTask = function() {
+    var env = {};
+    var $values = this._$container.find('.task-editor-env-value');
+    this._$container.find('.task-editor-env-key').each(function(i, element) {
+      env[$(element).val()] = $values.eq(i).val();
+    });
+
+    var args = [];
+    this._$container.find('.task-editor-argument input').each(function(i, element) {
+      args.push($(element).val());
+    });
+
+    return {
+      Args: args,
+      AutoRun: this._getField('auto-launch').is(':checked'),
+      Dir: this._getField('directory').val(),
+      Env: env,
+      GID: parseInt(this._getField('gid').val()) || 0,
+      UID: parseInt(this._getField('uid').val()) || 0,
+      SetGID: this._getField('set-gid').is(':checked'),
+      SetUID: this._getField('set-uid').is(':checked'),
+      Relaunch: this._getField('auto-relaunch').is(':checked'),
+      Interval: parseInt(this._getField('relaunch-interval').val())
+    };
+  };
 
   TaskEditor.prototype._addArgument = function() {
     this._$arguments.append(createArgumentElement(''));
@@ -156,10 +183,6 @@
     return $res;
   }
 
-  function createTaskEditor($container, optionalTask) {
-    new TaskEditor($container, optionalTask || DEFAULT_TASK)
-  }
-
-  window.createTaskEditor = createTaskEditor;
+  window.TaskEditor = TaskEditor;
 
 })();

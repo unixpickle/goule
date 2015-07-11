@@ -9,8 +9,9 @@
     <link rel="stylesheet" type="text/css" href="assets/styles/task_editor.css">
     <script type="text/javascript" src="assets/scripts/jquery.js"></script>
     <script type="text/javascript" src="assets/scripts/task_editor.js"></script>
+    <script type="text/javascript" src="assets/scripts/add_task.js"></script>
   </head>
-  <body onload="window.createTaskEditor($('#add-task-fields'))">
+  <body>
     <div id="header">
       <h1>Goule</h1>
       <ul>
@@ -23,7 +24,7 @@
 
     <div class="main-content">
       <div id="add-task-fields"></div>
-      <button class="unlabeled-field">Submit</button>
+      <button class="unlabeled-field" id="submit">Submit</button>
     </div>
   </body>
 </html>
