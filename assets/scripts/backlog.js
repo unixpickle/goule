@@ -1,12 +1,12 @@
 (function() {
 
   $(function() {
-    var $content = $('.main-content');
+    var $content = $('.main-content').css({visibility: 'hidden'});
     if (window.backlog.length === 0) {
       $content.append('<label class="no-messages">No log messages</label>');
       return;
     }
-    for (var i = window.backlog.length-1; i >= 0; --i) {
+    for (var i = 0, len = window.backlog.length; i < len; ++i) {
       var entry = window.backlog[i];
       var $row = $('<div class="entry"><label class="date"></label>' +
         '<label class="message"></label></div>');
@@ -15,6 +15,10 @@
       $row.addClass(['stdout', 'stderr', 'status'][entry.Type]);
       $content.append($row);
     }
+    setTimeout(function() {
+      $(document).scrollTop($(document).height());
+      $content.css({visibility: 'visible'});
+    }, 100);
   });
 
   function formatTime(millis) {

@@ -22,12 +22,10 @@ In addition, you must install `go-bindata` and use it to generate bindata.go:
 
 Here is what needs to get done:
 
- * Create a script that handles the editing of a task's fields
- * Implement the add_task page
- * Create a script that renders the backlog of a task
- * Implement the edit_task page
- * Implement a start_task, stop_task and restart_task page
- * Implement TLS settings page
+ * Make a task identification that's not index based--indices are really dangerous.
+ * Make the Goule logo go back to the homepage.
+ * Implement task deletion.
+ * Implement TLS settings page.
 
 # License
 
@@ -41,7 +39,7 @@ Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
 
 1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer. 
+   list of conditions and the following disclaimer.
 2. Redistributions in binary form must reproduce the above copyright notice,
    this list of conditions and the following disclaimer in the documentation
    and/or other materials provided with the distribution.
