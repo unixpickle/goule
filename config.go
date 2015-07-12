@@ -21,6 +21,7 @@ type Config struct {
 	StartHTTPS bool
 	Tasks      []*Task
 	TLS        *ezserver.TLSConfig
+	LastTaskID int64
 	path       string
 }
 
@@ -31,7 +32,7 @@ func LoadConfig(path string) (*Config, error) {
 	contents, err := ioutil.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return defaultConfig(), nil
+			return defaultConfig(path), nil
 		}
 		return nil, err
 	}
@@ -56,7 +57,7 @@ func (c *Config) Save() error {
 
 // defaultConfig creates the default configuration.
 // The password for this configuration is "password".
-func defaultConfig() *Config {
+func defaultConfig(path string) *Config {
 	tls := ezserver.TLSConfig{
 		map[string]ezserver.KeyCert{}, []string{}, ezserver.KeyCert{},
 	}
@@ -64,5 +65,5 @@ func defaultConfig() *Config {
 	hash := HashPassword("password")
 
 	return &Config{Rules: reverseproxy.RuleTable{}, Tasks: []*Task{},
-		AdminHash: hash, TLS: &tls}
+		AdminHash: hash, TLS: &tls, path: path}
 }

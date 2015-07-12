@@ -38,6 +38,8 @@ func (c Control) ServeAddTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	c.Config.Lock()
+	c.Config.LastTaskID++
+	task.ID = c.Config.LastTaskID
 	c.Config.Tasks = append([]*Task{task}, c.Config.Tasks...)
 	task.StartLoop()
 	if task.AutoRun {
@@ -66,7 +68,7 @@ func (c Control) ServeAsset(w http.ResponseWriter, r *http.Request) {
 
 // ServeBacklog serves the page which shows the backlog of a task.
 func (c Control) ServeBacklog(w http.ResponseWriter, r *http.Request) {
-	index, err := strconv.Atoi(r.URL.Query().Get("index"))
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -74,19 +76,19 @@ func (c Control) ServeBacklog(w http.ResponseWriter, r *http.Request) {
 
 	c.Config.RLock()
 	defer c.Config.RUnlock()
-	if index < 0 || index >= len(c.Config.Tasks) {
-		http.Error(w, "Invalid task index", http.StatusBadRequest)
+	_, task := c.findTaskById(id)
+	if task == nil {
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
-	data, err := json.Marshal(c.Config.Tasks[index].Backlog())
+	data, err := json.Marshal(task.Backlog())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	serveTemplate(w, r, "backlog", map[string]interface{}{"backlog": string(data),
-		"index": strconv.Itoa(index)})
+	serveTemplate(w, r, "backlog", map[string]interface{}{"backlog": string(data)})
 }
 
 // ServeChpass serves the change password POST target.
@@ -118,7 +120,7 @@ func (c Control) ServeChpass(w http.ResponseWriter, r *http.Request) {
 
 // ServeEditTask serves the task editor.
 func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
-	index, err := strconv.Atoi(r.URL.Query().Get("index"))
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -127,18 +129,21 @@ func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		c.Config.Lock()
 		defer c.Config.Unlock()
-		if index < 0 || index >= len(c.Config.Tasks) {
-			http.Error(w, "Invalid task index", http.StatusBadRequest)
+		
+		index, oldTask := c.findTaskById(id)
+		if oldTask == nil {
+			http.Error(w, "Invalid task ID", http.StatusBadRequest)
 			return
 		}
 
-		oldStatus := c.Config.Tasks[index].Status()
+		oldStatus := oldTask.Status()
 		newTask := &Task{}
 		if err := json.Unmarshal([]byte(r.PostFormValue("task")), newTask); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		c.Config.Tasks[index].StopLoop()
+		newTask.ID = oldTask.ID
+		oldTask.StopLoop()
 		c.Config.Tasks[index] = newTask
 		c.Config.Save()
 		newTask.StartLoop()
@@ -151,8 +156,9 @@ func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 
 	c.Config.RLock()
 	defer c.Config.RUnlock()
-	if index < 0 || index >= len(c.Config.Tasks) {
-		http.Error(w, "Invalid task index", http.StatusBadRequest)
+	index, task := c.findTaskById(id)
+	if task == nil {
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
@@ -163,7 +169,7 @@ func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 	}
 
 	serveTemplate(w, r, "edit_task", map[string]interface{}{"taskData": string(data),
-		"index": strconv.Itoa(index)})
+		"id": strconv.FormatInt(id, 10)})
 }
 
 // ServeGeneral serves requests for the general settings page.
@@ -314,7 +320,7 @@ func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
 		actionName := []string{"Start", "Stop", "Restarting"}[status]
 		args := strings.Join(task.Args, " ")
 		objects[i] = map[string]string{"action": action, "status": statusStr, "args": args,
-			"actionName": actionName, "index": strconv.Itoa(i)}
+			"actionName": actionName, "id": strconv.FormatInt(task.ID, 10)}
 	}
 	template["tasks"] = objects
 	c.Config.RUnlock()
@@ -374,7 +380,7 @@ func (c Control) ServeTLS(w http.ResponseWriter, r *http.Request) {
 
 // ServeTaskAction serves the start_task and stop_task pages.
 func (c Control) ServeTaskAction(w http.ResponseWriter, r *http.Request, start bool) {
-	index, err := strconv.Atoi(r.URL.Query().Get("index"))
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -382,18 +388,28 @@ func (c Control) ServeTaskAction(w http.ResponseWriter, r *http.Request, start b
 
 	c.Config.Lock()
 	defer c.Config.Unlock()
-	if index < 0 || index >= len(c.Config.Tasks) {
-		http.Error(w, "Invalid task index", http.StatusBadRequest)
+	_, task := c.findTaskById(id)
+	if task == nil {
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
 		return
 	}
 
 	if start {
-		c.Config.Tasks[index].Start()
+		task.Start()
 	} else {
-		c.Config.Tasks[index].Stop()
+		task.Stop()
 	}
 
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+}
+
+func (c Control) findTaskById(id int64) (index int, task *Task) {
+	for i, t := range c.Config.Tasks {
+		if t.ID == id {
+			return i, t
+		}
+	}
+	return
 }
 
 // HashPassword returns the SHA-256 hash of a string.

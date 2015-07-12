@@ -21,9 +21,9 @@
     <div class="main-content">
     {{#tasks}}
       <div class="task">
-        <a class="args" href="/edit_task?index={{index}}">{{args}}</a>
+        <a class="args" href="/edit_task?id={{id}}">{{args}}</a>
         <a class="action action-{{status}}"
-           href="/{{action}}_task?index={{index}}">{{actionName}}</a>
+           href="/{{action}}_task?id={{id}}">{{actionName}}</a>
       </div>
     {{/tasks}}
     {{^tasks}}

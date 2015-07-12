@@ -53,6 +53,7 @@ type Task struct {
 	Relaunch bool
 	SetGID   bool
 	SetUID   bool
+	ID       int64
 
 	backlogLock sync.RWMutex
 	backlog     []BacklogLine
