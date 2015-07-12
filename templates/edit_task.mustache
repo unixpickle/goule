@@ -7,11 +7,13 @@
     <link rel="stylesheet" type="text/css" href="assets/styles/shared.css">
     <link rel="stylesheet" type="text/css" href="assets/styles/fields.css">
     <link rel="stylesheet" type="text/css" href="assets/styles/task_editor.css">
+    <link rel="stylesheet" type="text/css" href="assets/styles/edit_task.css">
     <script type="text/javascript" src="assets/scripts/jquery.js"></script>
     <script type="text/javascript" src="assets/scripts/task_editor.js"></script>
     <script type="text/javascript" src="assets/scripts/edit_task.js"></script>
     <script type="text/javascript">
     window.taskData = {{{taskData}}};
+    window.taskBacklog = {{{backlog}}};
     window.taskIndex = {{{index}}};
     </script>
   </head>
@@ -35,6 +37,7 @@
         <button id="cancel">Cancel</button>
         <button id="save">Save</button>
       </div>
+      <div id="backlog"></div>
     </div>
   </body>
 </html>

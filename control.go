@@ -137,8 +137,14 @@ func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	backlogData, err := json.Marshal(c.Config.Tasks[index].Backlog())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	serveTemplate(w, r, "edit_task", map[string]interface{}{"taskData": string(data),
-		"index": strconv.Itoa(index)})
+		"index": strconv.Itoa(index), "backlog": string(backlogData)})
 }
 
 // ServeGeneral serves requests for the general settings page.

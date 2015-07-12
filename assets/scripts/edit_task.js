@@ -12,6 +12,14 @@
     $('#cancel').click(function() {
       window.location = '/';
     });
+    for (var i = 0, len = window.taskBacklog.length; i < len; ++i) {
+      var entry = window.taskBacklog[i];
+      var className = ['stdout', 'stderr', 'status'][entry.Type];
+      var $element = $('<div class="backlog-entry backlog-' + className + '-entry">' +
+        '<label class="backlog-data"></label></div>');
+      $element.find('.backlog-data').text(entry.Data);
+      $('#backlog').append($element);
+    }
   });
 
 })();
