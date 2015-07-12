@@ -212,11 +212,11 @@ func (t *Task) runOnce(actions <-chan taskAction) {
 	t.generateStreams(cmd, doneChan)
 
 	if err := cmd.Start(); err != nil {
-		t.pushBacklog(BacklogLineStatus, "error starting: "+err.Error())
+		t.pushBacklog(BacklogLineStatus, "Error starting task: "+err.Error()+".")
 		return
 	}
 
-	t.pushBacklog(BacklogLineStatus, "started task")
+	t.pushBacklog(BacklogLineStatus, "Started task.")
 
 	go func() {
 		cmd.Wait()
@@ -226,11 +226,11 @@ func (t *Task) runOnce(actions <-chan taskAction) {
 	for {
 		select {
 		case <-doneChan:
-			t.pushBacklog(BacklogLineStatus, "task exited")
+			t.pushBacklog(BacklogLineStatus, "Task exited.")
 			return
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
-				t.pushBacklog(BacklogLineStatus, "task stopped")
+				t.pushBacklog(BacklogLineStatus, "Task stopped.")
 				cmd.Process.Kill()
 				// Wait for the task to die before closing the response channel.
 				<-doneChan
@@ -253,11 +253,11 @@ func (t *Task) runRestart(actions <-chan taskAction) {
 	t.generateStreams(cmd, doneChan)
 
 	if err := cmd.Start(); err != nil {
-		t.pushBacklog(BacklogLineStatus, "error starting: "+err.Error())
+		t.pushBacklog(BacklogLineStatus, "Error starting: "+err.Error())
 		return
 	}
 
-	t.pushBacklog(BacklogLineStatus, "started task")
+	t.pushBacklog(BacklogLineStatus, "Started task.")
 
 	go func() {
 		cmd.Wait()
@@ -267,25 +267,27 @@ func (t *Task) runRestart(actions <-chan taskAction) {
 	for {
 		select {
 		case <-doneChan:
-			t.pushBacklog(BacklogLineStatus, "task exited; waiting to restart")
-
 			if !t.waitTimeout(actions) {
 				return
 			}
-
-			t.pushBacklog(BacklogLineStatus, "restarting...")
 			cmd = t.cmd()
 			doneChan = make(chan struct{})
 			t.generateStreams(cmd, doneChan)
-			go func() {
-				if err := cmd.Run(); err != nil {
-					t.pushBacklog(BacklogLineStatus, "error restarting: "+err.Error())
-				}
+			if err := cmd.Start(); err != nil {
+				t.pushBacklog(BacklogLineStatus, "Error restarting: "+err.Error()+".")
 				close(doneChan)
-			}()
+			} else {
+				t.pushBacklog(BacklogLineStatus, "Restarted task.")
+				go func() {
+					if err := cmd.Wait(); err != nil {
+						t.pushBacklog(BacklogLineStatus, "Task exited: "+err.Error()+".")
+					}
+					close(doneChan)
+				}()
+			}
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
-				t.pushBacklog(BacklogLineStatus, "task stopped")
+				t.pushBacklog(BacklogLineStatus, "Task stopped.")
 				cmd.Process.Kill()
 				// Wait for the task to die before closing the response channel.
 				<-doneChan
@@ -303,6 +305,7 @@ func (t *Task) runRestart(actions <-chan taskAction) {
 }
 
 func (t *Task) waitTimeout(actions <-chan taskAction) bool {
+	t.pushBacklog(BacklogLineStatus, "Waiting to restart.")
 	timeoutChannel := time.After(time.Second * time.Duration(t.Interval))
 	for {
 		select {
@@ -310,7 +313,7 @@ func (t *Task) waitTimeout(actions <-chan taskAction) bool {
 			return true
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
-				t.pushBacklog(BacklogLineStatus, "stopped during relaunch")
+				t.pushBacklog(BacklogLineStatus, "Stopped during wait.")
 				if ok {
 					close(val.resp)
 				}
@@ -318,7 +321,7 @@ func (t *Task) waitTimeout(actions <-chan taskAction) bool {
 			} else if val.action == taskActionStatus {
 				val.resp <- TaskStatusRestarting
 			} else if val.action == taskActionStart {
-				t.pushBacklog(BacklogLineStatus, "relaunch wait bypassed")
+				t.pushBacklog(BacklogLineStatus, "Wait bypassed.")
 				close(val.resp)
 				return true
 			}

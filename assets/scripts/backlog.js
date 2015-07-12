@@ -2,6 +2,10 @@
 
   $(function() {
     var $content = $('.main-content');
+    if (window.backlog.length === 0) {
+      $content.append('<label class="no-messages">No log messages</label>');
+      return;
+    }
     for (var i = window.backlog.length-1; i >= 0; --i) {
       var entry = window.backlog[i];
       var $row = $('<div class="entry"><label class="date"></label>' +
