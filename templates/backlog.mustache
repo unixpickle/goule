@@ -5,13 +5,11 @@
     <title>Goule Edit Task</title>
     <link href='assets/fonts/roboto/imports.css' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="assets/styles/shared.css">
-    <link rel="stylesheet" type="text/css" href="assets/styles/fields.css">
-    <link rel="stylesheet" type="text/css" href="assets/styles/task_editor.css">
+    <link rel="stylesheet" type="text/css" href="assets/styles/backlog.css">
     <script type="text/javascript" src="assets/scripts/jquery.js"></script>
-    <script type="text/javascript" src="assets/scripts/task_editor.js"></script>
-    <script type="text/javascript" src="assets/scripts/edit_task.js"></script>
+    <script type="text/javascript" src="assets/scripts/backlog.js"></script>
     <script type="text/javascript">
-    window.taskData = {{{taskData}}};
+    window.backlog = {{{backlog}}};
     </script>
   </head>
   <body>
@@ -26,17 +24,6 @@
     </div>
 
     <div class="main-content">
-      {{#error}}
-      <div id="error">{{error}}</div>
-      {{/error}}
-      <div style="text-align: center">
-        <a href="/backlog?index={{index}}">View Backlog</a>
-      </div>
-      <div id="edit-task-fields"></div>
-      <div class="unlabeled-field">
-        <button id="cancel">Cancel</button>
-        <button id="save">Save</button>
-      </div>
     </div>
   </body>
 </html>

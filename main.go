@@ -63,8 +63,10 @@ func shutdown() {
 	for _, t := range GlobalConfig.Tasks {
 		t.StopLoop()
 	}
-	GlobalServer.Control.Stop()
-	GlobalServer.HTTP.Stop()
-	GlobalServer.HTTPS.Stop()
+	if GlobalServer != nil {
+		GlobalServer.Control.Stop()
+		GlobalServer.HTTP.Stop()
+		GlobalServer.HTTPS.Stop()
+	}
 	os.Exit(1)
 }

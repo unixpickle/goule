@@ -1,0 +1,16 @@
+.stdout {
+  color: #777;
+}
+
+.stderr {
+  color: red;
+}
+
+.status {
+  color: #bbbb00;
+}
+
+.date {
+  display: inline-block;
+  width: 170px;
+}

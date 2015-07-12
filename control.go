@@ -64,6 +64,31 @@ func (c Control) ServeAsset(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ServeBacklog serves the page which shows the backlog of a task.
+func (c Control) ServeBacklog(w http.ResponseWriter, r *http.Request) {
+	index, err := strconv.Atoi(r.URL.Query().Get("index"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	c.Config.RLock()
+	defer c.Config.RUnlock()
+	if index < 0 || index >= len(c.Config.Tasks) {
+		http.Error(w, "Invalid task index", http.StatusBadRequest)
+		return
+	}
+
+	data, err := json.Marshal(c.Config.Tasks[index].Backlog())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	serveTemplate(w, r, "backlog", map[string]interface{}{"backlog": string(data),
+		"index": strconv.Itoa(index)})
+}
+
 // ServeChpass serves the change password POST target.
 func (c Control) ServeChpass(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -137,14 +162,8 @@ func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	backlogData, err := json.Marshal(c.Config.Tasks[index].Backlog())
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	serveTemplate(w, r, "edit_task", map[string]interface{}{"taskData": string(data),
-		"index": strconv.Itoa(index), "backlog": string(backlogData)})
+		"index": strconv.Itoa(index)})
 }
 
 // ServeGeneral serves requests for the general settings page.
@@ -208,7 +227,7 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"/chpass": c.ServeChpass, "/": c.ServeRoot,
 		"/setrules": c.ServeSetRules, "/add_task": c.ServeAddTask,
 		"/start_task": c.ServeStartTask, "/stop_task": c.ServeStopTask,
-		"/edit_task": c.ServeEditTask}
+		"/edit_task": c.ServeEditTask, "/backlog": c.ServeBacklog}
 	handler, ok := pages[urlPath]
 	if !ok {
 		handler = http.NotFound
