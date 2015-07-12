@@ -1,11 +1,12 @@
 (function() {
 
   $(function() {
-    var $content = $('.main-content').css({visibility: 'hidden'});
+    var $content = $('.main-content');
     if (window.backlog.length === 0) {
       $content.append('<label class="no-messages">No log messages</label>');
       return;
     }
+    $content.css({visibility: 'hidden'});
     for (var i = 0, len = window.backlog.length; i < len; ++i) {
       var entry = window.backlog[i];
       var $row = $('<div class="entry"><label class="date"></label>' +
