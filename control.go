@@ -129,26 +129,27 @@ func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
 		c.Config.Lock()
 		defer c.Config.Unlock()
-		
-		index, oldTask := c.findTaskById(id)
-		if oldTask == nil {
+
+		_, task := c.findTaskById(id)
+		if task == nil {
 			http.Error(w, "Invalid task ID", http.StatusBadRequest)
 			return
 		}
 
-		oldStatus := oldTask.Status()
-		newTask := &Task{}
-		if err := json.Unmarshal([]byte(r.PostFormValue("task")), newTask); err != nil {
+		oldStatus := task.Status()
+		task.StopLoop()
+		if err := json.Unmarshal([]byte(r.PostFormValue("task")), task); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			task.StartLoop()
+			if oldStatus != TaskStatusStopped {
+				task.Start()
+			}
 			return
 		}
-		newTask.ID = oldTask.ID
-		oldTask.StopLoop()
-		c.Config.Tasks[index] = newTask
 		c.Config.Save()
-		newTask.StartLoop()
+		task.StartLoop()
 		if oldStatus != TaskStatusStopped {
-			newTask.Start()
+			task.Start()
 		}
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
