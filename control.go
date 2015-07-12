@@ -118,6 +118,30 @@ func (c Control) ServeChpass(w http.ResponseWriter, r *http.Request) {
 		http.StatusTemporaryRedirect)
 }
 
+// ServeDeleteTask serves the task deletion page.
+func (c Control) ServeDeleteTask(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	c.Config.Lock()
+	defer c.Config.Unlock()
+	index, task := c.findTaskById(id)
+	if task == nil {
+		http.Error(w, "Invalid task ID", http.StatusBadRequest)
+		return
+	}
+	task.StopLoop()
+	for i := index; i < len(c.Config.Tasks)-1; i++ {
+		c.Config.Tasks[i] = c.Config.Tasks[i+1]
+	}
+	c.Config.Tasks = c.Config.Tasks[0 : len(c.Config.Tasks)-1]
+	c.Config.Save()
+
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+}
+
 // ServeEditTask serves the task editor.
 func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseInt(r.URL.Query().Get("id"), 10, 64)
@@ -234,7 +258,8 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"/chpass": c.ServeChpass, "/": c.ServeRoot,
 		"/setrules": c.ServeSetRules, "/add_task": c.ServeAddTask,
 		"/start_task": c.ServeStartTask, "/stop_task": c.ServeStopTask,
-		"/edit_task": c.ServeEditTask, "/backlog": c.ServeBacklog}
+		"/edit_task": c.ServeEditTask, "/backlog": c.ServeBacklog,
+		"/delete_task": c.ServeDeleteTask}
 	handler, ok := pages[urlPath]
 	if !ok {
 		handler = http.NotFound
