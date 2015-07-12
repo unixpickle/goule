@@ -91,6 +91,56 @@ func (c Control) ServeChpass(w http.ResponseWriter, r *http.Request) {
 		http.StatusTemporaryRedirect)
 }
 
+// ServeEditTask serves the task editor.
+func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
+	index, err := strconv.Atoi(r.URL.Query().Get("index"))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if r.Method == "POST" {
+		c.Config.Lock()
+		defer c.Config.Unlock()
+		if index < 0 || index >= len(c.Config.Tasks) {
+			http.Error(w, "Invalid task index", http.StatusBadRequest)
+			return
+		}
+
+		oldStatus := c.Config.Tasks[index].Status()
+		newTask := &Task{}
+		if err := json.Unmarshal([]byte(r.PostFormValue("task")), newTask); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		c.Config.Tasks[index].StopLoop()
+		c.Config.Tasks[index] = newTask
+		c.Config.Save()
+		newTask.StartLoop()
+		if oldStatus != TaskStatusStopped {
+			newTask.Start()
+		}
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	c.Config.RLock()
+	defer c.Config.RUnlock()
+	if index < 0 || index >= len(c.Config.Tasks) {
+		http.Error(w, "Invalid task index", http.StatusBadRequest)
+		return
+	}
+
+	data, err := json.Marshal(c.Config.Tasks[index])
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	serveTemplate(w, r, "edit_task", map[string]interface{}{"taskData": string(data),
+		"index": strconv.Itoa(index)})
+}
+
 // ServeGeneral serves requests for the general settings page.
 func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "POST" {
@@ -151,7 +201,8 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"/http": c.ServeHTTPConfig, "/https": c.ServeHTTPSConfig,
 		"/chpass": c.ServeChpass, "/": c.ServeRoot,
 		"/setrules": c.ServeSetRules, "/add_task": c.ServeAddTask,
-		"/start_task": c.ServeStartTask, "/stop_task": c.ServeStopTask}
+		"/start_task": c.ServeStartTask, "/stop_task": c.ServeStopTask,
+		"/edit_task": c.ServeEditTask}
 	handler, ok := pages[urlPath]
 	if !ok {
 		handler = http.NotFound

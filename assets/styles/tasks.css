@@ -54,6 +54,8 @@
 }
 
 .args {
+  cursor: pointer;
+
   float: left;
   display: inline-block;
   font-weight: bold;
