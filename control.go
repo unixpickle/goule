@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/hoisie/mustache"
+	"github.com/unixpickle/ezserver"
 )
 
 var Store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
@@ -259,7 +260,7 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"/setrules": c.ServeSetRules, "/add_task": c.ServeAddTask,
 		"/start_task": c.ServeStartTask, "/stop_task": c.ServeStopTask,
 		"/edit_task": c.ServeEditTask, "/backlog": c.ServeBacklog,
-		"/delete_task": c.ServeDeleteTask}
+		"/delete_task": c.ServeDeleteTask, "/set_tls": c.ServeSetTLS}
 	handler, ok := pages[urlPath]
 	if !ok {
 		handler = http.NotFound
@@ -387,6 +388,21 @@ func (c Control) ServeSetRules(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/rules", http.StatusTemporaryRedirect)
 }
 
+// ServeSetTLS serves the endpoint which updates the TLS settings.
+func (c Control) ServeSetTLS(w http.ResponseWriter, r *http.Request) {
+	rulesJSON := []byte(r.PostFormValue("rules"))
+	c.Config.Lock()
+	defer c.Config.Unlock()
+	var newRules ezserver.TLSConfig
+	if err := json.Unmarshal(rulesJSON, &newRules); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	c.Config.TLS = &newRules
+	c.Config.Save()
+	c.Server.HTTPS.SetTLSConfig(&newRules)
+}
+
 // ServeStartTask starts a task given its index.
 func (c Control) ServeStartTask(w http.ResponseWriter, r *http.Request) {
 	c.ServeTaskAction(w, r, true)
@@ -400,8 +416,15 @@ func (c Control) ServeStopTask(w http.ResponseWriter, r *http.Request) {
 // ServeTLS serves requests for the TLS settings page.
 func (c Control) ServeTLS(w http.ResponseWriter, r *http.Request) {
 	template := map[string]interface{}{}
-	// TODO: fill template
-	serveTemplate(w, r, "tls", template)
+	c.Config.RLock()
+	tls, err := json.Marshal(c.Config.TLS)
+	c.Config.RUnlock()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		template["tls"] = string(tls)
+		serveTemplate(w, r, "tls", template)
+	}
 }
 
 // ServeTaskAction serves the start_task and stop_task pages.

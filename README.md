@@ -22,7 +22,6 @@ In addition, you must install `go-bindata` and use it to generate bindata.go:
 
 Here is what needs to get done:
 
- * Implement task deletion.
  * Implement TLS settings page.
 
 # License
