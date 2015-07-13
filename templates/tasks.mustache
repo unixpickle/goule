@@ -24,6 +24,7 @@
         <a class="args" href="/edit_task?id={{id}}">{{args}}</a>
         <a class="action action-{{status}}"
            href="/{{action}}_task?id={{id}}">{{actionName}}</a>
+        <a class="delete" href="/delete_task?id={{id}}">Delete</a>
       </div>
     {{/tasks}}
     {{^tasks}}

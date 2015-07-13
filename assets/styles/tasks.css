@@ -43,6 +43,7 @@
 }
 
 .task {
+  position: relative;
   padding: 15px 15px 15px 15px;
   background: white;
   text-align: left;
@@ -94,4 +95,24 @@
 
 .action-restarting {
   background-color: #fcb514;
+}
+
+.delete {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: calc(50% - 16px);
+
+  display: block;
+  width: 32px;
+  height: 32px;
+
+  margin: 0;
+  padding: 0;
+
+  color: transparent;
+
+  background-color: transparent;
+  background-image: url('../images/delete.svg');
+  background-size: 32px 32px;
+  cursor: pointer;
 }
