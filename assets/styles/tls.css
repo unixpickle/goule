@@ -1,0 +1,110 @@
+.labeled-textarea {
+  margin-bottom: 10px;
+}
+
+.labeled-textarea::after {
+  content: ".";
+  display: block;
+  height: 0px;
+  color: transparent;
+  visibility: hidden;
+  clear: both;
+}
+
+.labeled-textarea-label {
+  display: inline-block;
+  float: left;
+  height: 50px;
+  line-height: 50px;
+  width: 300px;
+  margin-right: 5px;
+  text-align: right;
+}
+
+.labeled-textarea-textarea {
+  display: inline-block;
+  float: left;
+  height: 50px;
+  width: 200px;
+  box-sizing: border-box;
+  resize: none;
+  border: 1px solid #d5d5d5;
+}
+
+.labeled-textarea-textarea:focus {
+  outline: none;
+}
+
+.root-ca {
+  display: block;
+  width: 200px;
+  height: 50px;
+  resize: none;
+  position: relative;
+  left: calc(50% - 100px);
+  margin-bottom: 10px;
+  border: 1px solid #d5d5d5;
+}
+
+.root-ca:focus {
+  outline: none;
+}
+
+.title {
+  position: relative;
+  left: calc(50% - 75px);
+  width: 150px;
+  height: 40px;
+}
+
+.title h1 {
+  display: inline-block;
+  float: left;
+  padding: 0;
+  margin: 0;
+
+  height: 40px;
+
+  font-size: 20px;
+  line-height: 40px;
+}
+
+.title button {
+  float: right;
+  height: 30px;
+  width: 30px;
+
+  margin: 5px 0 0 0;
+  padding: 0;
+  color: transparent;
+  border: none;
+
+  cursor: pointer;
+
+  border-radius: 15px;
+  background-color: red;
+  background-image: url('../images/plus.svg');
+  background-size: 14px 14px;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
+.named-key-cert-pair {
+  margin-bottom: 20px;
+}
+
+.name-field {
+  margin-bottom: 10px;
+}
+
+.key-cert-name {
+  margin: 0;
+  border: 1px solid #d5d5d5;
+  box-sizing: border-box;
+  width: 200px;
+}
+
+h1 {
+  font-size: 20px;
+  text-align: center;
+}
