@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -15,21 +15,18 @@ var GlobalServer *Server
 func main() {
 	// Deal with the arguments.
 	if len(os.Args) != 3 {
-		fmt.Fprintln(os.Stderr, "Usage:", os.Args[0], "<port> <config.json>")
-		os.Exit(1)
+		log.Fatal("Usage: " + os.Args[0] + " <port> <config.json>")
 	}
 	port, err := strconv.Atoi(os.Args[1])
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Invalid port number:", os.Args[1])
-		os.Exit(1)
+		log.Fatal("Invalid port number: " + os.Args[1])
 	}
 	ConfigPath = os.Args[2]
 
 	// Load the configuration.
 	GlobalConfig, err = LoadConfig(ConfigPath)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed to load configuration:", err)
-		os.Exit(1)
+		log.Fatal("Failed to load configuration: " + err.Error())
 	}
 
 	// Run the tasks before we start the servers so the configuration page isn't accessible until
@@ -46,7 +43,7 @@ func main() {
 	// Start the servers.
 	GlobalServer, err = NewServer(GlobalConfig, port)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "Failed to start server:", err)
+		log.Fatal("Failed to start server: " + err.Error())
 		shutdown()
 	}
 
@@ -54,7 +51,7 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
-	fmt.Println("Goule shutting down...")
+	log.Print("Goule shutting down...")
 	shutdown()
 }
 

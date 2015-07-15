@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"mime"
 	"net/http"
 	"path"
@@ -276,7 +277,9 @@ func (c Control) ServeHTTPConfig(w http.ResponseWriter, r *http.Request) {
 		c.Config.RLock()
 		port := c.Config.HTTPPort
 		c.Config.RUnlock()
-		c.Server.HTTP.Start(port)
+		if err := c.Server.HTTP.Start(port); err != nil {
+			log.Print("Failed to start HTTP: " + err.Error())
+		}
 	case "stop":
 		c.Server.HTTP.Stop()
 	default:
@@ -294,7 +297,9 @@ func (c Control) ServeHTTPSConfig(w http.ResponseWriter, r *http.Request) {
 		c.Config.RLock()
 		port := c.Config.HTTPSPort
 		c.Config.RUnlock()
-		c.Server.HTTPS.Start(port)
+		if err := c.Server.HTTPS.Start(port); err != nil {
+			log.Print("Failed to start HTTPS: " + err.Error())
+		}
 	case "stop":
 		c.Server.HTTPS.Stop()
 	default:
