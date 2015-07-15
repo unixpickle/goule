@@ -7,6 +7,7 @@
       this._$default);
     this._initializeRootCAs(tlsConfig);
     this._initializeNamedCertificates(tlsConfig);
+    this._fixFloatingTextareaBug();
   }
 
   TlsEditor.prototype.getConfig = function() {
@@ -30,6 +31,26 @@
       root_ca: rootCAs,
       named: named
     };
+  };
+
+  TlsEditor.prototype._fixFloatingTextareaBug = function() {
+    // In Safari and Chrome as of July 15, 2015, floating <textarea>'s disappear when the text
+    // scrolls and then the user deletes the text.
+    var $textareas = $('.textarea-field-textarea');
+    $textareas.each(function(index, element) {
+      var $element = $(element);
+      var elementStyle = $element.css(['float', 'width', 'height', 'box-sizing', 'display']);
+      var $parent = $('<div></div>').css(elementStyle);
+      $element.css({
+        width: '100%',
+        height: '100%',
+        boxSizing: 'border-box',
+        float: 'none'
+      });
+      $element.after($parent);
+      $element.detach();
+      $parent.append($element);
+    });
   };
 
   TlsEditor.prototype._initializeNamedCertificates = function(tlsConfig) {
