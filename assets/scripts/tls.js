@@ -20,7 +20,7 @@
       $certs.append(generateNamedKeyCert(name, kc.key, kc.certificate));
     }
     $heading.find('button').click(function() {
-      $certs.append(generateNamedKeyCert('', '', ''));
+      $certs.prepend(generateNamedKeyCert('', '', ''));
     }.bind(this));
     this._$certs = $certs;
     this._$mainContent.append($heading, $certs);
@@ -32,10 +32,10 @@
     var $cas = $('<div class="root-cas"></div>');
     for (var i = 0, len = tlsConfig.root_ca.length; i < len; ++i) {
       var ca = tlsConfig.root_ca[i];
-      $cas.append($('<textarea class="unlabeled-textarea root-ca"></textarea>').text(ca));
+      $cas.append(generateRootCA(ca));
     }
     $heading.find('button').click(function() {
-      $cas.append('<textarea class="unlabeled-textarea root-ca"></textarea>');
+      $cas.prepend(generateRootCA(''));
     }.bind(this));
     this._$cas = $cas;
     this._$mainContent.append($heading, $cas);
@@ -45,7 +45,7 @@
     var $res = $('<div class="key-cert-pair"><div class="field">' +
       '<label class="textarea-field-label">Key</label>' +
       '<textarea class="textarea-field-textarea key-value"></textarea>' +
-      '</div><div class="field">'+
+      '</div><div class="field">' +
       '<label class="textarea-field-label">Certificate</label>' +
       '<textarea class="textarea-field-textarea cert-value"></textarea></div>');
     $res.find('.key-value').text(key);
@@ -58,7 +58,21 @@
     $res.addClass('named-key-cert-pair');
     $res.prepend('<div class="field"><label class="input-field-label">Name</label>' +
       '<input class="input-field-input key-cert-name"></div>');
+    $res.append('<button class="unlabeled-field">Delete</button>');
     $res.find('key-cert-name').text(name);
+    $res.find('button').click(function() {
+      $res.remove();
+    });
+    return $res;
+  }
+
+  function generateRootCA(ca) {
+    var $res = $('<div class="root-ca"><textarea></textarea>' +
+      '<button>Delete</button></div>');
+    $res.find('textarea').text(ca);
+    $res.find('button').click(function() {
+      $res.remove();
+    });
     return $res;
   }
 
