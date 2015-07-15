@@ -401,6 +401,7 @@ func (c Control) ServeSetTLS(w http.ResponseWriter, r *http.Request) {
 	c.Config.TLS = &newRules
 	c.Config.Save()
 	c.Server.HTTPS.SetTLSConfig(&newRules)
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 }
 
 // ServeStartTask starts a task given its index.
