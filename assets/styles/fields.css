@@ -1,11 +1,115 @@
-.field-label {
+.field {
+  margin-bottom: 2px;
+}
+
+.field::after {
+  content: ".";
+  display: block;
+  height: 0px;
+  color: transparent;
+  visibility: hidden;
+  clear: both;
+}
+
+.input-field-label, .generic-field-label {
+  float: left;
   display: inline-block;
   width: 300px;
   padding-right: 5px;
   text-align: right;
 }
 
+.input-field-input {
+  float: left;
+  margin: 0;
+  border: 1px solid #d5d5d5;
+  box-sizing: border-box;
+  width: 200px;
+}
+
+.generic-field-content {
+  float: left;
+}
+
+.textarea-field-label {
+  display: inline-block;
+  float: left;
+  height: 50px;
+  line-height: 50px;
+  width: 300px;
+  margin-right: 5px;
+  text-align: right;
+}
+
+.textarea-field-textarea {
+  display: inline-block;
+  float: left;
+  height: 50px;
+  width: 200px;
+  box-sizing: border-box;
+  resize: none;
+  border: 1px solid #d5d5d5;
+}
+
 .unlabeled-field {
   margin-left: 305px;
   display: inline-block;
+}
+
+.unlabeled-textarea {
+  display: block;
+  width: 200px;
+  height: 50px;
+  resize: none;
+  position: relative;
+  left: calc(50% - 100px);
+  margin-bottom: 10px;
+  border: 1px solid #d5d5d5;
+}
+
+.field-set-heading {
+  text-align: center;
+  padding: 0;
+  margin: 10px 0 0 0;
+  height: 40px;
+  font-size: 20px;
+  line-height: 40px;
+}
+
+.field-set-action-heading {
+  display: block;
+  width: 200px;
+  height: 40px;
+  position: relative;
+  left: calc(50% - 100px);
+}
+
+.field-set-action-heading h1 {
+  display: block;
+  margin: 0;
+  padding: 0;
+  height: 40px;
+  font-size: 20px;
+  line-height: 40px;
+  float: left;
+}
+
+.field-set-add-button {
+  float: right;
+  height: 30px;
+  width: 30px;
+
+  margin: 5px 0 0 0;
+  padding: 0;
+  color: transparent;
+  border: none;
+
+  cursor: pointer;
+
+  border-radius: 15px;
+  background-color: red;
+  background-image: url('../images/plus.svg');
+  background-size: 14px 14px;
+  background-position: center center;
+  background-repeat: no-repeat;
 }

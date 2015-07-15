@@ -61,10 +61,9 @@
   };
 
   TaskEditor.prototype._initializeArguments = function(task) {
-    var $argumentsTitle = $('<div class="task-editor-heading">' +
-      '<h1 class="task-editor-title">Arguments</h1>' +
-      '<button class="task-editor-add-argument-button task-editor-add-button">Add</button></div>');
-    $argumentsTitle.find('.task-editor-add-argument-button').click(this._addArgument.bind(this));
+    var $argumentsTitle = $('<div class="field-set-action-heading">' +
+      '<h1>Arguments</h1><button class="field-set-add-button">Add</button></div>');
+    $argumentsTitle.find('.field-set-add-button').click(this._addArgument.bind(this));
 
     this._$arguments = $('<div></div>');
     for (var i = 0, len = task.Args.length; i < len; ++i) {
@@ -75,10 +74,9 @@
   };
 
   TaskEditor.prototype._initializeEnvironment = function(task) {
-    var $envTitle = $('<div class="task-editor-heading">' +
-      '<h1 class="task-editor-title">Environment</h1>' +
-      '<button class="task-editor-add-env-button task-editor-add-button">Add</button></div>');
-    $envTitle.find('.task-editor-add-env-button').click(this._addEnv.bind(this));
+    var $envTitle = $('<div class="field-set-action-heading">' +
+      '<h1>Environment</h1><button class="field-set-add-button">Add</button></div>');
+    $envTitle.find('.field-set-add-button').click(this._addEnv.bind(this));
 
     this._$env = $('<div></div>');
     var keys = Object.keys(task.Env).sort();
@@ -92,32 +90,37 @@
   TaskEditor.prototype._initializeFields = function(task) {
     this._$fields = $('<div class="task-editor-fields">' +
 
-      '<label class="field-label">Directory</label>' +
-      '<input class="task-editor-directory">' +
+      '<div class="field">' +
+      '<label class="input-field-label">Directory</label>' +
+      '<input class="input-field-input task-editor-directory"></div>' +
 
-      '<label class="field-label">Auto-launch</label>' +
-      '<input class="task-editor-auto-launch" type="checkbox"><br>' +
+      '<div class="field">' +
+      '<label class="generic-field-label">Auto-launch</label>' +
+      '<input class="generic-field-content task-editor-auto-launch" type="checkbox"></div>' +
 
-      '<label class="field-label">Auto-relaunch</label>' +
-      '<input class="task-editor-auto-relaunch" type="checkbox"><br>' +
+      '<div class="field">' +
+      '<label class="generic-field-label">Auto-relaunch</label>' +
+      '<input class="generic-field-content task-editor-auto-relaunch" type="checkbox"></div>' +
 
-      '<div class="task-editor-relaunch-interval-field">' +
-      '<label class="field-label task-editor">Relaunch interval (sec)</label>' +
-      '<input class="task-editor-relaunch-interval"></div>' +
+      '<div class="field task-editor-relaunch-interval-field">' +
+      '<label class="input-field-label task-editor">Relaunch interval (sec)</label>' +
+      '<input class="input-field-input task-editor-relaunch-interval"></div>' +
 
-      '<label class="field-label">Set GID</label>' +
-      '<input class="task-editor-set-gid" type="checkbox"><br>' +
+      '<div class="field">' +
+      '<label class="generic-field-label">Set GID</label>' +
+      '<input class="generic-field-content task-editor-set-gid" type="checkbox"></div>' +
 
-      '<div class="task-editor-gid-field">' +
-      '<label class="field-label">GID</label>' +
-      '<input class="task-editor-gid"></div>' +
+      '<div class="field task-editor-gid-field">' +
+      '<label class="input-field-label">GID</label>' +
+      '<input class="input-field-input task-editor-gid"></div>' +
 
-      '<label class="field-label">Set UID</label>' +
-      '<input class="task-editor-set-uid" type="checkbox"><br>' +
+      '<div class="field">' +
+      '<label class="generic-field-label">Set UID</label>' +
+      '<input class="generic-field-content task-editor-set-uid" type="checkbox"></div>' +
 
-      '<div class="task-editor-uid-field">' +
-      '<label class="field-label">UID</label>' +
-      '<input class="task-editor-uid"></div>' +
+      '<div class="field task-editor-uid-field">' +
+      '<label class="input-field-label">UID</label>' +
+      '<input class="input-field-input task-editor-uid"></div>' +
 
       '</div>');
 

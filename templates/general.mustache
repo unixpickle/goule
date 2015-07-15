@@ -20,64 +20,79 @@
     </div>
 
     <div class="main-content">
-
       <form action="/general" method="POST">
-        <label class="field-label">HTTP Port:</label><input name="http" value="{{http}}">
-        <br>
-        <label class="field-label">HTTPS Port:</label><input name="https" value="{{https}}">
-        <br>
-        <label class="field-label">Start HTTP:</label><input name="starthttp" type="checkbox"
-          value="On" {{#startHTTP}}checked{{/startHTTP}}>
-        <br>
-        <label class="field-label">Start HTTPS:</label><input name="starthttps" type="checkbox"
-          value="On" {{#startHTTPS}}checked{{/startHTTPS}}>
-        <br>
+        <div class="field">
+          <label class="input-field-label">HTTP Port:</label>
+          <input class="input-field-input" name="http" value="{{http}}">
+        </div>
+        <div class="field">
+          <label class="input-field-label">HTTPS Port:</label>
+          <input class="input-field-input" name="https" value="{{https}}">
+        </div>
+        <div class="field">
+          <label class="generic-field-label">Start HTTP:</label>
+          <input class="generic-field-content" name="starthttp" type="checkbox"
+            value="On" {{#startHTTP}}checked{{/startHTTP}}>
+        </div>
+        <div class="field">
+          <label class="generic-field-label">Start HTTPS:</label>
+          <input class="generic-field-content" name="starthttps" type="checkbox"
+            value="On" {{#startHTTPS}}checked{{/startHTTPS}}>
+        </div>
         <input type="submit" class="unlabeled-field">
       </form>
 
       <br>
 
       {{#httpRunning}}
-      <label class="field-label">HTTP server is running on port {{httpPort}}.</label>
-      <a href="/http?action=stop">Stop</a>
+      <div class="field">
+        <label class="generic-field-label">HTTP server is running on port {{httpPort}}.</label>
+        <a class="generic-field-content" href="/http?action=stop">Stop</a>
+      </div>
       {{/httpRunning}}
       {{^httpRunning}}
-      <label class="field-label">HTTP server is stopped.</label>
-      <a href="/http?action=start">Start</a>
+      <div class="field">
+        <label class="generic-field-label">HTTP server is stopped.</label>
+        <a class="generic-field-content" href="/http?action=start">Start</a>
+      </div>
       {{/httpRunning}}
 
-      <br>
-
       {{#httpsRunning}}
-      <label class="field-label">HTTPS server is running on port {{httpsPort}}.</label>
-      <a href="/https?action=stop">Stop</a>
+      <div class="field">
+        <label class="generic-field-label">HTTPS server is running on port {{httpsPort}}.</label>
+        <a class="generic-field-content" href="/https?action=stop">Stop</a>
+      </div>
       {{/httpsRunning}}
       {{^httpsRunning}}
-      <label class="field-label">HTTPS server is stopped.</label>
-      <a href="/https?action=start">Start</a>
+      <div class="field">
+        <label class="generic-field-label">HTTPS server is stopped.</label>
+        <a class="generic-field-content" href="/https?action=start">Start</a>
+      </div>
       {{/httpsRunning}}
 
       <br><br>
 
       <form action="/chpass" method="POST">
-        <label class="field-label">Old:</label><input name="old" type="password"
-          autocomplete="off">
-        <br>
-        <label class="field-label">New:</label><input name="new" type="password"
-          autocomplete="off">
-        <br>
-        <label class="field-label">Confirm:</label><input name="confirm" type="password"
-          autocomplete="off">
-        <br>
+        <div class="field">
+          <label class="input-field-label">Old:</label>
+          <input class="input-field-input" name="old" type="password" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="input-field-label">New:</label>
+          <input class="input-field-input" name="new" type="password" autocomplete="off">
+        </div>
+        <div class="field">
+          <label class="input-field-label">Confirm:</label>
+          <input class="input-field-input" name="confirm" type="password" autocomplete="off">
+        </div>
         {{#chpassError}}
         <div class="chpass-error unlabeled-field">{{chpassError}}</div>
         {{/chpassError}}
         {{#chpassSuccess}}
         <div class="chpass-success unlabeled-field">{{chpassSuccess}}</div>
         {{/chpassSuccess}}
-        <input type="submit" value="Change Password" class="unlabeled-field">
+        <input class="unlabeled-field" type="submit" value="Change Password">
       </form>
-
     </div>
   </body>
 </html>
