@@ -81,7 +81,7 @@
     this._$env = $('<div></div>');
     var keys = Object.keys(task.Env).sort();
     for (var i = 0; i < keys.length; ++i) {
-      this._$env.append(createEnvironmentElement(keys[i], task.Env[i]));
+      this._$env.append(createEnvironmentElement(keys[i], task.Env[keys[i]]));
     }
 
     this._$container.append($envTitle, this._$env);
@@ -178,8 +178,8 @@
   function createEnvironmentElement(name, value) {
     var $res = $('<div><input class="task-editor-env-key"><input class="task-editor-env-value">' +
       '<button>Remove</button></div>');
-    $res.find('task-editor-env-key').val(name);
-    $res.find('task-editor-env-value').val(value);
+    $res.find('.task-editor-env-key').val(name);
+    $res.find('.task-editor-env-value').val(value);
     $res.find('button').click(function() {
       $res.remove();
     });

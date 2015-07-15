@@ -163,9 +163,12 @@ func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 		}
 
 		oldStatus := task.Status()
+		oldEnv := task.Env
+		task.Env = nil
 		task.StopLoop()
 		if err := json.Unmarshal([]byte(r.PostFormValue("task")), task); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			task.Env = oldEnv
 			task.StartLoop()
 			if oldStatus != TaskStatusStopped {
 				task.Start()
