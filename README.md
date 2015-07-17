@@ -20,9 +20,8 @@ In addition, you must install `go-bindata` and use it to generate bindata.go:
 
 # TODO
 
-Here is what needs to get done:
-
- * Implement TLS settings page.
+ * Test websocket support
+ * Test the TLS system
 
 # License
 
