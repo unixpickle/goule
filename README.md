@@ -20,6 +20,7 @@ In addition, you must install `go-bindata` and use it to generate bindata.go:
 
 # TODO
 
+ * Implement SetGID and SetUID
  * Test websocket support
  * Test the TLS system
 

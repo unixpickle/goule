@@ -249,7 +249,7 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
-	
+
 	urlPath := path.Clean(r.URL.Path)
 	if urlPath == "/login" {
 		c.ServeLogin(w, r)
@@ -490,8 +490,7 @@ func isAuthenticated(r *http.Request) bool {
 }
 
 // serveTemplate serves a mustache template asset.
-func serveTemplate(w http.ResponseWriter, r *http.Request, name string,
-	info interface{}) {
+func serveTemplate(w http.ResponseWriter, r *http.Request, name string, info interface{}) {
 	data, err := Asset("templates/" + name + ".mustache")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

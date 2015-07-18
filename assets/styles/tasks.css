@@ -12,7 +12,7 @@
 
 #add-button {
   color: transparent;
-  background-color: #db4437;
+  background-color: #64bcd4;
   border-radius: 28px;
   width: 56px;
   height: 56px;
@@ -34,7 +34,7 @@
 }
 
 #add-button:hover {
-  background-color: #e06055;
+  background-color: #74cce4;
   box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.4);
 }
 
