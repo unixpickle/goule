@@ -7,6 +7,7 @@ import (
 	"log"
 	"mime"
 	"net/http"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -244,6 +245,11 @@ func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
 
 // ServeHTTP serves the web control panel.
 func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if !validateReferer(r) {
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+	
 	urlPath := path.Clean(r.URL.Path)
 	if urlPath == "/login" {
 		c.ServeLogin(w, r)
@@ -409,7 +415,7 @@ func (c Control) ServeSetTLS(w http.ResponseWriter, r *http.Request) {
 	c.Config.TLS = &newRules
 	c.Config.Save()
 	c.Server.HTTPS.SetTLSConfig(&newRules)
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/tls", http.StatusTemporaryRedirect)
 }
 
 // ServeStartTask starts a task given its index.
@@ -493,4 +499,28 @@ func serveTemplate(w http.ResponseWriter, r *http.Request, name string,
 	content := mustache.Render(string(data), info)
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(content))
+}
+
+// validateReferer makes sure the Referer's host is correct for a request.
+func validateReferer(r *http.Request) bool {
+	urlPath := path.Clean(r.URL.Path)
+	if strings.HasPrefix(urlPath, "/assets/") {
+		return true
+	}
+	if r.Method == "GET" {
+		allowedGets := []string{"/general", "/rules", "/tls", "/", "/backlog", "/edit_task",
+			"/add_task", "/login"}
+		for _, path := range allowedGets {
+			if path == urlPath {
+				return true
+			}
+		}
+	}
+	// Get the Referer
+	referer := r.Referer()
+	u, err := url.Parse(referer)
+	if err != nil {
+		return false
+	}
+	return u.Host == r.Host
 }

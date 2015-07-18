@@ -20,7 +20,6 @@ In addition, you must install `go-bindata` and use it to generate bindata.go:
 
 # TODO
 
- * Prevent CSRF
  * Test websocket support
  * Test the TLS system
 
