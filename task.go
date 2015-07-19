@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os/exec"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -134,7 +135,20 @@ func (t *Task) cmd() *exec.Cmd {
 	}
 	task.Dir = t.Dir
 
-	// TODO: here, set UID and GID
+	if t.SetUID || t.SetGID {
+		task.SysProcAttr = &syscall.SysProcAttr{}
+		task.SysProcAttr.Credential = &syscall.Credential{}
+		if t.SetUID {
+			task.SysProcAttr.Credential.Uid = uint32(t.UID)
+		} else {
+			task.SysProcAttr.Credential.Uid = uint32(syscall.Getuid())
+		}
+		if t.SetGID {
+			task.SysProcAttr.Credential.Gid = uint32(t.GID)
+		} else {
+			task.SysProcAttr.Credential.Gid = uint32(syscall.Getgid())
+		}
+	}
 
 	return task
 }
