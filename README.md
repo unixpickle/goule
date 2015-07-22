@@ -20,8 +20,6 @@ In addition, you must install `go-bindata` and use it to generate bindata.go:
 
 # TODO
 
- * Figure out how to make Process.Kill() terminate child processes
- * Make a timeout for Process.Kill() incase a child process hangs around
  * Test websocket support
 
 # License
