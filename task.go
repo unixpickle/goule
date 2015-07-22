@@ -135,8 +135,9 @@ func (t *Task) cmd() *exec.Cmd {
 	}
 	task.Dir = t.Dir
 
+	task.SysProcAttr = &syscall.SysProcAttr{}
+	task.SysProcAttr.Setpgid = true
 	if t.SetUID || t.SetGID {
-		task.SysProcAttr = &syscall.SysProcAttr{}
 		task.SysProcAttr.Credential = &syscall.Credential{}
 		if t.SetUID {
 			task.SysProcAttr.Credential.Uid = uint32(t.UID)
@@ -246,9 +247,7 @@ func (t *Task) runOnce(actions <-chan taskAction) {
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
 				t.pushBacklog(BacklogLineStatus, "Task stopped.")
-				cmd.Process.Kill()
-				// Wait for the task to die before closing the response channel.
-				<-doneChan
+				t.terminateCommand(cmd, doneChan)
 				if ok {
 					close(val.resp)
 				}
@@ -303,9 +302,7 @@ func (t *Task) runRestart(actions <-chan taskAction) {
 		case val, ok := <-actions:
 			if !ok || val.action == taskActionStop {
 				t.pushBacklog(BacklogLineStatus, "Task stopped.")
-				cmd.Process.Kill()
-				// Wait for the task to die before closing the response channel.
-				<-doneChan
+				t.terminateCommand(cmd, doneChan)
 				if ok {
 					close(val.resp)
 				}
@@ -317,6 +314,28 @@ func (t *Task) runRestart(actions <-chan taskAction) {
 			}
 		}
 	}
+}
+
+func (t *Task) terminateCommand(cmd *exec.Cmd, killChan <-chan struct{}) {
+	if pgid, err := syscall.Getpgid(cmd.Process.Pid); err == nil {
+	    syscall.Kill(-pgid, syscall.SIGTERM)
+		select {
+		case <-killChan:
+			return
+		case <-time.After(time.Second):
+		}
+
+		t.pushBacklog(BacklogLineStatus, "Process group did not respond to SIGTERM.")
+
+		syscall.Kill(-pgid, syscall.SIGKILL)
+		select {
+		case <-killChan:
+			return
+		case <-time.After(time.Second):
+		}
+	}
+	t.pushBacklog(BacklogLineStatus, "Process group could not be terminated.")
+	cmd.Process.Kill()
 }
 
 func (t *Task) waitTimeout(actions <-chan taskAction) bool {
