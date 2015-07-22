@@ -489,6 +489,17 @@ func isAuthenticated(r *http.Request) bool {
 	return ok && val
 }
 
+// originalHost uses the X-Forwarded-Host header if available to get the
+// host of a request.
+func originalHost(r *http.Request) string {
+	forwardHost := r.Header.Get("X-Forwarded-Host")
+	if forwardHost == "" {
+		return r.Host
+	}
+	parts := strings.Split(forwardHost, ",")
+	return strings.TrimSpace(parts[len(parts)-1])
+}
+
 // serveTemplate serves a mustache template asset.
 func serveTemplate(w http.ResponseWriter, r *http.Request, name string, info interface{}) {
 	data, err := Asset("templates/" + name + ".mustache")
@@ -521,5 +532,5 @@ func validateReferer(r *http.Request) bool {
 	if err != nil {
 		return false
 	}
-	return u.Host == r.Host
+	return u.Host == originalHost(r)
 }
