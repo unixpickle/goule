@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -359,7 +360,7 @@ func (c Control) ServeRoot(w http.ResponseWriter, r *http.Request) {
 		statusStr := []string{"stopped", "running", "restarting"}[status]
 		action := []string{"start", "stop", "stop"}[status]
 		actionName := []string{"Start", "Stop", "Restarting"}[status]
-		args := strings.Join(task.Args, " ")
+		args := "[" + filepath.Base(task.Dir) + "] " + strings.Join(task.Args, " ")
 		objects[i] = map[string]string{"action": action, "status": statusStr, "args": args,
 			"actionName": actionName, "id": strconv.FormatInt(task.ID, 10)}
 	}
