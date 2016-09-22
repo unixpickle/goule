@@ -29,7 +29,7 @@ type Control struct {
 
 // ServeAddTask serves the add-task page.
 func (c Control) ServeAddTask(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		serveTemplate(w, r, "add_task", map[string]interface{}{})
 		return
 	}
@@ -96,7 +96,7 @@ func (c Control) ServeBacklog(w http.ResponseWriter, r *http.Request) {
 
 // ServeChpass serves the change password POST target.
 func (c Control) ServeChpass(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		http.Error(w, "You must POST to this API", http.StatusMethodNotAllowed)
 		return
 	}
@@ -153,7 +153,7 @@ func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method == "POST" {
+	if r.Method == http.MethodPost {
 		c.Config.Lock()
 		defer c.Config.Unlock()
 
@@ -205,7 +205,7 @@ func (c Control) ServeEditTask(w http.ResponseWriter, r *http.Request) {
 
 // ServeGeneral serves requests for the general settings page.
 func (c Control) ServeGeneral(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
+	if r.Method == http.MethodPost {
 		// Use posted form data to update configuration.
 		httpPort := r.PostFormValue("http")
 		httpsPort := r.PostFormValue("https")
@@ -321,7 +321,7 @@ func (c Control) ServeHTTPSConfig(w http.ResponseWriter, r *http.Request) {
 // ServeLogin serves the login page.
 func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 	template := map[string]interface{}{"error": false}
-	if r.Method == "POST" {
+	if r.Method == http.MethodPost {
 		// Get their submitted hash and the real hash.
 		password := r.PostFormValue("password")
 		hash := HashPassword(password)
@@ -518,7 +518,7 @@ func validateReferer(r *http.Request) bool {
 	if strings.HasPrefix(urlPath, "/assets/") {
 		return true
 	}
-	if r.Method == "GET" {
+	if r.Method == http.MethodGet {
 		allowedGets := []string{"/general", "/rules", "/tls", "/", "/backlog", "/edit_task",
 			"/add_task", "/login"}
 		for _, path := range allowedGets {
