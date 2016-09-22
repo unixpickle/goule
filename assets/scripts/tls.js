@@ -3,14 +3,14 @@
   function TlsEditor(config) {
     var tlsConfig = config.tlsConfig;
     var redirects = (config.redirects || []);
-    this._$mainContent = $('#tls-editor');
+    this._$mainContent = $('#tls-settings');
     this._$default = generateKeyCert(tlsConfig.default.key, tlsConfig.default.certificate);
     this._$mainContent.append('<h1 class="field-set-heading">Default Key/Cert Pair</h1>',
       this._$default);
-    this._$redirectList = $('#redirect-list');
     this._initializeRootCAs(tlsConfig);
     this._initializeNamedCertificates(tlsConfig);
     this._initializeRedirects(redirects);
+    this._initializeACME(tlsConfig);
     this._fixFloatingTextareaBug();
   }
 
@@ -31,6 +31,10 @@
     $('.https-redirect-host input').each(function(index, element) {
       redirects.push($(element).val());
     });
+    var acmeHosts = [];
+    $('.acme-host input').each(function(index, element) {
+      acmeHosts.push($(element).val());
+    });
     return {
       tlsConfig: {
         default: {
@@ -38,7 +42,9 @@
           certificate: this._$default.find('.cert-value').val()
         },
         root_ca: rootCAs,
-        named: named
+        named: named,
+        acme_dir_url: this._$mainContent.find('.acme-directory-url').val(),
+        acme_hosts: acmeHosts,
       },
       redirects: redirects
     };
@@ -110,7 +116,35 @@
       $redirects.prepend(generateRedirect(''));
     });
 
-    this._$redirectList.append($listTitle, $redirects);
+    this._$mainContent.append($listTitle, $redirects);
+  };
+
+  TlsEditor.prototype._initializeACME = function(tlsConfig) {
+    var $dirURL = $('<div class="field">' +
+      '<label class="input-field-label">ACME Directory</label>' +
+      '<input class="input-field-input acme-directory-url"></div>');
+    var $urlInput = $dirURL.find('input');
+    $urlInput.val(tlsConfig.acme_dir_url);
+    $urlInput.attr('placeholder', 'Defaults to LetsEncrypt');
+
+    var $listTitle = $('<div class="field-set-action-heading">' +
+      '<h1>ACME Hosts</h1><button class="field-set-add-button">Add</button></div>');
+
+    var hosts = (tlsConfig.acme_hosts || []).slice();
+    hosts.sort();
+    var $hosts = $('<div></div>');
+    for (var i = 0; i < hosts.length; ++i) {
+      $hosts.append(generateACMEHost(hosts[i]));
+    }
+
+    $listTitle.find('.field-set-add-button').click(function() {
+      $hosts.prepend(generateACMEHost(''));
+    });
+
+    $acmeSettings = $('<div></div>').append($dirURL, $listTitle, $hosts);
+    $acmeSettings.addClass('acme-settings');
+
+    this._$mainContent.append($acmeSettings);
   };
 
   function generateKeyCert(key, cert) {
@@ -150,6 +184,16 @@
 
   function generateRedirect(hostname) {
     var $res = $('<div class="https-redirect-host"><input placeholder="Host">' +
+      '<button>Remove</button></div>');
+    $res.find('input').val(hostname);
+    $res.find('button').click(function() {
+      $res.remove();
+    });
+    return $res;
+  }
+
+  function generateACMEHost(hostname) {
+    var $res = $('<div class="acme-host"><input placeholder="Host">' +
       '<button>Remove</button></div>');
     $res.find('input').val(hostname);
     $res.find('button').click(function() {

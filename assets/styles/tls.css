@@ -20,3 +20,11 @@
 .https-redirect-host {
   text-align: center;
 }
+
+.acme-settings {
+  margin-top: 10px;
+}
+
+.acme-host {
+  text-align: center;
+}

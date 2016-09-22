@@ -66,6 +66,7 @@ func defaultConfig(path string) *Config {
 	tls := TLSConfig{
 		TLS: &ezserver.TLSConfig{
 			map[string]ezserver.KeyCert{}, []string{}, ezserver.KeyCert{},
+			"", []string{},
 		},
 		Redirects: []string{},
 	}
