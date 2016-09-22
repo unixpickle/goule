@@ -16,3 +16,7 @@
   left: calc(50% - 100px);
   border: 1px solid #d5d5d5;
 }
+
+.https-redirect-host {
+  text-align: center;
+}

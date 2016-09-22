@@ -1,12 +1,16 @@
 (function() {
 
-  function TlsEditor(tlsConfig) {
+  function TlsEditor(config) {
+    var tlsConfig = config.tlsConfig;
+    var redirects = (config.redirects || []);
     this._$mainContent = $('#tls-editor');
     this._$default = generateKeyCert(tlsConfig.default.key, tlsConfig.default.certificate);
     this._$mainContent.append('<h1 class="field-set-heading">Default Key/Cert Pair</h1>',
       this._$default);
+    this._$redirectList = $('#redirect-list');
     this._initializeRootCAs(tlsConfig);
     this._initializeNamedCertificates(tlsConfig);
+    this._initializeRedirects(redirects);
     this._fixFloatingTextareaBug();
   }
 
@@ -23,13 +27,20 @@
       var cert = $element.find('.cert-value').val();
       named[name] = {key: key, certificate: cert};
     });
+    var redirects = [];
+    $('.https-redirect-host input').each(function(index, element) {
+      redirects.push($(element).val());
+    });
     return {
-      default: {
-        key: this._$default.find('.key-value').val(),
-        certificate: this._$default.find('.cert-value').val()
+      tlsConfig: {
+        default: {
+          key: this._$default.find('.key-value').val(),
+          certificate: this._$default.find('.cert-value').val()
+        },
+        root_ca: rootCAs,
+        named: named
       },
-      root_ca: rootCAs,
-      named: named
+      redirects: redirects
     };
   };
 
@@ -85,6 +96,23 @@
     this._$mainContent.append($heading, $cas);
   };
 
+  TlsEditor.prototype._initializeRedirects = function(redirects) {
+    var $listTitle = $('<div class="field-set-action-heading">' +
+      '<h1>Redirects</h1><button class="field-set-add-button">Add</button></div>');
+
+    redirects.sort();
+    var $redirects = $('<div></div>');
+    for (var i = 0; i < redirects.length; ++i) {
+      $redirects.append(generateRedirect(redirects[i]));
+    }
+
+    $listTitle.find('.field-set-add-button').click(function() {
+      $redirects.prepend(generateRedirect(''));
+    });
+
+    this._$redirectList.append($listTitle, $redirects);
+  };
+
   function generateKeyCert(key, cert) {
     var $res = $('<div class="key-cert-pair"><div class="field">' +
       '<label class="textarea-field-label">Key</label>' +
@@ -114,6 +142,16 @@
     var $res = $('<div class="root-ca"><textarea></textarea>' +
       '<button>Delete</button></div>');
     $res.find('textarea').val(ca);
+    $res.find('button').click(function() {
+      $res.remove();
+    });
+    return $res;
+  }
+
+  function generateRedirect(hostname) {
+    var $res = $('<div class="https-redirect-host"><input placeholder="Host">' +
+      '<button>Remove</button></div>');
+    $res.find('input').val(hostname);
     $res.find('button').click(function() {
       $res.remove();
     });

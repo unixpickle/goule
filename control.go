@@ -16,7 +16,6 @@ import (
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/hoisie/mustache"
-	"github.com/unixpickle/ezserver"
 )
 
 var Store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
@@ -408,14 +407,15 @@ func (c Control) ServeSetTLS(w http.ResponseWriter, r *http.Request) {
 	rulesJSON := []byte(r.PostFormValue("rules"))
 	c.Config.Lock()
 	defer c.Config.Unlock()
-	var newRules ezserver.TLSConfig
-	if err := json.Unmarshal(rulesJSON, &newRules); err != nil {
+	var newConfig TLSConfig
+	if err := json.Unmarshal(rulesJSON, &newConfig); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	c.Config.TLS = &newRules
+	c.Config.TLS = &newConfig
 	c.Config.Save()
-	c.Server.HTTPS.SetTLSConfig(&newRules)
+	c.Server.HTTPS.SetTLSConfig(newConfig.TLS)
+	c.Server.HTTP.SetSecurityRedirects(newConfig.Redirects)
 	http.Redirect(w, r, "/tls", http.StatusTemporaryRedirect)
 }
 

@@ -10,6 +10,11 @@ import (
 	"github.com/unixpickle/reverseproxy"
 )
 
+type TLSConfig struct {
+	TLS       *ezserver.TLSConfig `json:"tlsConfig"`
+	Redirects []string            `json:"redirects"`
+}
+
 // Config encompasses the collective configuration of a Goule server.
 type Config struct {
 	sync.RWMutex
@@ -20,7 +25,7 @@ type Config struct {
 	StartHTTP  bool
 	StartHTTPS bool
 	Tasks      []*Task
-	TLS        *ezserver.TLSConfig
+	TLS        *TLSConfig
 	LastTaskID int64
 	path       string
 }
@@ -58,8 +63,11 @@ func (c *Config) Save() error {
 // defaultConfig creates the default configuration.
 // The password for this configuration is "password".
 func defaultConfig(path string) *Config {
-	tls := ezserver.TLSConfig{
-		map[string]ezserver.KeyCert{}, []string{}, ezserver.KeyCert{},
+	tls := TLSConfig{
+		TLS: &ezserver.TLSConfig{
+			map[string]ezserver.KeyCert{}, []string{}, ezserver.KeyCert{},
+		},
+		Redirects: []string{},
 	}
 
 	hash := HashPassword("password")
