@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/gorilla/context"
 	"github.com/unixpickle/ezserver"
 	"github.com/unixpickle/reverseproxy"
 )
@@ -24,7 +25,7 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	res := &Server{}
 
 	// Create server-related objects.
-	res.Control = ezserver.NewHTTP(Control{cfg, res})
+	res.Control = ezserver.NewHTTP(context.ClearHandler(Control{cfg, res}))
 	res.Proxy = reverseproxy.NewProxy(cfg.Rules)
 	res.HTTP = ezserver.NewHTTP(res.Proxy)
 	res.HTTPS = ezserver.NewHTTPS(res.Proxy, cfg.TLS.TLS)
