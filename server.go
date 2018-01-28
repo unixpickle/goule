@@ -30,6 +30,7 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	res.HTTP = ezserver.NewHTTP(res.Proxy)
 	res.HTTPS = ezserver.NewHTTPS(res.Proxy, cfg.TLS.TLS)
 	res.HTTP.SetSecurityRedirects(cfg.TLS.Redirects)
+	res.HTTP.SetAutocertHandler(res.HTTPS.HandleAutocertRequest)
 
 	// Start admin server.
 	if err := res.Control.Start(adminPort); err != nil {
