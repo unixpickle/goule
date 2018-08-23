@@ -206,10 +206,7 @@
     var editor = new TlsEditor(window.tlsConfiguration);
     $('#submit').click(function() {
       var rulesJSON = JSON.stringify(editor.getConfig());
-      var $form = $('<form method="POST" action="/set_tls"><input name="rules" ' +
-        'type="hidden"></form>');
-      $form.find('input').val(rulesJSON);
-      $form.submit();
+      postData('rules', rulesJSON, '/set_tls');
     });
   });
 
