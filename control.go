@@ -385,7 +385,7 @@ func (c Control) ServeRules(w http.ResponseWriter, r *http.Request) {
 // ServeSetRules serves requests for the page that sets the rules.
 func (c Control) ServeSetRules(w http.ResponseWriter, r *http.Request) {
 	// Get rules from the request.
-	rulesData := r.URL.Query().Get("rules")
+	rulesData := r.PostFormValue("rules")
 	var decoded map[string][]string
 	if err := json.Unmarshal([]byte(rulesData), &decoded); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

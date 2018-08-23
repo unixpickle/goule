@@ -59,7 +59,6 @@
   }
 
   function save() {
-    // Generate a rules object.
     var result = {};
     var $rules = $('.rule');
     for (var i = 0, len = $rules.length; i < len; ++i) {
@@ -72,10 +71,7 @@
       }
       result[name] = targetNames;
     }
-
-    // Send the rules object to the server.
-    var encoded = encodeURIComponent(JSON.stringify(result));
-    window.location = '/setrules?rules=' + encoded;
+    postData('rules', JSON.stringify(result), '/setrules');
   }
 
   window.app.addRule = addRule;
