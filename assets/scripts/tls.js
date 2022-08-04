@@ -44,6 +44,7 @@
         root_ca: rootCAs,
         named: named,
         acme_dir_url: this._$mainContent.find('.acme-directory-url').val(),
+        acme_cache_dir: this._$mainContent.find('.acme-cache-dir').val(),
         acme_hosts: acmeHosts,
       },
       redirects: redirects
@@ -127,6 +128,13 @@
     $urlInput.val(tlsConfig.acme_dir_url);
     $urlInput.attr('placeholder', 'Defaults to LetsEncrypt');
 
+    var $cacheDir = $('<div class="field">' +
+      '<label class="input-field-label">ACME Cache Dir</label>' +
+      '<input class="input-field-input acme-cache-dir"></div>');
+    var $cacheDirInput = $cacheDir.find('input');
+    $cacheDirInput.val(tlsConfig.acme_cache_dir);
+    $cacheDirInput.attr('placeholder', 'Directory to store data');
+
     var $listTitle = $('<div class="field-set-action-heading">' +
       '<h1>ACME Hosts</h1><button class="field-set-add-button">Add</button></div>');
 
@@ -141,7 +149,7 @@
       $hosts.prepend(generateACMEHost(''));
     });
 
-    $acmeSettings = $('<div></div>').append($dirURL, $listTitle, $hosts);
+    $acmeSettings = $('<div></div>').append($dirURL, $cacheDir, $listTitle, $hosts);
     $acmeSettings.addClass('acme-settings');
 
     this._$mainContent.append($acmeSettings);
