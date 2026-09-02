@@ -69,7 +69,7 @@ func (c Control) ServeAddTask(w http.ResponseWriter, r *http.Request) {
 // ServeAsset serves a static asset.
 func (c Control) ServeAsset(w http.ResponseWriter, r *http.Request) {
 	urlPath := path.Clean(r.URL.Path)
-	if data, err := Asset(urlPath[1:]); err != nil {
+	if data, err := embeddedFiles.ReadFile(urlPath[1:]); err != nil {
 		http.NotFound(w, r)
 	} else {
 		mimeType := mime.TypeByExtension(path.Ext(urlPath))
@@ -351,7 +351,7 @@ func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Serve login page with no template.
-	data, err := Asset("templates/login.mustache")
+	data, err := embeddedFiles.ReadFile("templates/login.mustache")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -521,7 +521,7 @@ func originalHost(r *http.Request) string {
 
 // serveTemplate serves a mustache template asset.
 func serveTemplate(w http.ResponseWriter, r *http.Request, name string, info interface{}) {
-	data, err := Asset("templates/" + name + ".mustache")
+	data, err := embeddedFiles.ReadFile("templates/" + name + ".mustache")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}

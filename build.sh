@@ -1,3 +1,5 @@
 #!/bin/bash
 
-go-bindata assets/... templates/
+set -e
+
+go build "$@"

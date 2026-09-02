@@ -4,19 +4,11 @@ This project will replace [nodules](https://github.com/unixpickle/nodules). I wi
 
 # Dependencies & Setup
 
-This depends on the [Go programming language](https://golang.org/doc/install). In addition, it depends on several dependencies which you can install manually like so:
+This project requires [Go 1.18 or newer](https://go.dev/doc/install). Dependencies
+are managed by Go modules, and the web assets and templates are embedded in the
+binary at build time. Build the server with:
 
-    go get github.com/unixpickle/ezserver
-    go get github.com/unixpickle/reverseproxy
-    go get github.com/hoisie/mustache
-    go get github.com/gorilla/securecookie
-    go get github.com/gorilla/sessions
-
-In addition, you must install `go-bindata` and use it to generate bindata.go:
-
-    go get -u github.com/jteeuwen/go-bindata
-	go install github.com/jteeuwen/go-bindata/go-bindata
-    go-bindata assets/... templates/
+    go build
 
 # TODO
 
