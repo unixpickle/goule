@@ -1,10 +1,14 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/gorilla/context"
 	"github.com/unixpickle/ezserver"
 	"github.com/unixpickle/reverseproxy"
 )
+
+const hstsPolicy = "max-age=31536000; includeSubDomains"
 
 // A Server contains all the HTTP servers and the proxy object for a Goule instance.
 type Server struct {
@@ -28,7 +32,7 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	res.Control = ezserver.NewHTTP(context.ClearHandler(Control{cfg, res}))
 	res.Proxy = reverseproxy.NewProxy(cfg.Rules)
 	res.HTTP = ezserver.NewHTTP(res.Proxy)
-	res.HTTPS = ezserver.NewHTTPS(res.Proxy, cfg.TLS.TLS)
+	res.HTTPS = ezserver.NewHTTPS(withHSTS(res.Proxy), cfg.TLS.TLS)
 	res.HTTP.SetSecurityRedirects(cfg.TLS.Redirects)
 	res.HTTP.SetAutocertHandler(res.HTTPS.HandleAutocertRequest)
 
@@ -58,4 +62,13 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	}
 
 	return res, nil
+}
+
+// withHSTS tells browsers which reached this handler over HTTPS to keep using
+// HTTPS for future requests.
+func withHSTS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Strict-Transport-Security", hstsPolicy)
+		next.ServeHTTP(w, r)
+	})
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"log"
@@ -18,8 +19,19 @@ import (
 	"github.com/hoisie/mustache"
 )
 
-var Store = sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
-	securecookie.GenerateRandomKey(16))
+var Store = newCookieStore()
+
+func newCookieStore() *sessions.CookieStore {
+	store := sessions.NewCookieStore(securecookie.GenerateRandomKey(16),
+		securecookie.GenerateRandomKey(16))
+	store.Options = &sessions.Options{
+		Path:     "/",
+		Secure:   true,
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+	}
+	return store
+}
 
 // Control is an http.Handler which serves the web control panel.
 type Control struct {
@@ -105,7 +117,7 @@ func (c Control) ServeChpass(w http.ResponseWriter, r *http.Request) {
 	confirm := r.PostFormValue("confirm")
 	c.Config.Lock()
 	defer c.Config.Unlock()
-	if HashPassword(old) != c.Config.AdminHash {
+	if !passwordMatchesHash(old, c.Config.AdminHash) {
 		http.Redirect(w, r, "/general?error=Password%20incorrect",
 			http.StatusTemporaryRedirect)
 		return
@@ -322,14 +334,13 @@ func (c Control) ServeHTTPSConfig(w http.ResponseWriter, r *http.Request) {
 func (c Control) ServeLogin(w http.ResponseWriter, r *http.Request) {
 	template := map[string]interface{}{"error": false}
 	if r.Method == http.MethodPost {
-		// Get their submitted hash and the real hash.
+		// Get the submitted password and the real hash.
 		password := r.PostFormValue("password")
-		hash := HashPassword(password)
 		c.Config.RLock()
 		realHash := c.Config.AdminHash
 		c.Config.RUnlock()
 		// Check if they got the password correct.
-		if hash == realHash {
+		if passwordMatchesHash(password, realHash) {
 			s, _ := Store.Get(r, "sessid")
 			s.Values["authenticated"] = true
 			s.Save(r, w)
@@ -481,6 +492,13 @@ func (c Control) findTaskById(id int64) (index int, task *Task) {
 func HashPassword(password string) string {
 	hash := sha256.Sum256([]byte(password))
 	return strings.ToLower(hex.EncodeToString(hash[:]))
+}
+
+// passwordMatchesHash checks a password against a SHA-256 hash without leaking
+// the matching prefix through comparison timing.
+func passwordMatchesHash(password, expectedHash string) bool {
+	actualHash := HashPassword(password)
+	return subtle.ConstantTimeCompare([]byte(actualHash), []byte(expectedHash)) == 1
 }
 
 // isAuthenticated returns whether or not a request was authenticated.
