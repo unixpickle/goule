@@ -1,4 +1,4 @@
-package main
+package metrics
 
 import (
 	"bufio"
@@ -18,9 +18,18 @@ type ByteTracker struct {
 	hostsLock sync.RWMutex
 	hosts     map[string]struct{}
 
-	// Maps from host string to *SingleUsageHistory
-	writes sync.Map
-	reads  sync.Map
+	windows *TimeWindows
+
+	// Maps from host string to *WindowCounter
+	counters sync.Map
+}
+
+func NewByteTracker() *ByteTracker {
+	windows := NewTimeWindows(time.Now().Truncate(WindowDuration), WindowDuration, HistoryLength)
+	return &ByteTracker{
+		hosts:   map[string]struct{}{},
+		windows: windows,
+	}
 }
 
 func (b *ByteTracker) SetHosts(hosts []string) {
@@ -46,14 +55,16 @@ func (b *ByteTracker) Wrap(h http.Handler) http.HandlerFunc {
 		if !b.allowHost(host) {
 			host = ""
 		}
+
+		anyTracker, _ := b.counters.LoadOrStore(host, NewWindowCounter(b.windows))
+		tracker := anyTracker.(*WindowCounter)
 		writeCallback := func(n int) {
-			tracker, _ := b.writes.LoadOrStore(host, &SingleUsageHistory{})
-			tracker.(*SingleUsageHistory).RecordBytes(n)
+			tracker.Add(CountsKeyEgress, uint64(n))
 		}
 		readCallback := func(n int) {
-			tracker, _ := b.reads.LoadOrStore(host, &SingleUsageHistory{})
-			tracker.(*SingleUsageHistory).RecordBytes(n)
+			tracker.Add(CountsKeyIngress, uint64(n))
 		}
+		tracker.Add(CountsKeyRequests, 1)
 
 		wInitial := &wrappedWriter{
 			ResponseWriter: w,
@@ -135,21 +146,4 @@ func (c countReader) Read(p []byte) (n int, err error) {
 type countReadCloser struct {
 	countReader
 	io.Closer
-}
-
-type HistoryWindow struct {
-	Start time.Time
-	End   time.Time
-	Usage uint64
-}
-
-// TODO: implement a single host usage tracker
-type SingleUsageHistory struct {
-	lock    sync.RWMutex
-	history []HistoryWindow
-	current *HistoryWindow
-}
-
-func (h *SingleUsageHistory) RecordBytes(n int) {
-	// TODO: this.
 }
