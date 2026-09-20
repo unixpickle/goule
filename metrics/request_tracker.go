@@ -14,7 +14,7 @@ const (
 	HistoryLength  = time.Hour * 24 * 7
 )
 
-type ByteTracker struct {
+type RequestTracker struct {
 	hostsLock sync.RWMutex
 	hosts     map[string]struct{}
 
@@ -24,15 +24,15 @@ type ByteTracker struct {
 	counters sync.Map
 }
 
-func NewByteTracker() *ByteTracker {
+func NewRequestTracker() *RequestTracker {
 	windows := NewTimeWindows(time.Now().Truncate(WindowDuration), WindowDuration, HistoryLength)
-	return &ByteTracker{
+	return &RequestTracker{
 		hosts:   map[string]struct{}{},
 		windows: windows,
 	}
 }
 
-func (b *ByteTracker) SetHosts(hosts []string) {
+func (b *RequestTracker) SetHosts(hosts []string) {
 	hostSet := map[string]struct{}{}
 	for _, h := range hosts {
 		hostSet[h] = struct{}{}
@@ -42,14 +42,14 @@ func (b *ByteTracker) SetHosts(hosts []string) {
 	b.hostsLock.Unlock()
 }
 
-func (b *ByteTracker) allowHost(h string) bool {
+func (b *RequestTracker) allowHost(h string) bool {
 	b.hostsLock.RLock()
 	defer b.hostsLock.RUnlock()
 	_, ok := b.hosts[h]
 	return ok
 }
 
-func (b *ByteTracker) Wrap(h http.Handler) http.HandlerFunc {
+func (b *RequestTracker) Wrap(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		host := r.Host
 		if !b.allowHost(host) {
@@ -59,12 +59,12 @@ func (b *ByteTracker) Wrap(h http.Handler) http.HandlerFunc {
 		anyTracker, _ := b.counters.LoadOrStore(host, NewWindowCounter(b.windows))
 		tracker := anyTracker.(*WindowCounter)
 		writeCallback := func(n int) {
-			tracker.Add(CountsKeyEgress, uint64(n))
+			tracker.Add(MetricKeyEgress, uint64(n))
 		}
 		readCallback := func(n int) {
-			tracker.Add(CountsKeyIngress, uint64(n))
+			tracker.Add(MetricKeyIngress, uint64(n))
 		}
-		tracker.Add(CountsKeyRequests, 1)
+		tracker.Add(MetricKeyRequests, 1)
 
 		wInitial := &wrappedWriter{
 			ResponseWriter: w,
@@ -88,6 +88,25 @@ func (b *ByteTracker) Wrap(h http.Handler) http.HandlerFunc {
 		}
 		h.ServeHTTP(newW, &newReq)
 	}
+}
+
+// MetricsSince gets a per-host total usage breakdown since the start time for
+// all available metrics.
+//
+// Hosts may be omitted if there was zero traffic for them, and keys
+// with zero values may be omitted as well.
+func (b *RequestTracker) MetricsSince(start time.Time) map[string]map[MetricKey]uint64 {
+	results := map[string]map[MetricKey]uint64{}
+	for anyHost, anyHostCounter := range b.counters.Range {
+		host := anyHost.(string)
+		hostCounter := anyHostCounter.(*WindowCounter)
+		sums := hostCounter.SumSince(start)
+		if len(sums) == 0 {
+			continue
+		}
+		results[host] = sums
+	}
+	return results
 }
 
 type wrappedWriter struct {

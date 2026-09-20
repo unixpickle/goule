@@ -1,16 +1,22 @@
 package metrics
 
-import "sync"
+import (
+	"sort"
+	"sync"
+	"time"
+)
+
+type MetricKey string
 
 var (
-	CountsKeyEgress   = "egress"
-	CountsKeyIngress  = "ingress"
-	CountsKeyRequests = "requests"
+	MetricKeyEgress   MetricKey = "egress"
+	MetricKeyIngress  MetricKey = "ingress"
+	MetricKeyRequests MetricKey = "requests"
 )
 
 type WindowCounts struct {
 	Window *TimeWindow
-	Values map[string]uint64
+	Values map[MetricKey]uint64
 }
 
 type WindowCounter struct {
@@ -23,7 +29,7 @@ func NewWindowCounter(windows *TimeWindows) *WindowCounter {
 	return &WindowCounter{windows: windows, counts: newRingBuffer[*WindowCounts]()}
 }
 
-func (w *WindowCounter) Add(metric string, amount uint64) {
+func (w *WindowCounter) Add(metric MetricKey, amount uint64) {
 	first, last := w.windows.StartAndEnd()
 	w.lock.Lock()
 	defer w.lock.Unlock()
@@ -40,4 +46,21 @@ func (w *WindowCounter) Add(metric string, amount uint64) {
 	}
 	curValue, _ := lastCounts.Values[metric]
 	lastCounts.Values[metric] = curValue + amount
+}
+
+func (w *WindowCounter) SumSince(start time.Time) map[MetricKey]uint64 {
+	w.lock.RLock()
+	w.lock.RUnlock()
+	startIdx := sort.Search(w.counts.Len(), func(idx int) bool {
+		return w.counts.At(idx).Window.End.After(start)
+	})
+	total := map[MetricKey]uint64{}
+	for i := startIdx; i < w.counts.Len(); i++ {
+		for k, v := range w.counts.At(i).Values {
+			cur, _ := total[k]
+			cur += v
+			total[k] = cur
+		}
+	}
+	return total
 }
