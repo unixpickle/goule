@@ -1,6 +1,6 @@
 module github.com/unixpickle/goule
 
-go 1.18
+go 1.23
 
 require (
 	github.com/gorilla/context v1.1.1

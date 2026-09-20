@@ -46,10 +46,10 @@ func (r *ringBuffer[T]) PopFirst() T {
 	if r.len == 0 {
 		panic("ring buffer is empty")
 	}
-	value := r.buffer[r.start]
+	value := r.buffer[r.start%len(r.buffer)]
 	var zero T
 	r.buffer[r.start] = zero
-	r.start += 1
+	r.start = (r.start + 1) % len(r.buffer)
 	r.len -= 1
 	return value
 }
@@ -65,4 +65,12 @@ func (r *ringBuffer[T]) Push(x T) {
 	}
 	r.buffer[(r.start+r.len)%len(r.buffer)] = x
 	r.len += 1
+}
+
+func (r *ringBuffer[T]) Iter(yield func(idx int, v T) bool) {
+	for i := 0; i < r.Len(); i++ {
+		if !yield(i, r.At(i)) {
+			return
+		}
+	}
 }
