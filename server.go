@@ -5,6 +5,7 @@ import (
 
 	"github.com/gorilla/context"
 	"github.com/unixpickle/ezserver"
+	"github.com/unixpickle/goule/metrics"
 	"github.com/unixpickle/reverseproxy"
 )
 
@@ -15,6 +16,7 @@ type Server struct {
 	Control *ezserver.HTTP
 	HTTP    *ezserver.HTTP
 	HTTPS   *ezserver.HTTPS
+	Tracker *metrics.RequestTracker
 	Proxy   *reverseproxy.Proxy
 }
 
@@ -29,10 +31,12 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	res := &Server{}
 
 	// Create server-related objects.
+	res.Tracker = metrics.NewRequestTracker()
 	res.Control = ezserver.NewHTTP(context.ClearHandler(Control{cfg, res}))
 	res.Proxy = reverseproxy.NewProxy(cfg.Rules)
-	res.HTTP = ezserver.NewHTTP(res.Proxy)
-	res.HTTPS = ezserver.NewHTTPS(withHSTS(res.Proxy), cfg.TLS.TLS)
+	res.UpdateMetricsHosts()
+	res.HTTP = ezserver.NewHTTP(res.Tracker.Wrap(res.Proxy))
+	res.HTTPS = ezserver.NewHTTPS(withHSTS(res.Tracker.Wrap(res.Proxy)), cfg.TLS.TLS)
 	res.HTTP.SetSecurityRedirects(cfg.TLS.Redirects)
 	res.HTTP.SetAutocertHandler(res.HTTPS.HandleAutocertRequest)
 
@@ -62,6 +66,17 @@ func NewServer(cfg *Config, adminPort int) (*Server, error) {
 	}
 
 	return res, nil
+}
+
+func (s *Server) UpdateMetricsHosts() {
+	rules := s.Proxy.RuleTable()
+	var hosts []string
+	for host := range rules {
+		if host != "*" {
+			hosts = append(hosts, host)
+		}
+	}
+	s.Tracker.SetHosts(hosts)
 }
 
 // withHSTS tells browsers which reached this handler over HTTPS to keep using

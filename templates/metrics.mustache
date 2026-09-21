@@ -6,12 +6,12 @@
     <link href="assets/fonts/roboto/imports.css" rel="stylesheet" type="text/css">
     <link rel="stylesheet" type="text/css" href="assets/styles/shared.css">
     <link rel="stylesheet" type="text/css" href="assets/styles/fields.css">
-    <link rel="stylesheet" type="text/css" href="assets/styles/tls.css">
+    <link rel="stylesheet" type="text/css" href="assets/styles/metrics.css">
     <script type="text/javascript" src="assets/scripts/jquery.js"></script>
     <script type="text/javascript" src="assets/scripts/form.js"></script>
-    <script type="text/javascript" src="assets/scripts/tls.js"></script>
+    <script type="text/javascript" src="assets/scripts/metrics.js"></script>
     <script type="text/javascript">
-    window.tlsConfiguration = {{{tls}}};
+    window.metricsData = {{{metrics}}};
     </script>
   </head>
   <body>
@@ -20,13 +20,13 @@
       <ul>
         <li class="other"><a href="/">Tasks</a></li>
         <li class="other"><a href="/rules">Proxy Rules</a></li>
-        <li class="current"><a href="/tls">TLS</a></li>
+        <li class="other"><a href="/tls">TLS</a></li>
+        <li class="current"><a href="/metrics">Metrics</a></li>
         <li class="other"><a href="/general">General</a></li>
       </ul>
     </div>
     <div class="main-content">
-      <div id="tls-settings"></div>
-      <button id="submit" class="unlabeled-field">Save</button>
+      <div id="metrics-viewer"></div>
     </div>
   </body>
 </html>

@@ -13,10 +13,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
 	"github.com/hoisie/mustache"
+	"github.com/unixpickle/goule/metrics"
 )
 
 var Store = newCookieStore()
@@ -277,7 +279,7 @@ func (c Control) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Page routing for authenticated clients.
 	pages := map[string]func(http.ResponseWriter, *http.Request){
 		"/general": c.ServeGeneral, "/rules": c.ServeRules, "/tls": c.ServeTLS,
-		"/http": c.ServeHTTPConfig, "/https": c.ServeHTTPSConfig,
+		"/metrics": c.ServeMetrics, "/http": c.ServeHTTPConfig, "/https": c.ServeHTTPSConfig,
 		"/chpass": c.ServeChpass, "/": c.ServeRoot,
 		"/setrules": c.ServeSetRules, "/add_task": c.ServeAddTask,
 		"/start_task": c.ServeStartTask, "/stop_task": c.ServeStopTask,
@@ -410,6 +412,8 @@ func (c Control) ServeSetRules(w http.ResponseWriter, r *http.Request) {
 	c.Config.Save()
 	c.Config.Unlock()
 
+	c.Server.UpdateMetricsHosts()
+
 	http.Redirect(w, r, "/rules", http.StatusTemporaryRedirect)
 }
 
@@ -451,6 +455,23 @@ func (c Control) ServeTLS(w http.ResponseWriter, r *http.Request) {
 	} else {
 		template["tls"] = string(tls)
 		serveTemplate(w, r, "tls", template)
+	}
+}
+
+// ServeMetrics serves requests for the metrics page.
+func (c Control) ServeMetrics(w http.ResponseWriter, r *http.Request) {
+	template := map[string]interface{}{}
+	metrics := map[string]map[string]map[metrics.MetricKey]uint64{
+		"hour": c.Server.Tracker.MetricsSince(time.Now().Add(-time.Hour)),
+		"day":  c.Server.Tracker.MetricsSince(time.Now().Add(-time.Hour * 24)),
+		"week": c.Server.Tracker.MetricsSince(time.Now().Add(-time.Hour * 24 * 7)),
+	}
+	encoded, err := json.Marshal(metrics)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	} else {
+		template["metrics"] = string(encoded)
+		serveTemplate(w, r, "metrics", template)
 	}
 }
 

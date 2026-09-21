@@ -33,16 +33,22 @@ func (w *WindowCounter) Add(metric MetricKey, amount uint64) {
 	first, last := w.windows.StartAndEnd()
 	w.lock.Lock()
 	defer w.lock.Unlock()
-	for w.counts.First().Window.ID < first.ID {
-		w.counts.PopFirst()
+	var lastCounts *WindowCounts
+	if w.counts.Len() != 0 {
+		for w.counts.First().Window.ID < first.ID {
+			w.counts.PopFirst()
+		}
+		lastCounts = w.counts.Last()
+		if lastCounts.Window.ID > last.ID {
+			panic("ID should never decrease")
+		}
 	}
-	lastCounts := w.counts.Last()
-	if lastCounts.Window.ID > last.ID {
-		panic("ID should never decrease")
-	}
-	if lastCounts.Window.ID != last.ID {
+	if lastCounts == nil || lastCounts.Window.ID != last.ID {
 		lastCounts = &WindowCounts{Window: last}
 		w.counts.Push(lastCounts)
+	}
+	if lastCounts.Values == nil {
+		lastCounts.Values = map[MetricKey]uint64{}
 	}
 	curValue, _ := lastCounts.Values[metric]
 	lastCounts.Values[metric] = curValue + amount
