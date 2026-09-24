@@ -1,0 +1,15 @@
+#metrics-viewer {
+    text-align: center;
+}
+
+.window-select {
+    width: 150px;
+}
+
+table {
+    margin: 10px auto;
+}
+
+.field {
+    text-align: right;
+}
