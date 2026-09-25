@@ -15,16 +15,19 @@
     $editor.append($details);
 
     function showData() {
-      const byDay = window.metricsData[$timeSelect.val()];
-      console.log('by day', byDay, $timeSelect.val());
+      const windowUsage = window.metricsData[$timeSelect.val()];
       const totals = { egress: 0, ingress: 0, requests: 0 };
-      for (const host of Object.keys(byDay)) {
-        for (const metric of Object.keys(byDay[host])) {
-          totals[metric] += byDay[host][metric] || 0;
+      const hostCounts = [];
+      for (const host of Object.keys(windowUsage)) {
+        const hostMetrics = windowUsage[host];
+        hostCounts.push([host, hostMetrics]);
+        for (const metric of Object.keys(hostMetrics)) {
+          totals[metric] += hostMetrics[metric] || 0;
         }
       }
+      hostCounts.sort((a, b) => (a[1]['requests'] || 0) - (b[1]['requests'] || 0));
       const $totalsTable = $(`
-        <table>
+        <table class="totals">
           <tr><td class="field">Egress</td><td>${totals['egress']}</td></tr>
           <tr><td class="field">Ingress</td><td>${totals['ingress']}</td></tr>
           <tr><td class="field">Requests</td><td>${totals['requests']}</td></tr>
@@ -32,6 +35,22 @@
       `);
       $details.empty();
       $details.append($totalsTable);
+
+      $hostTable = $('<table class="by-host"><tr><th>Host</th><th>Requests</th><th>Ingress</th><th>Egress</th></tr></table>');
+      hostCounts.forEach((hostAndMetrics) => {
+        const [host, metrics] = hostAndMetrics;
+        const $row = $(`
+          <tr>
+            <td class="host"></td>
+            <td>${metrics['requests'] || 0}</td>
+            <td>${metrics['ingress'] || 0}</td>
+            <td>${metrics['egress'] || 0}</td>
+          </tr>`
+        );
+        $row.find('.host').text(host);
+        $hostTable.append($row);
+      });
+      $details.append($hostTable);
     }
 
     $timeSelect.change(showData);
