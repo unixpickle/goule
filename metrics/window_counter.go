@@ -33,20 +33,25 @@ func (w *WindowCounter) Add(metric MetricKey, amount uint64) {
 	first, last := w.windows.StartAndEnd()
 	w.lock.Lock()
 	defer w.lock.Unlock()
+
+	// Remove old windows
+	for w.counts.Len() != 0 && w.counts.First().Window.ID < first.ID {
+		w.counts.PopFirst()
+	}
+
 	var lastCounts *WindowCounts
 	if w.counts.Len() != 0 {
-		for w.counts.First().Window.ID < first.ID {
-			w.counts.PopFirst()
-		}
 		lastCounts = w.counts.Last()
-		if lastCounts.Window.ID > last.ID {
-			panic("ID should never decrease")
-		}
 	}
-	if lastCounts == nil || lastCounts.Window.ID != last.ID {
+
+	// Another Add may have recorded a newer window after we obtained
+	// last but before we acquired the lock. In that case, add to the
+	// newer window rather than append an older one.
+	if lastCounts == nil || lastCounts.Window.ID < last.ID {
 		lastCounts = &WindowCounts{Window: last}
 		w.counts.Push(lastCounts)
 	}
+
 	if lastCounts.Values == nil {
 		lastCounts.Values = map[MetricKey]uint64{}
 	}
@@ -56,7 +61,7 @@ func (w *WindowCounter) Add(metric MetricKey, amount uint64) {
 
 func (w *WindowCounter) SumSince(start time.Time) map[MetricKey]uint64 {
 	w.lock.RLock()
-	w.lock.RUnlock()
+	defer w.lock.RUnlock()
 	startIdx := sort.Search(w.counts.Len(), func(idx int) bool {
 		return w.counts.At(idx).Window.End.After(start)
 	})

@@ -5,12 +5,15 @@ import (
 	"time"
 )
 
+// A TimeWindow is chunk of time in [start, end), where ID increments for
+// successive chunks of time within a TimeWindows context.
 type TimeWindow struct {
 	ID    uint64
 	Start time.Time
 	End   time.Time
 }
 
+// TimeWindows manages shared, time-aligned instances of *TimeWindow.
 type TimeWindows struct {
 	lock     sync.RWMutex
 	rb       *ringBuffer[*TimeWindow]
@@ -33,12 +36,12 @@ func NewTimeWindows(start time.Time, interval, limit time.Duration) *TimeWindows
 	}
 }
 
+// StartAndEnd returns the current first and last time window, possibly
+// updating the state if necessary.
 func (t *TimeWindows) StartAndEnd() (start, end *TimeWindow) {
-	t.lock.RLock()
-	latest := t.rb.Last()
-	t.lock.RUnlock()
-	if time.Since(latest.End) < 0 {
-		return t.rb.First(), latest
+	start, end = t.currentStartAndEnd()
+	if time.Since(end.End) < 0 {
+		return start, end
 	}
 
 	// Create new windows as necessary, noting that there could
@@ -63,4 +66,10 @@ func (t *TimeWindows) StartAndEnd() (start, end *TimeWindow) {
 			t.rb.PopFirst()
 		}
 	}
+}
+
+func (t *TimeWindows) currentStartAndEnd() (start, end *TimeWindow) {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
+	return t.rb.First(), t.rb.Last()
 }
